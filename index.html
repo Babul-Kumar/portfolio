@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Portfolio of Babul Kumar, an AI Product Engineer specializing in AI, automation, and human-centric systems.">
+  <meta name="keywords" content="AI Product Engineer, Babul Kumar, Voice Assistant, Resume Analyzer, TensorFlow">
+  <meta name="author" content="Babul Kumar">
+  <title>Babul Kumar — conceded — Building Tomorrow’s Intelligence</title>
+  <!-- Favicon to prevent 404 error -->
+  <link rel="icon" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.1/svgs/solid/rocket.svg">
+  <!-- Note: cdn.tailwindcss.com is used for testing. For production, install Tailwind CSS via npm: https://tailwindcss.com/docs/installation -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+  <!-- Note: babel-standalone is used for testing. For production, precompile scripts: https://babeljs.io/docs/setup/ -->
+  <script src="https://cdn.jsdelivr.net/npm/babel-standalone@6.26.0/babel.min.js"></script>
+  <!-- EmailJS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3.11.0/dist/email.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    .font-orbitron { font-family: 'Orbitron', sans-serif; }
+    .font-inter { font-family: 'Inter', sans-serif; }
+    .shadow-glow { box-shadow: 0 0 10px rgba(0, 247, 255, 0.5); }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fadeInUp { animation: fadeInUp 0.8s ease-out forwards; }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-slideIn { animation: slideIn 1s ease-out forwards; }
+    [data-animate] { opacity: 0; }
+    [data-animate].visible { opacity: 1; }
+    #particles-js { position: fixed; inset: 0; z-index: -10; }
+  </style>
+</head>
+<body class="bg-gray-900 text-white font-inter">
+  <div id="particles-js"></div>
+  <div id="root"></div>
+  <script type="text/babel">
+    // Error Boundary
+    class ErrorBoundary extends React.Component {
+      state = { hasError: false };
+      static getDerivedStateFromError(error) {
+        return { hasError: true };
+      }
+      render() {
+        if (this.state.hasError) {
+          return <h1 className="text-center py-16">Something went wrong. Please refresh the page.</h1>;
+        }
+        return this.props.children;
+      }
+    }
+
+    // Animation Hook
+    const useAnimateOnScroll = () => {
+      React.useEffect(() => {
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('visible', 'animate-fadeInUp');
+                observer.unobserve(entry.target);
+              }
+            });
+          },
+          { threshold: 0.1 }
+        );
+        document.querySelectorAll('[data-animate]').forEach((el) => observer.observe(el));
+        return () => observer.disconnect();
+      }, []);
+    };
+
+    // Smooth Scroll Hook
+    const useSmoothScroll = () => {
+      React.useEffect(() => {
+        const handleClick = (e) => {
+          const href = e.target.getAttribute('href');
+          if (href && href.startsWith('#')) {
+            e.preventDefault();
+            const target = document.querySelector(href);
+            if (target) {
+              target.scrollIntoView({ behavior: 'smooth' });
+            }
+          }
+        };
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+          anchor.addEventListener('click', handleClick);
+        });
+        return () => {
+          document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.removeEventListener('click', handleClick);
+          });
+        };
+      }, []);
+    };
+
+    // Particles.js Initialization
+    const useParticles = () => {
+      React.useEffect(() => {
+        if (window.particlesJS) {
+          window.particlesJS('particles-js', {
+            particles: {
+              number: { value: 50, density: { enable: true, value_area: 800 } },
+              color: { value: '#00f7ff' },
+              shape: { type: 'circle' },
+              opacity: { value: 0.5 },
+              size: { value: 3, random: true },
+              move: { enable: true, speed: 2, direction: 'none', random: false }
+            },
+            interactivity: {
+              events: { onhover: { enable: true, mode: 'repulse' }, onclick: { enable: true, mode: 'push' } },
+              modes: { repulse: { distance: 100 }, push: { particles_nb: 4 } }
+            }
+          });
+        }
+        return () => {
+          if (window.pJSDom && window.pJSDom[0] && window.pJSDom[0].pJS) {
+            window.pJSDom[0].pJS.fn.vendors.destroypJS();
+            window.pJSDom = [];
+          }
+        };
+      }, []);
+    };
+
+    const Navigation = () => {
+      useSmoothScroll();
+      return (
+        <nav className="relative z-20 sticky top-0 bg-gray-800/80 backdrop-blur-md py-4 font-inter">
+          <div className="container mx-auto px-4 flex justify-between items-center">
+            <a href="#home" className="text-2xl font-orbitron">Babul Kumar</a>
+            <ul className="flex space-x-6">
+              <li><a href="#home" className="hover:text-blue-400 transition">Home</a></li>
+              <li><a href="#about" className="hover:text-blue-400 transition">About</a></li>
+              <li><a href="#projects" className="hover:text-blue-400 transition">Projects</a></li>
+              <li><a href="#skills" className="hover:text-blue-400 transition">Skills</a></li>
+              <li><a href="#achievements" className="hover:text-blue-400 transition">Achievements</a></li>
+              <li><a href="#contact" className="hover:text-blue-400 transition">Contact</a></li>
+            </ul>
+          </div>
+        </nav>
+      );
+    };
+
+    const Header = () => {
+      useParticles();
+      return (
+        <section id="home" className="relative z-10 min-h-screen flex flex-col justify-center items-center text-center px-4 animate-slideIn">
+          <h1 className="text-4xl md:text-6xl font-orbitron mb-4">Babul Kumar — Building Tomorrow’s Intelligence</h1>
+          <p className="text-lg md:text-xl mb-8 max-w-2xl">AI Product Engineer in the making | Innovator | Creator of Smart, Human-Centric Systems</p>
+          <div className="space-x-4">
+            <a href="#projects" className="px-6 py-3 bg-blue-600 rounded-lg hover:bg-blue-700 transition hover:shadow-glow">Explore Projects</a>
+            <a href="#contact" className="px-6 py-3 bg-purple-600 rounded-lg hover:bg-purple-700 transition hover:shadow-glow">Get in Touch</a>
+          </div>
+        </section>
+      );
+    };
+
+    const About = () => {
+      useAnimateOnScroll();
+      return (
+        <section id="about" className="relative z-10 py-16 px-4" data-animate>
+          <div className="container mx-auto">
+            <h2 className="text-3xl font-orbitron mb-8 text-center">About Me</h2>
+            <div className="max-w-3xl mx-auto text-center">
+              <p className="mb-4">I'm Babul Kumar, a B.Tech CSE student at Lovely Professional University, working toward becoming a top-tier AI Product Engineer. I specialize in AI integration, voice interaction systems, and smart automation projects. My goal? To build intelligent tools that genuinely help people.</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
+              <div>
+                <h3 className="text-xl font-bold mb-4">Current Skills</h3>
+                <ul className="space-y-2">
+                  <li>Python, JavaScript, HTML/CSS, C++</li>
+                  <li>React.js, Node.js, OpenCV</li>
+                  <li>AI/ML (TensorFlow, Gemini API, sklearn)</li>
+                  <li>System Automation (pywin32, psutil)</li>
+                  <li>Voice & Face Recognition</li>
+                  <li>Prompt Engineering</li>
+                </ul>
+              </div>
+              <div>
+                <h3 className="text-xl font-bold mb-4">Currently Learning</h3>
+                <ul className="space-y-2">
+                  <li>Cybersecurity (Ethical Hacking)</li>
+                  <li>Advanced AI Product Engineering</li>
+                  <li>Google AI Professional Certification</li>
+                  <li>Public Speaking</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+    };
+
+    const Projects = () => {
+      useAnimateOnScroll();
+      const projects = [
+        {
+          name: "Smart System Monitor (SSM)",
+          desc: "Windows desktop monitor with charger detection, CPU/RAM/network tracking, and junk cleaner",
+          tech: "Python, pywin32, psutil",
+          links: { github: "#", demo: "#" }
+        },
+        {
+          name: "Voice-Controlled OS Assistant",
+          desc: "System-wide AI assistant with face + voice login, voice typing, and emotional responses",
+          tech: "Python, OpenCV, SpeechRecognition, pyttsx3",
+          links: { github: "#", demo: "#" }
+        },
+        {
+          name: "AI Resume Analyzer",
+          desc: "Upload resume → Gemini-powered analysis → Output with styling, suggestions, downloadable PDF",
+          tech: "Node.js, Gemini API, HTML/CSS",
+          links: { github: "#", live: "#" }
+        },
+        {
+          name: "AI Mental Health Assistant",
+          desc: "Emotion-aware dark mode AI chatbot to support mental wellness",
+          tech: "Python, React, TensorFlow",
+          links: { github: "#", concept: "#" }
+        },
+        {
+          name: "Age & Emotion Detection Web App",
+          desc: "Camera-based tool for real-time age & emotion analysis",
+          tech: "JavaScript, TensorFlow.js",
+          links: { github: "#", live: "#" }
+        }
+      ];
+
+      return (
+        <section id="projects" className="relative z-10 py-16 px-4 bg-gray-800" data-animate>
+          <div className="container mx-auto">
+            <h2 className="text-3xl font-orbitron mb-8 text-center">Flagship Projects</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {projects.map((project, index) => (
+                <div
+                  key={index}
+                  className="bg-gray-700 rounded-lg p-6 transform hover:scale-105 transition hover:shadow-glow"
+                >
+                  <h3 className="text-xl font-bold mb-2">{project.name}</h3>
+                  <p className="mb-4">{project.desc}</p>
+                  <p className="text-sm text-gray-300 mb-4">Tech: {project.tech}</p>
+                  <div className="flex space-x-4">
+                    {project.links.github && <a href={project.links.github} className="text-blue-400 hover:underline">GitHub</a>}
+                    {project.links.demo && <a href={project.links.demo} className="text-blue-400 hover:underline">Demo</a>}
+                    {project.links.live && <a href={project.links.live} className="text-blue-400 hover:underline">Live Site</a>}
+                    {project.links.concept && <a href={project.links.concept} className="text-blue-400 hover:underline">Concept</a>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      );
+    };
+
+    const Skills = () => {
+      useAnimateOnScroll();
+      return (
+        <section id="skills" className="relative z-10 py-16 px-4" data-animate>
+          <div className="container mx-auto">
+            <h2 className="text-3xl font-orbitron mb-8 text-center">Technical Skills</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto">
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Languages</h3>
+                <p>Python, JavaScript, HTML/CSS, C++, Java (basics)</p>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Frameworks/Libraries</h3>
+                <p>React.js, Node.js, pywin32, psutil, OpenCV, pyttsx3</p>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold mb-2">AI/ML Tools</h3>
+                <p>TensorFlow, Google Gemini API, face_recognition, sklearn</p>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Other</h3>
+                <p>GitHub, Firebase, Canva, Unity, WordPress</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+    };
+
+    const Achievements = () => {
+      useAnimateOnScroll();
+      return (
+        <section id="achievements" className="relative z-10 py-16 px-4 bg-gray-800" data-animate>
+          <div className="container mx-auto">
+            <h2 className="text-3xl font-orbitron mb-8 text-center">Achievements Timeline</h2>
+            <ul className="space-y-6 max-w-3xl mx-auto">
+              <li className="flex items-start">
+                <span className="w-4 h-4 bg-blue-600 rounded-full mt-1 mr-4"></span>
+                <div>
+                  <h3 className="font-bold">Created AI Resume Analyzer</h3>
+                  <p className="text-gray-300">Built a Gemini-powered tool with animated resume export.</p>
+                </div>
+              </li>
+              <li className="flex items-start">
+                <span className="w-4 h-4 bg-blue-600 rounded-full mt-1 mr-4"></span>
+                <div>
+                  <h3 className="font-bold">Founded EchoVerse YouTube</h3>
+                  <p className="text-gray-300">Launched a channel for music and spoken word.</p>
+                </div>
+              </li>
+              <li className="flex items-start">
+                <span className="w-4 h-4 bg-blue-600 rounded-full mt-1 mr-4"></span>
+                <div>
+                  <h3 className="font-bold">Waive Club Contributor</h3>
+                  <p className="text-gray-300">Active member of LPU’s tech club.</p>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </section>
+      );
+    };
+
+    const Contact = () => {
+      useAnimateOnScroll();
+      const [status, setStatus] = React.useState('');
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const data = {
+          name: form.name.value,
+          email: form.email.value,
+          message: form.message.value
+        };
+
+        // Initialize EmailJS with your Public Key
+        emailjs.init('ZulzissuDBZEEQC85'); // Replace with your EmailJS Public Key
+
+        // Send email
+        emailjs.send('service_c6nvflt', 'service_c6nvflt', data)
+          .then(() => {
+            setStatus('Message sent successfully!');
+            form.reset();
+            setTimeout(() => setStatus(''), 5000);
+          })
+          .catch((error) => {
+            setStatus('Failed to send message. Please try again.');
+            console.error('EmailJS error:', error);
+            setTimeout(() => setStatus(''), 5000);
+          });
+      };
+
+      return (
+        <section id="contact" className="relative z-10 py-16 px-4" data-animate>
+          <div className="container mx-auto">
+            <h2 className="text-3xl font-orbitron mb-8 text-center">Get in Touch</h2>
+            <div className="max-w-lg mx-auto">
+              <form className="space-y-4" onSubmit={handleSubmit}>
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="Your Name"
+                  className="w-full p-3 bg-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  required
+                />
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="Your Email"
+                  className="w-full p-3 bg-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  required
+                />
+                <textarea
+                  name="message"
+                  placeholder="Your Message"
+                  className="w-full p-3 bg-gray-700 rounded-lg text-white h-32 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  required
+                ></textarea>
+                <button
+                  type="submit"
+                  className="w-full p-3 bg-purple-600 rounded-lg hover:bg-purple-700 transition hover:shadow-glow"
+                >
+                  Send Message
+                </button>
+              </form>
+              {status && (
+                <p className={`mt-4 text-center ${status.includes('Failed') ? 'text-red-400' : 'text-green-400'}`}>
+                  {status}
+                </p>
+              )}
+              <div className="mt-8 text-center">
+                <p>
+                  Email:{' '}
+                  <a href="mailto:babulkumarai@gmail.com" className="text-blue-400 hover:underline hover:shadow-glow transition">
+                    babulkumarai@gmail.com
+                  </a>
+                </p>
+                <p>
+                  LinkedIn:{' '}
+                  <a href="https://linkedin.com/in/babul-kumar-ai" className="text-blue-400 hover:underline hover:shadow-glow transition">
+                    linkedin.com/in/babul-kumar-ai
+                  </a>
+                </p>
+                <p>
+                  GitHub:{' '}
+                  <a href="https://github.com/babulkumar-dev" className="text-blue-400 hover:underline hover:shadow-glow transition">
+                    github.com/babulkumar-dev
+                  </a>
+                </p>
+                <p>
+                  YouTube:{' '}
+                  <a href="#" className="text-blue-400 hover:underline hover:shadow-glow transition">
+                    EchoVerse
+                  </a>
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+    };
+
+    const Footer = () => (
+      <footer className="relative z-10 py-6 bg-gray-800 text-center">
+        <p>© 2025 Babul Kumar. All rights reserved.</p>
+      </footer>
+    );
+
+    const App = () => (
+      <ErrorBoundary>
+        <Navigation />
+        <Header />
+        <About />
+        <Projects />
+        <Skills />
+        <Achievements />
+        <Contact />
+        <Footer />
+      </ErrorBoundary>
+    );
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
