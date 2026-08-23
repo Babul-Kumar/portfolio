@@ -109,7 +109,7 @@ export function formatFileSize(bytes: number): string {
 /**
  * Debounce utility
  */
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => unknown>(
   fn: T,
   delay: number
 ): (...args: Parameters<T>) => void {

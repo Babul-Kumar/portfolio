@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { getEducation } from '@/lib/data'
 import { formatDate } from '@/lib/utils'
+import { ExternalLink } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'Education',
@@ -13,84 +14,80 @@ export default async function EducationPage() {
   const educationList = await getEducation()
 
   return (
-    <div style={{ padding: 'var(--section-gap) var(--container-pad)', minHeight: '80vh' }}>
+    <div style={{ padding: 'var(--section-gap) var(--container-pad)', minHeight: '85vh' }}>
       <div style={{ maxWidth: 'var(--container-max)', margin: '0 auto' }}>
         {/* Header */}
-        <div style={{ marginBottom: '80px' }}>
-          <div className="text-label" style={{ marginBottom: '16px' }}>Academic Journey</div>
-          <h1 className="text-display">
+        <div style={{ marginBottom: '56px', borderBottom: '1px solid var(--color-border)', paddingBottom: '32px' }}>
+          <div className="text-label" style={{ marginBottom: '12px' }}>
+            Academic Journey
+          </div>
+          <h1 className="text-display" style={{ marginBottom: '20px' }}>
             EDUCATION &<br />FOUNDATION
           </h1>
-          <p style={{ fontSize: '16px', color: 'var(--color-text-secondary)', marginTop: '24px', maxWidth: '440px', lineHeight: 1.7 }}>
-            Degrees, academic milestones, core coursework, and foundational studies.
+          <p
+            style={{
+              fontSize: '16px',
+              color: 'var(--color-text-secondary)',
+              maxWidth: '540px',
+              lineHeight: 1.65,
+            }}
+          >
+            Undergraduate degree, specialized coursework, and core computer science foundations.
           </p>
         </div>
 
-        <div style={{ maxWidth: '840px' }}>
-          {educationList.map((edu, index) => (
-            <article key={edu.id} style={{
-              display: 'grid',
-              gridTemplateColumns: '140px 1fr',
-              gap: '40px',
-              paddingBottom: '48px',
-              marginBottom: '48px',
-              borderBottom: index < educationList.length - 1 ? '1px solid var(--color-border)' : 'none',
-            }} className="edu-item">
-              {/* Period */}
-              <div style={{
-                fontSize: '13px',
-                color: 'var(--color-text-muted)',
-                paddingTop: '4px',
-              }}>
-                <div>{formatDate(edu.start_date, 'yyyy')} — {edu.is_current ? 'Present' : formatDate(edu.end_date, 'yyyy')}</div>
-                {edu.is_current && (
-                  <span style={{
-                    display: 'inline-block',
-                    fontSize: '10px',
-                    letterSpacing: '0.08em',
-                    textTransform: 'uppercase',
-                    color: 'var(--color-accent)',
-                    border: '1px solid var(--color-accent)',
-                    padding: '2px 6px',
-                    borderRadius: '3px',
-                    marginTop: '8px',
-                  }}>
-                    Enrolled
-                  </span>
-                )}
-              </div>
-
-              {/* Details */}
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: '8px', marginBottom: '6px' }}>
-                  <h2 style={{ fontSize: '22px', fontWeight: 500, color: 'var(--color-text)', letterSpacing: '-0.01em' }}>
+        <div style={{ maxWidth: '880px' }}>
+          {educationList.map((edu) => (
+            <article
+              key={edu.id}
+              className="glass-card"
+              style={{
+                padding: '32px',
+                marginBottom: '32px',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: '8px', marginBottom: '12px' }}>
+                <div>
+                  <h2 style={{ fontSize: '22px', fontWeight: 600, color: 'var(--color-text)', letterSpacing: '-0.01em' }}>
                     {edu.degree} {edu.field ? `in ${edu.field}` : ''}
                   </h2>
+                  <div style={{ fontSize: '15px', color: 'var(--color-accent)', fontWeight: 500, marginTop: '2px' }}>
+                    {edu.institution} {edu.location ? `· ${edu.location}` : ''}
+                  </div>
+                </div>
+
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--color-text-muted)' }}>
+                    {formatDate(edu.start_date, 'yyyy')} — {edu.is_current ? 'Present' : formatDate(edu.end_date, 'yyyy')}
+                  </div>
                   {edu.grade && (
-                    <span style={{
-                      fontSize: '12px',
-                      color: 'var(--color-accent)',
-                      background: 'var(--color-accent-bg)',
-                      padding: '3px 10px',
-                      borderRadius: '4px',
-                      fontWeight: 500,
-                    }}>
+                    <span
+                      style={{
+                        display: 'inline-block',
+                        fontSize: '11px',
+                        fontFamily: 'var(--font-mono)',
+                        color: '#10B981',
+                        background: 'rgba(16, 185, 129, 0.1)',
+                        border: '1px solid rgba(16, 185, 129, 0.2)',
+                        padding: '2px 8px',
+                        borderRadius: 'var(--radius-sm)',
+                        marginTop: '4px',
+                      }}
+                    >
                       {edu.grade}
                     </span>
                   )}
                 </div>
+              </div>
 
-                <div style={{ fontSize: '15px', color: 'var(--color-text-secondary)', marginBottom: '8px', fontWeight: 400 }}>
-                  {edu.institution} {edu.location ? `· ${edu.location}` : ''}
-                </div>
+              {edu.description && (
+                <p style={{ fontSize: '14px', color: 'var(--color-text-secondary)', lineHeight: 1.75, marginTop: '16px' }}>
+                  {edu.description}
+                </p>
+              )}
 
-                {edu.description && (
-                  <p style={{ fontSize: '14px', color: 'var(--color-text-secondary)', lineHeight: 1.7, marginTop: '14px' }}>
-                    {edu.description}
-                  </p>
-                )}
-
-                {edu.website_url && (
+              {edu.website_url && (
+                <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--color-border-subtle)' }}>
                   <a
                     href={edu.website_url}
                     target="_blank"
@@ -100,28 +97,20 @@ export default async function EducationPage() {
                       alignItems: 'center',
                       gap: '4px',
                       fontSize: '12px',
+                      fontFamily: 'var(--font-mono)',
                       color: 'var(--color-accent)',
                       textDecoration: 'none',
-                      marginTop: '16px',
                     }}
+                    className="hover-accent-text"
                   >
-                    Institution Website ↗
+                    Institution Website <ExternalLink size={12} />
                   </a>
-                )}
-              </div>
+                </div>
+              )}
             </article>
           ))}
         </div>
       </div>
-
-      <style>{`
-        @media (max-width: 640px) {
-          .edu-item {
-            grid-template-columns: 1fr !important;
-            gap: 16px !important;
-          }
-        }
-      `}</style>
     </div>
   )
 }

@@ -83,6 +83,32 @@ export interface Certificate {
   updated_at: string
 }
 
+export interface ExtractionConfidence {
+  title: number
+  issuer: number
+  category: number
+  issue_date: number
+  expiry_date: number
+  credential_id: number
+  verification_url: number
+  description: number
+  skills: number
+}
+
+export interface GeminiCertificateExtraction {
+  title: string
+  issuer: string
+  category: CertificateCategory
+  issue_date: string | null
+  expiry_date: string | null
+  credential_id: string | null
+  verification_url: string | null
+  description: string | null
+  skills: string[]
+  confidence: ExtractionConfidence
+  file_url?: string | null
+}
+
 export interface Achievement {
   id: string
   title: string

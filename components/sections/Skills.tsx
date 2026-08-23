@@ -1,77 +1,92 @@
+'use client'
+
 import type { SkillsByCategory } from '@/types'
+import TechConstellationScene from '@/components/3d/TechConstellationScene'
 
-const LEVEL_WEIGHT: Record<string, number> = {
-  Expert: 4, Advanced: 3, Intermediate: 2, Beginner: 1,
-}
-
-export default function SkillsSection({ skillsByCategory }: { skillsByCategory: SkillsByCategory }) {
+export default function SkillsSection({
+  skillsByCategory,
+}: {
+  skillsByCategory: SkillsByCategory
+}) {
   const categories = Object.keys(skillsByCategory)
-  if (categories.length === 0) return null
 
   return (
-    <section style={{
-      padding: 'var(--section-gap) var(--container-pad)',
-      background: 'var(--color-surface)',
-      borderTop: '1px solid var(--color-border)',
-      borderBottom: '1px solid var(--color-border)',
-    }}>
-      <div style={{ maxWidth: 'var(--container-max)', margin: '0 auto' }}>
-        <div style={{ marginBottom: '64px' }}>
-          <div className="text-label" style={{ marginBottom: '12px' }}>05 / Capabilities</div>
-          <h2 className="text-display-sm">SKILLS &<br />TOOLS</h2>
+    <section id="skills" className="section">
+      <div className="container">
+        {/* Section Header */}
+        <div style={{ marginBottom: '48px', borderBottom: '1px solid var(--color-border)', paddingBottom: '24px' }}>
+          <div className="text-label" style={{ marginBottom: '12px' }}>
+            05 / Capabilities
+          </div>
+          <h2 className="text-display-sm">
+            TECHNOLOGY /<br />STACK
+          </h2>
         </div>
 
-        {/* Two-column layout */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: '0 80px',
-        }}>
+        {/* Interactive 3D Technology Constellation */}
+        <div style={{ marginBottom: '64px' }}>
+          <TechConstellationScene />
+        </div>
+
+        {/* Categorized Skills Grid */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gap: '32px',
+          }}
+        >
           {categories.map((category) => (
-            <SkillGroup key={category} category={category} skills={skillsByCategory[category]} />
+            <div
+              key={category}
+              className="glass-card"
+              style={{
+                padding: '24px',
+              }}
+            >
+              <div
+                style={{
+                  fontSize: '11px',
+                  fontFamily: 'var(--font-mono)',
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  color: 'var(--color-accent)',
+                  marginBottom: '18px',
+                  paddingBottom: '10px',
+                  borderBottom: '1px solid var(--color-border)',
+                }}
+              >
+                {category}
+              </div>
+
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {skillsByCategory[category].map((skill) => (
+                  <div
+                    key={skill.id}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: 'var(--radius-sm)',
+                      background: skill.featured
+                        ? 'rgba(229, 106, 61, 0.08)'
+                        : 'rgba(255, 255, 255, 0.03)',
+                      border: `1px solid ${
+                        skill.featured ? 'var(--color-accent-border)' : 'var(--color-border)'
+                      }`,
+                      fontSize: '12px',
+                      color: skill.featured ? 'var(--color-accent)' : 'var(--color-text)',
+                      fontFamily: 'var(--font-mono)',
+                      transition: 'all 0.2s ease',
+                      cursor: 'default',
+                    }}
+                  >
+                    {skill.name}
+                  </div>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       </div>
     </section>
-  )
-}
-
-function SkillGroup({ category, skills }: { category: string; skills: { id: string; name: string; level: string; featured: boolean }[] }) {
-  const sorted = [...skills].sort((a, b) => (LEVEL_WEIGHT[b.level] ?? 2) - (LEVEL_WEIGHT[a.level] ?? 2))
-
-  return (
-    <div style={{ marginBottom: '48px' }}>
-      <div style={{
-        fontSize: '11px',
-        letterSpacing: '0.12em',
-        textTransform: 'uppercase',
-        color: 'var(--color-text-muted)',
-        marginBottom: '20px',
-        paddingBottom: '12px',
-        borderBottom: '1px solid var(--color-border)',
-      }}>
-        {category}
-      </div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-        {sorted.map((skill) => (
-          <div
-            key={skill.id}
-            className="hover-border-accent"
-            style={{
-              padding: '6px 14px',
-              background: skill.featured ? 'var(--color-accent-bg)' : 'transparent',
-              border: `1px solid ${skill.featured ? 'var(--color-accent)' : 'var(--color-border)'}`,
-              borderRadius: '4px',
-              fontSize: '13px',
-              color: skill.featured ? 'var(--color-accent)' : 'var(--color-text-secondary)',
-              letterSpacing: '0.02em',
-              cursor: 'default',
-            }}
-          >
-            {skill.name}
-          </div>
-        ))}
-      </div>
-    </div>
   )
 }

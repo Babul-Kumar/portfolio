@@ -32,6 +32,20 @@ export const projectSchema = z.object({
 })
 
 // ============================================================
+export const CERTIFICATE_CATEGORIES = [
+  'AI / ML',
+  'Full Stack',
+  'Programming',
+  'Cloud',
+  'Data',
+  'Cybersecurity',
+  'Hackathon',
+  'Other',
+] as const
+
+export const certificateCategoryEnum = z.enum(CERTIFICATE_CATEGORIES)
+
+// ============================================================
 // Certificate Form
 // ============================================================
 export const certificateSchema = z.object({
@@ -48,6 +62,46 @@ export const certificateSchema = z.object({
   featured:         z.boolean(),
   published:        z.boolean(),
 })
+
+// ============================================================
+// Gemini Certificate Extraction Schema (Untrusted AI Output Validation)
+// ============================================================
+export const geminiExtractionConfidenceSchema = z.object({
+  title:            z.number().min(0).max(1).default(0.5),
+  issuer:           z.number().min(0).max(1).default(0.5),
+  category:         z.number().min(0).max(1).default(0.5),
+  issue_date:       z.number().min(0).max(1).default(0.5),
+  expiry_date:      z.number().min(0).max(1).default(0),
+  credential_id:    z.number().min(0).max(1).default(0.5),
+  verification_url: z.number().min(0).max(1).default(0.5),
+  description:      z.number().min(0).max(1).default(0.5),
+  skills:           z.number().min(0).max(1).default(0.5),
+})
+
+export const geminiCertificateExtractionSchema = z.object({
+  title:            z.string().max(300).default(''),
+  issuer:           z.string().max(200).default(''),
+  category:         certificateCategoryEnum.catch('AI / ML'),
+  issue_date:       z.string().nullable().catch(null),
+  expiry_date:      z.string().nullable().catch(null),
+  credential_id:    z.string().nullable().catch(null),
+  verification_url: z.string().url().nullable().catch(null),
+  description:      z.string().max(1000).nullable().catch(null),
+  skills:           z.array(z.string().max(50)).default([]),
+  confidence:       geminiExtractionConfidenceSchema.default({
+    title: 0.5,
+    issuer: 0.5,
+    category: 0.5,
+    issue_date: 0.5,
+    expiry_date: 0,
+    credential_id: 0.5,
+    verification_url: 0.5,
+    description: 0.5,
+    skills: 0.5,
+  }),
+})
+
+export type GeminiCertificateExtractionValues = z.infer<typeof geminiCertificateExtractionSchema>
 
 // ============================================================
 // Achievement Form

@@ -2,36 +2,74 @@
 
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { certificateSchema, type CertificateFormValues } from '@/lib/validations'
+import {
+  certificateSchema,
+  CERTIFICATE_CATEGORIES,
+  type CertificateFormValues,
+} from '@/lib/validations'
 import { createClient } from '@/lib/supabase/client'
 import { slugify, joinCSV, parseCSV } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import FileUpload from '@/components/admin/FileUpload'
-import type { Certificate } from '@/types'
+import CertificateAiUploader from '@/components/admin/CertificateAiUploader'
+import type { Certificate, GeminiCertificateExtraction, ExtractionConfidence } from '@/types'
+import { toast, Toaster } from 'sonner'
+import {
+  CheckCircle2,
+  AlertTriangle,
+  FileText,
+  Sparkles,
+  ExternalLink,
+  ShieldCheck,
+} from 'lucide-react'
 
-const input = {
-  width: '100%', background: '#1A1A1A', border: '1px solid #2C2C2C',
-  borderRadius: '6px', padding: '10px 14px', color: '#F5F5F5',
-  fontSize: '14px', outline: 'none', fontFamily: 'inherit',
+const inputStyle = {
+  width: '100%',
+  background: '#141414',
+  border: '1px solid #282828',
+  borderRadius: '6px',
+  padding: '11px 14px',
+  color: '#F5F5F5',
+  fontSize: '14px',
+  outline: 'none',
+  fontFamily: 'inherit',
+  transition: 'border-color 0.2s, box-shadow 0.2s',
 }
 
-const label = {
-  display: 'block', fontSize: '11px', letterSpacing: '0.08em',
-  textTransform: 'uppercase' as const, color: '#666', marginBottom: '6px',
+const labelStyle = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  fontSize: '11px',
+  letterSpacing: '0.08em',
+  textTransform: 'uppercase' as const,
+  color: '#777',
+  marginBottom: '6px',
+  fontFamily: 'var(--font-mono, monospace)',
 }
 
-const CATEGORIES = ['AI / ML', 'Full Stack', 'Programming', 'Cloud', 'Data', 'Cybersecurity', 'Hackathon', 'Other']
-
-export default function CertificateForm({ certificate }: { certificate?: Certificate }) {
+export default function AdminCertificateForm({ certificate }: { certificate?: Certificate }) {
   const router = useRouter()
   const isEdit = !!certificate
   const [saving, setSaving] = useState(false)
   const [fileUrl, setFileUrl] = useState<string | null>(certificate?.file_url ?? null)
   const [thumbUrl, setThumbUrl] = useState<string | null>(certificate?.thumbnail_url ?? null)
-  const [uploading, setUploading] = useState<'file' | 'thumb' | null>(null)
+  const [uploadingFile, setUploadingFile] = useState(false)
+  const [uploadingThumb, setUploadingThumb] = useState(false)
+  const [previewDocumentUrl, setPreviewDocumentUrl] = useState<string | null>(
+    certificate?.file_url ?? null
+  )
+  const [confidence, setConfidence] = useState<ExtractionConfidence | null>(null)
+  const [aiExtracted, setAiExtracted] = useState(false)
 
-  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<CertificateFormValues>({
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    getValues,
+    formState: { errors },
+  } = useForm<CertificateFormValues>({
     resolver: zodResolver(certificateSchema),
     defaultValues: {
       title: certificate?.title ?? '',
@@ -45,173 +83,724 @@ export default function CertificateForm({ certificate }: { certificate?: Certifi
       description: certificate?.description ?? '',
       skills: certificate ? joinCSV(certificate.skills) : '',
       featured: certificate?.featured ?? false,
-      published: certificate?.published ?? true,
+      published: certificate?.published ?? false,
     },
   })
 
-  const title = watch('title')
+  function handleAiExtraction(
+    extraction: GeminiCertificateExtraction,
+    file: File,
+    previewUrl: string
+  ) {
+    setAiExtracted(true)
+    setConfidence(extraction.confidence)
 
-  async function handleUpload(file: File, type: 'file' | 'thumb') {
-    setUploading(type)
-    const formData = new FormData()
-    formData.append('file', file)
-    formData.append('bucket', 'certificates')
-    formData.append('prefix', type)
-    const res = await fetch('/api/admin/upload', { method: 'POST', body: formData })
-    const data = await res.json()
-    if (type === 'file') setFileUrl(data.url ?? null)
-    else setThumbUrl(data.url ?? null)
-    setUploading(null)
+    if (extraction.title) {
+      setValue('title', extraction.title, { shouldValidate: true })
+      setValue('slug', slugify(extraction.title), { shouldValidate: true })
+    }
+
+    if (extraction.issuer) {
+      setValue('issuer', extraction.issuer, { shouldValidate: true })
+    }
+
+    if (extraction.category) {
+      setValue('category', extraction.category, { shouldValidate: true })
+    }
+
+    if (extraction.issue_date) {
+      setValue('issue_date', extraction.issue_date, { shouldValidate: true })
+    }
+
+    if (extraction.expiry_date) {
+      setValue('expiry_date', extraction.expiry_date, { shouldValidate: true })
+    }
+
+    if (extraction.credential_id) {
+      setValue('credential_id', extraction.credential_id, { shouldValidate: true })
+    }
+
+    if (extraction.verification_url) {
+      setValue('verification_url', extraction.verification_url, { shouldValidate: true })
+    }
+
+    if (extraction.description) {
+      setValue('description', extraction.description, { shouldValidate: true })
+    }
+
+    if (extraction.skills && extraction.skills.length > 0) {
+      setValue('skills', extraction.skills.join(', '), { shouldValidate: true })
+    }
+
+    if (extraction.file_url) {
+      setFileUrl(extraction.file_url)
+    }
+
+    if (previewUrl) {
+      setPreviewDocumentUrl(previewUrl)
+    }
+  }
+
+  function handleFileRemoved() {
+    setAiExtracted(false)
+    setConfidence(null)
+    setPreviewDocumentUrl(null)
+  }
+
+  async function handleFileUpload(file: File) {
+    setUploadingFile(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('bucket', 'certificate')
+      formData.append('prefix', 'documents')
+      const res = await fetch('/api/admin/upload', { method: 'POST', body: formData })
+      const data = await res.json()
+      if (data.url) {
+        setFileUrl(data.url)
+        setPreviewDocumentUrl(data.url)
+        toast.success('Document uploaded')
+      } else {
+        toast.error(data.error || 'Upload failed')
+      }
+    } catch {
+      toast.error('Upload failed')
+    } finally {
+      setUploadingFile(false)
+    }
+  }
+
+  async function handleThumbUpload(file: File) {
+    setUploadingThumb(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('bucket', 'certificate')
+      formData.append('prefix', 'thumbnails')
+      const res = await fetch('/api/admin/upload', { method: 'POST', body: formData })
+      const data = await res.json()
+      if (data.url) {
+        setThumbUrl(data.url)
+        toast.success('Thumbnail uploaded')
+      } else {
+        toast.error(data.error || 'Upload failed')
+      }
+    } catch {
+      toast.error('Upload failed')
+    } finally {
+      setUploadingThumb(false)
+    }
   }
 
   async function onSubmit(values: CertificateFormValues) {
     setSaving(true)
-    const supabase = createClient()
+    try {
+      const supabase = createClient()
 
-    const payload = {
-      title: values.title,
-      slug: values.slug || slugify(values.title),
-      issuer: values.issuer,
-      category: values.category,
-      issue_date: values.issue_date || null,
-      expiry_date: values.expiry_date || null,
-      credential_id: values.credential_id || null,
-      verification_url: values.verification_url || null,
-      description: values.description || null,
-      skills: values.skills ? parseCSV(values.skills) : [],
-      featured: values.featured,
-      published: values.published,
-      file_url: fileUrl,
-      thumbnail_url: thumbUrl,
+      const payload = {
+        title: values.title.trim(),
+        slug: values.slug.trim(),
+        issuer: values.issuer.trim(),
+        category: values.category,
+        issue_date: values.issue_date || null,
+        expiry_date: values.expiry_date || null,
+        credential_id: values.credential_id?.trim() || null,
+        verification_url: values.verification_url?.trim() || null,
+        description: values.description?.trim() || null,
+        skills: values.skills ? parseCSV(values.skills) : [],
+        featured: values.featured,
+        published: values.published,
+        file_url: fileUrl,
+        thumbnail_url: thumbUrl,
+      }
+
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(certificate?.id ?? '')
+
+      if (isEdit && isUuid) {
+        const { data: existing } = await supabase.from('certificates').select('id').eq('id', certificate!.id).single()
+        if (existing) {
+          const { error } = await supabase
+            .from('certificates')
+            .update(payload)
+            .eq('id', certificate!.id)
+          if (error) {
+            toast.error(`Update failed: ${error.message}`)
+            setSaving(false)
+            return
+          }
+        } else {
+          const { error } = await supabase.from('certificates').insert(payload)
+          if (error) {
+            toast.error(`Save failed: ${error.message}`)
+            setSaving(false)
+            return
+          }
+        }
+      } else if (isEdit) {
+        const { data: existing } = await supabase.from('certificates').select('id').eq('slug', payload.slug).single()
+        if (existing) {
+          const { error } = await supabase
+            .from('certificates')
+            .update(payload)
+            .eq('id', existing.id)
+          if (error) {
+            toast.error(`Update failed: ${error.message}`)
+            setSaving(false)
+            return
+          }
+        } else {
+          const { error } = await supabase.from('certificates').insert(payload)
+          if (error) {
+            toast.error(`Save failed: ${error.message}`)
+            setSaving(false)
+            return
+          }
+        }
+      } else {
+        const { error } = await supabase.from('certificates').insert(payload)
+        if (error) {
+          toast.error(`Insert failed: ${error.message}`)
+          setSaving(false)
+          return
+        }
+      }
+
+      toast.success(isEdit ? 'Certificate updated successfully' : 'Certificate created successfully')
+      setTimeout(() => {
+        router.push('/admin/certificates')
+        router.refresh()
+      }, 600)
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to save certificate'
+      toast.error(message)
+      setSaving(false)
     }
+  }
 
-    if (isEdit) {
-      await supabase.from('certificates').update(payload).eq('id', certificate.id)
-    } else {
-      await supabase.from('certificates').insert(payload)
-    }
+  function renderConfidenceBadge(field: keyof ExtractionConfidence) {
+    if (!confidence) return null
+    const score = confidence[field]
+    if (score === undefined || score === 0) return null
 
-    setSaving(false)
-    router.push('/admin/certificates')
+    const isHigh = score >= 0.85
+    return (
+      <span
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '3px',
+          fontSize: '10px',
+          fontFamily: 'var(--font-mono, monospace)',
+          color: isHigh ? '#10B981' : '#F59E0B',
+          background: isHigh ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+          padding: '1px 6px',
+          borderRadius: '3px',
+          textTransform: 'none',
+        }}
+      >
+        {isHigh ? <CheckCircle2 size={10} /> : <AlertTriangle size={10} />}
+        {isHigh ? `${Math.round(score * 100)}% AI` : `${Math.round(score * 100)}% Review`}
+      </span>
+    )
   }
 
   return (
-    <div style={{ maxWidth: '760px' }}>
-      <div style={{ marginBottom: '32px' }}>
-        <h1 style={{ fontSize: '22px', fontWeight: 500, color: '#F5F5F5' }}>
-          {isEdit ? 'Edit Certificate' : 'New Certificate'}
+    <div style={{ maxWidth: '1100px' }}>
+      <Toaster position="top-right" theme="dark" />
+
+      {/* Header */}
+      <div style={{ marginBottom: '28px' }}>
+        <div
+          style={{
+            fontSize: '11px',
+            fontFamily: 'var(--font-mono)',
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            color: 'var(--color-accent)',
+            marginBottom: '4px',
+          }}
+        >
+          {isEdit ? 'Credential Management' : 'AI-Assisted Publishing'}
+        </div>
+        <h1 style={{ fontSize: '24px', fontWeight: 600, color: '#F5F5F5' }}>
+          {isEdit ? 'Edit Certificate' : 'Add New Certificate'}
         </h1>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <div style={{ background: '#1A1A1A', border: '1px solid #222', borderRadius: '10px', padding: '28px', marginBottom: '20px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-            <div>
-              <label style={label}>Title *</label>
-              <input {...register('title')} style={input} onBlur={() => !isEdit && setValue('slug', slugify(title))} />
-              {errors.title && <p style={{ color: '#C96B46', fontSize: '12px', marginTop: '4px' }}>{errors.title.message}</p>}
-            </div>
-            <div>
-              <label style={label}>Slug *</label>
-              <input {...register('slug')} style={input} />
-            </div>
-          </div>
+      {/* Prominent AI Upload & Extraction Component */}
+      <CertificateAiUploader
+        onExtractionSuccess={handleAiExtraction}
+        onFileRemoved={handleFileRemoved}
+      />
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-            <div>
-              <label style={label}>Issuer *</label>
-              <input {...register('issuer')} style={input} placeholder="e.g. Coursera, Google, AWS" />
-            </div>
-            <div>
-              <label style={label}>Category</label>
-              <select {...register('category')} style={input}>
-                {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-            <div>
-              <label style={label}>Issue Date</label>
-              <input type="date" {...register('issue_date')} style={input} />
-            </div>
-            <div>
-              <label style={label}>Expiry Date</label>
-              <input type="date" {...register('expiry_date')} style={input} />
-            </div>
-          </div>
-
-          <div style={{ marginBottom: '20px' }}>
-            <label style={label}>Credential ID</label>
-            <input {...register('credential_id')} style={input} />
-          </div>
-
-          <div style={{ marginBottom: '20px' }}>
-            <label style={label}>Verification URL</label>
-            <input {...register('verification_url')} style={input} placeholder="https://…" />
-          </div>
-
-          <div style={{ marginBottom: '20px' }}>
-            <label style={label}>Skills (comma-separated)</label>
-            <input {...register('skills')} style={input} placeholder="Python, Machine Learning, TensorFlow" />
-          </div>
-
+      {/* AI Extraction Banner Notice */}
+      {aiExtracted && (
+        <div
+          style={{
+            background: 'rgba(229, 106, 61, 0.08)',
+            border: '1px solid var(--color-accent-border)',
+            borderRadius: 'var(--radius-sm)',
+            padding: '14px 18px',
+            marginBottom: '28px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            fontSize: '13px',
+            color: 'var(--color-text)',
+          }}
+        >
+          <Sparkles size={16} style={{ color: 'var(--color-accent)', flexShrink: 0 }} />
           <div>
-            <label style={label}>Description</label>
-            <textarea {...register('description')} style={{ ...input, minHeight: '80px', resize: 'vertical' }} />
+            <strong>AI Auto-Fill Completed:</strong> Google Gemini extracted metadata from your
+            certificate. Please review and edit any fields below before publishing.
           </div>
         </div>
+      )}
 
-        {/* File uploads */}
-        <div style={{ background: '#1A1A1A', border: '1px solid #222', borderRadius: '10px', padding: '28px', marginBottom: '20px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-            <FileUpload
-              label="Certificate File"
-              accept={{ 'image/*': ['.jpg', '.jpeg', '.png', '.webp'], 'application/pdf': ['.pdf'] }}
-              hint="PDF, JPG, PNG or WebP · Max 20MB"
-              maxSize={20 * 1024 * 1024}
-              onFileSelect={(f) => handleUpload(f, 'file')}
-              currentUrl={fileUrl}
-              onRemove={() => setFileUrl(null)}
-              uploading={uploading === 'file'}
-            />
-            <FileUpload
-              label="Thumbnail"
-              accept={{ 'image/*': ['.jpg', '.jpeg', '.png', '.webp'] }}
-              hint="JPG, PNG or WebP · Max 5MB"
-              maxSize={5 * 1024 * 1024}
-              onFileSelect={(f) => handleUpload(f, 'thumb')}
-              currentUrl={thumbUrl}
-              onRemove={() => setThumbUrl(null)}
-              uploading={uploading === 'thumb'}
-            />
+      {/* Main Dual-Column Layout on Desktop */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: previewDocumentUrl ? 'minmax(280px, 340px) 1fr' : '1fr',
+          gap: '32px',
+          alignItems: 'start',
+        }}
+        className="certificate-admin-layout"
+      >
+        {/* Left Column: Visual Document Preview Sheet */}
+        {previewDocumentUrl && (
+          <div
+            style={{
+              background: '#141414',
+              border: '1px solid #222',
+              borderRadius: 'var(--radius-md)',
+              padding: '20px',
+              position: 'sticky',
+              top: '20px',
+            }}
+          >
+            <div
+              style={{
+                fontSize: '11px',
+                fontFamily: 'var(--font-mono)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+                color: '#777',
+                marginBottom: '14px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <span>Document Verification</span>
+              <ShieldCheck size={14} style={{ color: 'var(--color-accent)' }} />
+            </div>
+
+            {previewDocumentUrl.match(/\.(jpg|jpeg|png|webp|avif)$/i) ||
+            previewDocumentUrl.startsWith('blob:') ? (
+              <div
+                style={{
+                  borderRadius: 'var(--radius-sm)',
+                  overflow: 'hidden',
+                  border: '1px solid #282828',
+                  marginBottom: '16px',
+                }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={previewDocumentUrl}
+                  alt="Certificate Document"
+                  style={{ width: '100%', height: 'auto', display: 'block' }}
+                />
+              </div>
+            ) : (
+              <div
+                style={{
+                  padding: '32px 16px',
+                  textAlign: 'center',
+                  background: '#1A1A1A',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid #282828',
+                  marginBottom: '16px',
+                }}
+              >
+                <FileText size={32} style={{ color: 'var(--color-accent)', margin: '0 auto 8px' }} />
+                <div style={{ fontSize: '13px', color: '#F5F5F5', fontWeight: 500 }}>
+                  PDF Certificate Document
+                </div>
+                <div style={{ fontSize: '11px', color: '#777', marginTop: '4px' }}>
+                  Stored & ready for publishing
+                </div>
+              </div>
+            )}
+
+            {fileUrl && (
+              <a
+                href={fileUrl}
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  fontSize: '12px',
+                  fontFamily: 'var(--font-mono)',
+                  color: 'var(--color-accent)',
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+              >
+                Open Full Asset <ExternalLink size={12} />
+              </a>
+            )}
           </div>
-        </div>
+        )}
 
-        <div style={{
-          background: '#1A1A1A', border: '1px solid #222', borderRadius: '10px',
-          padding: '24px 28px', marginBottom: '24px', display: 'flex', gap: '32px',
-        }}>
-          {(['featured', 'published'] as const).map((key) => (
-            <label key={key} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
-              <input type="checkbox" {...register(key)} style={{ accentColor: '#B65C3A', width: '16px', height: '16px' }} />
-              <span style={{ fontSize: '13px', color: '#888', textTransform: 'capitalize' }}>{key}</span>
+        {/* Right Column: Editable Certificate Form */}
+        <form onSubmit={handleSubmit(onSubmit)}>
+          {/* Section: Core Information */}
+          <div
+            style={{
+              background: '#141414',
+              border: '1px solid #222',
+              borderRadius: 'var(--radius-md)',
+              padding: '28px',
+              marginBottom: '20px',
+            }}
+          >
+            <div
+              style={{
+                fontSize: '11px',
+                fontFamily: 'var(--font-mono)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+                color: 'var(--color-accent)',
+                marginBottom: '20px',
+                paddingBottom: '8px',
+                borderBottom: '1px solid #222',
+              }}
+            >
+              01 / Core Credential Details
+            </div>
+
+            {/* Title & Slug */}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '20px',
+                marginBottom: '20px',
+              }}
+            >
+              <div>
+                <label style={labelStyle}>
+                  <span>Title *</span>
+                  {renderConfidenceBadge('title')}
+                </label>
+                <input
+                  {...register('title')}
+                  style={inputStyle}
+                  onBlur={() => {
+                    const curTitle = getValues('title')
+                    if (!isEdit && curTitle) setValue('slug', slugify(curTitle))
+                  }}
+                  placeholder="e.g. Machine Learning Specialization"
+                />
+                {errors.title && (
+                  <p style={{ color: '#EF4444', fontSize: '12px', marginTop: '4px' }}>
+                    {errors.title.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label style={labelStyle}>
+                  <span>Slug *</span>
+                  <span style={{ color: '#555', textTransform: 'none' }}>Auto-generated</span>
+                </label>
+                <input
+                  {...register('slug')}
+                  style={inputStyle}
+                  placeholder="machine-learning-specialization"
+                />
+                {errors.slug && (
+                  <p style={{ color: '#EF4444', fontSize: '12px', marginTop: '4px' }}>
+                    {errors.slug.message}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Issuer & Category */}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '20px',
+                marginBottom: '20px',
+              }}
+            >
+              <div>
+                <label style={labelStyle}>
+                  <span>Issuer / Organization *</span>
+                  {renderConfidenceBadge('issuer')}
+                </label>
+                <input
+                  {...register('issuer')}
+                  style={inputStyle}
+                  placeholder="e.g. Stanford Online & DeepLearning.AI"
+                />
+                {errors.issuer && (
+                  <p style={{ color: '#EF4444', fontSize: '12px', marginTop: '4px' }}>
+                    {errors.issuer.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label style={labelStyle}>
+                  <span>Category *</span>
+                  {renderConfidenceBadge('category')}
+                </label>
+                <select {...register('category')} style={inputStyle}>
+                  {CERTIFICATE_CATEGORIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Issue Date & Expiry Date */}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '20px',
+                marginBottom: '20px',
+              }}
+            >
+              <div>
+                <label style={labelStyle}>
+                  <span>Issue Date</span>
+                  {renderConfidenceBadge('issue_date')}
+                </label>
+                <input type="date" {...register('issue_date')} style={inputStyle} />
+              </div>
+
+              <div>
+                <label style={labelStyle}>
+                  <span>Expiry Date (Optional)</span>
+                  {renderConfidenceBadge('expiry_date')}
+                </label>
+                <input type="date" {...register('expiry_date')} style={inputStyle} />
+              </div>
+            </div>
+
+            {/* Credential ID & Verification URL */}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '20px',
+                marginBottom: '20px',
+              }}
+            >
+              <div>
+                <label style={labelStyle}>
+                  <span>Credential ID</span>
+                  {renderConfidenceBadge('credential_id')}
+                </label>
+                <input
+                  {...register('credential_id')}
+                  style={inputStyle}
+                  placeholder="e.g. STAN-ML-89241"
+                />
+              </div>
+
+              <div>
+                <label style={labelStyle}>
+                  <span>Verification URL</span>
+                  {renderConfidenceBadge('verification_url')}
+                </label>
+                <input
+                  {...register('verification_url')}
+                  style={inputStyle}
+                  placeholder="https://coursera.org/verify/..."
+                />
+              </div>
+            </div>
+
+            {/* Description */}
+            <div style={{ marginBottom: '20px' }}>
+              <label style={labelStyle}>
+                <span>Curriculum Description</span>
+                {renderConfidenceBadge('description')}
+              </label>
+              <textarea
+                {...register('description')}
+                rows={3}
+                style={{ ...inputStyle, resize: 'vertical' as const }}
+                placeholder="Comprehensive specialization covering supervised learning, neural networks..."
+              />
+            </div>
+
+            {/* Skills */}
+            <div>
+              <label style={labelStyle}>
+                <span>Demonstrated Skills (Comma separated)</span>
+                {renderConfidenceBadge('skills')}
+              </label>
+              <input
+                {...register('skills')}
+                style={inputStyle}
+                placeholder="Deep Learning, Neural Networks, PyTorch, Python"
+              />
+            </div>
+          </div>
+
+          {/* Section: Asset Management */}
+          <div
+            style={{
+              background: '#141414',
+              border: '1px solid #222',
+              borderRadius: 'var(--radius-md)',
+              padding: '28px',
+              marginBottom: '20px',
+            }}
+          >
+            <div
+              style={{
+                fontSize: '11px',
+                fontFamily: 'var(--font-mono)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+                color: 'var(--color-accent)',
+                marginBottom: '20px',
+                paddingBottom: '8px',
+                borderBottom: '1px solid #222',
+              }}
+            >
+              02 / Storage & Thumbnail Assets
+            </div>
+
+            <div style={{ marginBottom: '24px' }}>
+              <FileUpload
+                label="Certificate Document (PDF or Image)"
+                accept={{
+                  'image/*': ['.jpg', '.jpeg', '.png', '.webp'],
+                  'application/pdf': ['.pdf'],
+                }}
+                hint="PDF, JPG, PNG · Max 15MB"
+                maxSize={15 * 1024 * 1024}
+                onFileSelect={handleFileUpload}
+                currentUrl={fileUrl}
+                onRemove={() => {
+                  setFileUrl(null)
+                  setPreviewDocumentUrl(null)
+                }}
+                uploading={uploadingFile}
+              />
+            </div>
+
+            <div>
+              <FileUpload
+                label="Preview Thumbnail (Optional)"
+                accept={{ 'image/*': ['.jpg', '.jpeg', '.png', '.webp'] }}
+                hint="JPG, PNG, or WebP · Max 5MB"
+                maxSize={5 * 1024 * 1024}
+                onFileSelect={handleThumbUpload}
+                currentUrl={thumbUrl}
+                onRemove={() => setThumbUrl(null)}
+                uploading={uploadingThumb}
+              />
+            </div>
+          </div>
+
+          {/* Section: Visibility Flags */}
+          <div
+            style={{
+              background: '#141414',
+              border: '1px solid #222',
+              borderRadius: 'var(--radius-md)',
+              padding: '20px 28px',
+              marginBottom: '28px',
+              display: 'flex',
+              gap: '32px',
+              flexWrap: 'wrap',
+            }}
+          >
+            <label
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                cursor: 'pointer',
+                fontSize: '13px',
+                color: '#F5F5F5',
+              }}
+            >
+              <input
+                type="checkbox"
+                {...register('featured')}
+                style={{ accentColor: 'var(--color-accent)', width: '16px', height: '16px' }}
+              />
+              <span>Featured on Homepage</span>
             </label>
-          ))}
-        </div>
 
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <button type="submit" disabled={saving} style={{
-            background: saving ? '#333' : '#B65C3A', color: '#fff', border: 'none',
-            borderRadius: '8px', padding: '12px 24px', fontSize: '13px', cursor: saving ? 'not-allowed' : 'pointer',
-          }}>
-            {saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Create Certificate'}
-          </button>
-          <a href="/admin/certificates" style={{ padding: '12px 20px', color: '#555', fontSize: '13px', textDecoration: 'none' }}>
-            Cancel
-          </a>
-        </div>
-      </form>
+            <label
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                cursor: 'pointer',
+                fontSize: '13px',
+                color: '#F5F5F5',
+              }}
+            >
+              <input
+                type="checkbox"
+                {...register('published')}
+                style={{ accentColor: 'var(--color-accent)', width: '16px', height: '16px' }}
+              />
+              <span>Published (Visible in certificates)</span>
+            </label>
+          </div>
+
+          {/* Submit CTA */}
+          <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
+            <button
+              type="submit"
+              disabled={saving}
+              className="btn-primary"
+              style={{ padding: '14px 32px', fontSize: '14px' }}
+            >
+              {saving
+                ? 'Saving to Database…'
+                : isEdit
+                ? 'Update Certificate'
+                : 'Save Certificate'}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => router.push('/admin/certificates')}
+              className="btn-secondary"
+              style={{ padding: '14px 24px', fontSize: '14px' }}
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <style>{`
+        @media (max-width: 860px) {
+          .certificate-admin-layout {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
     </div>
   )
 }

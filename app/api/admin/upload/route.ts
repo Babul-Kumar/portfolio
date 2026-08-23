@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { generateFilePath, BUCKETS, type BucketName } from '@/lib/supabase/storage'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { generateFilePath, normalizeBucketName, BUCKETS } from '@/lib/supabase/storage'
 
 const ALLOWED_TYPES = [
   'image/jpeg', 'image/png', 'image/webp', 'image/avif',
@@ -20,10 +21,10 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData()
     const file = formData.get('file') as File | null
-    const bucket = formData.get('bucket') as BucketName | null
+    const rawBucket = (formData.get('bucket') as string | null)?.trim()
     const prefix = formData.get('prefix') as string | null
 
-    if (!file || !bucket) {
+    if (!file || !rawBucket) {
       return NextResponse.json({ error: 'Missing file or bucket' }, { status: 400 })
     }
 
@@ -37,9 +38,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: `File too large. Max size is 20MB` }, { status: 400 })
     }
 
-    // Validate bucket name
-    const validBuckets: BucketName[] = Object.values(BUCKETS)
-    if (!validBuckets.includes(bucket)) {
+    const bucket = normalizeBucketName(rawBucket)
+    const validBuckets: string[] = [
+      ...Object.values(BUCKETS),
+      'certificates',
+      'certificate',
+      'profile',
+      'profile picture',
+      'projects',
+      'achievements',
+      'resume',
+    ]
+    if (!validBuckets.includes(bucket) && !validBuckets.includes(rawBucket)) {
       return NextResponse.json({ error: 'Invalid bucket' }, { status: 400 })
     }
 
@@ -47,7 +57,20 @@ export async function POST(request: NextRequest) {
     const arrayBuffer = await file.arrayBuffer()
     const fileBuffer = new Uint8Array(arrayBuffer)
 
-    const { data, error } = await supabase.storage
+    // Prefer service role client if configured, otherwise use user client
+    let storageClient = supabase
+    try {
+      if (
+        process.env.SUPABASE_SERVICE_ROLE_KEY &&
+        process.env.SUPABASE_SERVICE_ROLE_KEY !== process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      ) {
+        storageClient = createAdminClient() as unknown as typeof supabase
+      }
+    } catch {
+      storageClient = supabase
+    }
+
+    const { data, error } = await storageClient.storage
       .from(bucket)
       .upload(filePath, fileBuffer, {
         contentType: file.type,
@@ -55,16 +78,21 @@ export async function POST(request: NextRequest) {
       })
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      console.error(`Upload error to bucket "${bucket}":`, error)
+      const errorMsg = error.message.includes('row-level security')
+        ? `Storage RLS Policy Violation: Please run the storage policies SQL in Supabase SQL Editor for bucket "${bucket}", or set the bucket to Public in Supabase Dashboard.`
+        : error.message
+      return NextResponse.json({ error: errorMsg }, { status: 400 })
     }
 
-    const { data: { publicUrl } } = supabase.storage
+    const { data: { publicUrl } } = storageClient.storage
       .from(bucket)
       .getPublicUrl(data.path)
 
     return NextResponse.json({ url: publicUrl, path: data.path })
-  } catch (err) {
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Upload failed'
     console.error('Upload error:', err)
-    return NextResponse.json({ error: 'Upload failed' }, { status: 500 })
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

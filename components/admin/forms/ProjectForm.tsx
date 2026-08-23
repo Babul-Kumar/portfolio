@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import FileUpload from '@/components/admin/FileUpload'
 import type { Project } from '@/types'
+import { toast, Toaster } from 'sonner'
 
 const input = {
   width: '100%',
@@ -41,7 +42,13 @@ export default function AdminProjectForm({ project }: { project?: Project }) {
   const [heroUrl, setHeroUrl] = useState<string | null>(project?.hero_image_url ?? null)
   const [uploading, setUploading] = useState(false)
 
-  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<ProjectFormValues>({
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    getValues,
+    formState: { errors },
+  } = useForm<ProjectFormValues>({
     resolver: zodResolver(projectSchema),
     defaultValues: {
       title: project?.title ?? '',
@@ -63,62 +70,120 @@ export default function AdminProjectForm({ project }: { project?: Project }) {
     },
   })
 
-  const title = watch('title')
-
   function autoSlug() {
-    if (!isEdit) {
-      setValue('slug', slugify(title), { shouldValidate: true })
+    const curTitle = getValues('title')
+    if (!isEdit && curTitle) {
+      setValue('slug', slugify(curTitle), { shouldValidate: true })
     }
   }
 
   async function handleHeroUpload(file: File) {
     setUploading(true)
-    const formData = new FormData()
-    formData.append('file', file)
-    formData.append('bucket', 'projects')
-    formData.append('prefix', 'heroes')
-    const res = await fetch('/api/admin/upload', { method: 'POST', body: formData })
-    const data = await res.json()
-    if (data.url) setHeroUrl(data.url)
-    setUploading(false)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('bucket', 'projects')
+      formData.append('prefix', 'heroes')
+      const res = await fetch('/api/admin/upload', { method: 'POST', body: formData })
+      const data = await res.json()
+      if (data.url) {
+        setHeroUrl(data.url)
+        toast.success('Hero image uploaded')
+      } else {
+        toast.error(data.error || 'Upload failed')
+      }
+    } catch {
+      toast.error('Upload failed')
+    } finally {
+      setUploading(false)
+    }
   }
 
   async function onSubmit(values: ProjectFormValues) {
     setSaving(true)
-    const supabase = createClient()
+    try {
+      const supabase = createClient()
 
-    const payload = {
-      title: values.title,
-      slug: values.slug,
-      short_desc: values.short_desc || null,
-      description: values.description || null,
-      problem: values.problem || null,
-      solution: values.solution || null,
-      architecture: values.architecture || null,
-      results: values.results || null,
-      challenges: values.challenges || null,
-      category: values.category,
-      technologies: values.technologies ? parseCSV(values.technologies) : [],
-      github_url: values.github_url || null,
-      live_url: values.live_url || null,
-      project_date: values.project_date || null,
-      featured: values.featured,
-      published: values.published,
-      hero_image_url: heroUrl,
+      const payload = {
+        title: values.title,
+        slug: values.slug,
+        short_desc: values.short_desc || null,
+        description: values.description || null,
+        problem: values.problem || null,
+        solution: values.solution || null,
+        architecture: values.architecture || null,
+        results: values.results || null,
+        challenges: values.challenges || null,
+        category: values.category,
+        technologies: values.technologies ? parseCSV(values.technologies) : [],
+        github_url: values.github_url || null,
+        live_url: values.live_url || null,
+        project_date: values.project_date || null,
+        featured: values.featured,
+        published: values.published,
+        hero_image_url: heroUrl,
+      }
+
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(project?.id ?? '')
+
+      if (isEdit && isUuid) {
+        const { data: existing } = await supabase.from('projects').select('id').eq('id', project!.id).single()
+        if (existing) {
+          const { error } = await supabase.from('projects').update(payload).eq('id', project!.id)
+          if (error) {
+            toast.error(`Update failed: ${error.message}`)
+            setSaving(false)
+            return
+          }
+        } else {
+          const { error } = await supabase.from('projects').insert(payload)
+          if (error) {
+            toast.error(`Save failed: ${error.message}`)
+            setSaving(false)
+            return
+          }
+        }
+      } else if (isEdit) {
+        const { data: existing } = await supabase.from('projects').select('id').eq('slug', payload.slug).single()
+        if (existing) {
+          const { error } = await supabase.from('projects').update(payload).eq('id', existing.id)
+          if (error) {
+            toast.error(`Update failed: ${error.message}`)
+            setSaving(false)
+            return
+          }
+        } else {
+          const { error } = await supabase.from('projects').insert(payload)
+          if (error) {
+            toast.error(`Save failed: ${error.message}`)
+            setSaving(false)
+            return
+          }
+        }
+      } else {
+        const { error } = await supabase.from('projects').insert(payload)
+        if (error) {
+          toast.error(`Insert failed: ${error.message}`)
+          setSaving(false)
+          return
+        }
+      }
+
+      toast.success(isEdit ? 'Project updated' : 'Project created')
+      setTimeout(() => {
+        router.push('/admin/projects')
+        router.refresh()
+      }, 600)
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to save project'
+      toast.error(message)
+      setSaving(false)
     }
-
-    if (isEdit) {
-      await supabase.from('projects').update(payload).eq('id', project.id)
-    } else {
-      await supabase.from('projects').insert(payload)
-    }
-
-    setSaving(false)
-    router.push('/admin/projects')
   }
 
   return (
     <div style={{ maxWidth: '760px' }}>
+      <Toaster position="top-right" theme="dark" />
       <div style={{ marginBottom: '32px' }}>
         <h1 style={{ fontSize: '22px', fontWeight: 500, color: '#F5F5F5' }}>
           {isEdit ? 'Edit Project' : 'New Project'}
@@ -130,63 +195,85 @@ export default function AdminProjectForm({ project }: { project?: Project }) {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
             <div style={field}>
               <label style={label}>Title *</label>
-              <input {...register('title')} style={input} onBlur={autoSlug} />
+              <input {...register('title')} style={input} onBlur={autoSlug} placeholder="Project title" />
               {errors.title && <p style={{ color: '#C96B46', fontSize: '12px', marginTop: '4px' }}>{errors.title.message}</p>}
             </div>
             <div style={field}>
               <label style={label}>Slug *</label>
-              <input {...register('slug')} style={input} />
+              <input {...register('slug')} style={input} placeholder="project-slug" />
               {errors.slug && <p style={{ color: '#C96B46', fontSize: '12px', marginTop: '4px' }}>{errors.slug.message}</p>}
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            <div style={field}>
+              <label style={label}>Category *</label>
+              <select {...register('category')} style={input}>
+                {['AI / ML', 'Machine Learning', 'Full Stack', 'Tools', 'Security', 'Other'].map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+            <div style={field}>
+              <label style={label}>Project Date</label>
+              <input type="date" {...register('project_date')} style={input} />
             </div>
           </div>
 
           <div style={field}>
             <label style={label}>Short Description</label>
-            <input {...register('short_desc')} style={input} placeholder="One sentence summary" />
+            <input {...register('short_desc')} style={input} placeholder="One line elevator pitch" />
           </div>
 
           <div style={field}>
-            <label style={label}>Category</label>
-            <select {...register('category')} style={input}>
-              {['AI / ML','Machine Learning','Full Stack','Tools','Security','Other'].map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-          </div>
-
-          <div style={field}>
-            <label style={label}>Technologies (comma-separated)</label>
-            <input {...register('technologies')} style={input} placeholder="Python, React, PostgreSQL" />
+            <label style={label}>Technologies (comma separated)</label>
+            <input {...register('technologies')} style={input} placeholder="Python, PyTorch, React, FastAPI" />
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
             <div style={field}>
               <label style={label}>GitHub URL</label>
-              <input {...register('github_url')} style={input} placeholder="https://github.com/…" />
+              <input {...register('github_url')} style={input} placeholder="https://github.com/..." />
             </div>
             <div style={field}>
               <label style={label}>Live URL</label>
-              <input {...register('live_url')} style={input} placeholder="https://…" />
+              <input {...register('live_url')} style={input} placeholder="https://..." />
             </div>
-          </div>
-
-          <div style={field}>
-            <label style={label}>Project Date</label>
-            <input type="date" {...register('project_date')} style={input} />
           </div>
         </div>
 
-        {/* Long form fields */}
+        {/* Case Study Details */}
         <div style={{ background: '#1A1A1A', border: '1px solid #222', borderRadius: '10px', padding: '28px', marginBottom: '20px' }}>
-          {(['description', 'problem', 'solution', 'architecture', 'results', 'challenges'] as const).map((f) => (
-            <div style={field} key={f}>
-              <label style={label}>{f.charAt(0).toUpperCase() + f.slice(1)}</label>
-              <textarea {...register(f)} style={{ ...input, minHeight: '100px' }} />
-            </div>
-          ))}
+          <div style={{ fontSize: '13px', color: '#888', marginBottom: '20px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+            Case Study Narrative
+          </div>
+          <div style={field}>
+            <label style={label}>Full Description</label>
+            <textarea {...register('description')} style={{ ...input, minHeight: '90px' }} />
+          </div>
+          <div style={field}>
+            <label style={label}>Problem</label>
+            <textarea {...register('problem')} style={{ ...input, minHeight: '80px' }} />
+          </div>
+          <div style={field}>
+            <label style={label}>Solution</label>
+            <textarea {...register('solution')} style={{ ...input, minHeight: '80px' }} />
+          </div>
+          <div style={field}>
+            <label style={label}>Architecture</label>
+            <textarea {...register('architecture')} style={{ ...input, minHeight: '80px' }} />
+          </div>
+          <div style={field}>
+            <label style={label}>Results</label>
+            <textarea {...register('results')} style={{ ...input, minHeight: '70px' }} />
+          </div>
+          <div style={field}>
+            <label style={label}>Challenges</label>
+            <textarea {...register('challenges')} style={{ ...input, minHeight: '70px' }} />
+          </div>
         </div>
 
-        {/* Hero image */}
+        {/* Media */}
         <div style={{ background: '#1A1A1A', border: '1px solid #222', borderRadius: '10px', padding: '28px', marginBottom: '20px' }}>
           <FileUpload
             label="Hero Image"
@@ -200,37 +287,34 @@ export default function AdminProjectForm({ project }: { project?: Project }) {
           />
         </div>
 
-        {/* Toggles */}
-        <div style={{
-          background: '#1A1A1A', border: '1px solid #222', borderRadius: '10px',
-          padding: '24px 28px', marginBottom: '24px',
-          display: 'flex', gap: '32px',
-        }}>
-          {(['featured', 'published'] as const).map((key) => (
-            <label key={key} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
-              <input type="checkbox" {...register(key)} style={{ accentColor: '#B65C3A', width: '16px', height: '16px' }} />
-              <span style={{ fontSize: '13px', color: '#888', textTransform: 'capitalize' }}>{key}</span>
-            </label>
-          ))}
+        {/* Flags */}
+        <div style={{ background: '#1A1A1A', border: '1px solid #222', borderRadius: '10px', padding: '20px 28px', marginBottom: '28px', display: 'flex', gap: '32px' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', color: '#F5F5F5' }}>
+            <input type="checkbox" {...register('featured')} style={{ accentColor: '#B65C3A' }} />
+            Featured on Homepage
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', color: '#F5F5F5' }}>
+            <input type="checkbox" {...register('published')} style={{ accentColor: '#B65C3A' }} />
+            Published (Visible publicly)
+          </label>
         </div>
 
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <button
-            type="submit"
-            disabled={saving}
-            style={{
-              background: saving ? '#333' : '#B65C3A', color: '#fff', border: 'none',
-              borderRadius: '8px', padding: '12px 24px', fontSize: '13px', cursor: saving ? 'not-allowed' : 'pointer',
-            }}
-          >
-            {saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Create Project'}
-          </button>
-          <a href="/admin/projects" style={{
-            padding: '12px 20px', color: '#555', fontSize: '13px', textDecoration: 'none',
-          }}>
-            Cancel
-          </a>
-        </div>
+        <button
+          type="submit"
+          disabled={saving}
+          style={{
+            background: saving ? '#333' : '#B65C3A',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '8px',
+            padding: '12px 28px',
+            fontSize: '13px',
+            cursor: saving ? 'not-allowed' : 'pointer',
+            fontWeight: 500,
+          }}
+        >
+          {saving ? 'Saving…' : isEdit ? 'Update Project' : 'Create Project'}
+        </button>
       </form>
     </div>
   )

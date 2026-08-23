@@ -1,34 +1,87 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
+import { usePathname } from 'next/navigation'
+import { useState, useEffect, useSyncExternalStore } from 'react'
 
-const navLinks = [
-  { href: '/projects', label: 'Work' },
-  { href: '/certificates', label: 'Archive' },
-  { href: '/about', label: 'About' },
-  { href: '/contact', label: 'Contact' },
+// Strict Section Order: ABOUT -> CERTIFICATES -> WORK -> CONTACT
+const NAV_ITEMS = [
+  { label: 'ABOUT', href: '/#about', path: '/about' },
+  { label: 'CERTIFICATES', href: '/#certificates', path: '/certificates' },
+  { label: 'WORK', href: '/#work', path: '/projects' },
+  { label: 'CONTACT', href: '/#contact', path: '/contact' },
 ]
 
+function getThemeSnapshot(): 'light' | 'dark' {
+  if (typeof window === 'undefined') return 'dark'
+  return (document.documentElement.getAttribute('data-theme') as 'light' | 'dark') || 'dark'
+}
+
+function subscribeTheme(callback: () => void) {
+  if (typeof window === 'undefined') return () => {}
+  const observer = new MutationObserver(callback)
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+  return () => observer.disconnect()
+}
+
 export default function Navbar() {
+  const pathname = usePathname()
+  const isHome = pathname === '/'
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
-  const [theme, setTheme] = useState<'light' | 'dark'>('light')
+  const [activeSection, setActiveSection] = useState<string>('')
+  const theme = useSyncExternalStore(subscribeTheme, getThemeSnapshot, () => 'dark' as const)
 
+  // Scroll background effect
   useEffect(() => {
-    const stored = localStorage.getItem('theme') as 'light' | 'dark' | null
-    if (stored) setTheme(stored)
-
-    const handler = () => setScrolled(window.scrollY > 30)
-    window.addEventListener('scroll', handler, { passive: true })
-    return () => window.removeEventListener('scroll', handler)
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20)
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  // Active section tracker on homepage in exact order: about, certificates, work, contact
+  useEffect(() => {
+    if (!isHome) return
+
+    const sections = ['about', 'certificates', 'work', 'contact']
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.id)
+          }
+        })
+      },
+      { rootMargin: '-25% 0px -50% 0px' }
+    )
+
+    sections.forEach((id) => {
+      const el = document.getElementById(id)
+      if (el) observer.observe(el)
+    })
+
+    return () => observer.disconnect()
+  }, [isHome])
 
   function toggleTheme() {
     const next = theme === 'light' ? 'dark' : 'light'
-    setTheme(next)
     localStorage.setItem('theme', next)
     document.documentElement.setAttribute('data-theme', next)
+  }
+
+  const handleNavClick = (href: string, e: React.MouseEvent<HTMLAnchorElement>) => {
+    setMenuOpen(false)
+    if (isHome && href.startsWith('/#')) {
+      const targetId = href.replace('/#', '')
+      const targetEl = document.getElementById(targetId)
+      if (targetEl) {
+        e.preventDefault()
+        targetEl.scrollIntoView({ behavior: 'smooth' })
+        window.history.pushState(null, '', href)
+      }
+    }
   }
 
   return (
@@ -40,122 +93,229 @@ export default function Navbar() {
           left: 0,
           right: 0,
           zIndex: 100,
-          padding: '0 var(--container-pad)',
-          height: '64px',
+          height: '72px',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between',
-          background: scrolled ? 'var(--color-bg)' : 'transparent',
-          borderBottom: scrolled ? '1px solid var(--color-border-subtle)' : '1px solid transparent',
-          transition: 'background 0.35s ease, border-color 0.35s ease',
-          backdropFilter: scrolled ? 'blur(12px)' : 'none',
+          background: scrolled
+            ? 'var(--color-card-bg)'
+            : 'transparent',
+          borderBottom: scrolled
+            ? '1px solid var(--color-border)'
+            : '1px solid transparent',
+          backdropFilter: scrolled ? 'blur(16px)' : 'none',
+          WebkitBackdropFilter: scrolled ? 'blur(16px)' : 'none',
+          transition: 'all 0.35s var(--ease-out)',
         }}
       >
-        {/* Logo */}
-        <Link
-          href="/"
-          className="brand-logo"
-          style={{
-            fontSize: '13px',
-            fontWeight: 600,
-            letterSpacing: '0.12em',
-            textTransform: 'uppercase',
-            color: 'var(--color-text)',
-            textDecoration: 'none',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-          }}
-        >
-          <span>BK</span>
-          <span style={{ fontSize: '10px', color: 'var(--color-accent)', opacity: 0.8 }}>/</span>
-          <span style={{ fontSize: '10px', color: 'var(--color-text-muted)', letterSpacing: '0.15em' }}>ARCHIVE</span>
-        </Link>
-
-        {/* Desktop nav */}
-        <nav
+        <div
+          className="container"
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '36px',
+            justifyContent: 'space-between',
           }}
-          className="desktop-nav"
         >
-          {navLinks.map(({ href, label }) => (
-            <Link
-              key={href}
-              href={href}
-              className="navbar-link"
-            >
-              {label}
-            </Link>
-          ))}
-        </nav>
-
-        {/* Actions */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          {/* Minimal Theme Glyph Toggle */}
-          <button
-            onClick={toggleTheme}
-            aria-label="Toggle dark mode"
-            className="theme-toggle-btn"
-            title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
-          >
-            <span style={{ fontSize: '14px', lineHeight: 1 }}>
-              {theme === 'light' ? '◐' : '○'}
-            </span>
-          </button>
-
-          {/* Resume CTA */}
+          {/* Brand Logo (Left) */}
           <Link
-            href="/resume"
-            className="resume-btn desktop-nav"
+            href="/"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              textDecoration: 'none',
+              color: 'var(--color-text)',
+            }}
+            aria-label="Babul Kumar Home"
           >
-            <span>RESUME</span>
-            <span className="resume-arrow">→</span>
+            <span
+              style={{
+                fontSize: '14px',
+                fontWeight: 700,
+                letterSpacing: '0.08em',
+                fontFamily: 'var(--font-sans)',
+              }}
+            >
+              BK
+            </span>
+            <span style={{ color: 'var(--color-accent)', opacity: 0.8, fontSize: '13px' }}>/</span>
+            <span
+              style={{
+                fontSize: '11px',
+                color: 'var(--color-text-secondary)',
+                letterSpacing: '0.12em',
+                fontFamily: 'var(--font-mono)',
+                textTransform: 'uppercase',
+                fontWeight: 500,
+              }}
+            >
+              Babul Kumar
+            </span>
           </Link>
 
-          {/* Mobile burger */}
-          <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="mobile-burger"
+          {/* Center Navigation in exact order: ABOUT, CERTIFICATES, WORK, CONTACT */}
+          <nav
+            className="desktop-nav"
             style={{
-              display: 'none',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              padding: '4px',
-              flexDirection: 'column',
-              gap: '5px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '32px',
             }}
-            aria-label="Open menu"
-            aria-expanded={menuOpen}
+            aria-label="Main Navigation"
           >
-            {[0, 1, 2].map((i) => (
+            {NAV_ITEMS.map((item) => {
+              const sectionKey = item.href.replace('/#', '')
+              const isActive = isHome
+                ? activeSection === sectionKey
+                : pathname.startsWith(item.path)
+
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  onClick={(e) => handleNavClick(item.href, e)}
+                  style={{
+                    fontSize: '12px',
+                    fontWeight: 500,
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                    color: isActive ? 'var(--color-accent)' : 'var(--color-text-secondary)',
+                    textDecoration: 'none',
+                    position: 'relative',
+                    padding: '6px 0',
+                    transition: 'color 0.2s ease',
+                    fontFamily: 'var(--font-mono)',
+                  }}
+                  className="nav-link"
+                >
+                  {item.label}
+                  {isActive && (
+                    <span
+                      style={{
+                        position: 'absolute',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        height: '2px',
+                        background: 'var(--color-accent)',
+                        borderRadius: '1px',
+                      }}
+                    />
+                  )}
+                </Link>
+              )
+            })}
+          </nav>
+
+          {/* Right Actions: Theme Switcher & Resume */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              aria-label={theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme'}
+              style={{
+                background: 'rgba(255, 255, 255, 0.04)',
+                border: '1px solid var(--color-border)',
+                borderRadius: 'var(--radius-full)',
+                width: '36px',
+                height: '36px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: 'var(--color-text)',
+                transition: 'all 0.2s ease',
+              }}
+              className="theme-btn"
+            >
+              <span style={{ fontSize: '14px', lineHeight: 1 }}>
+                {theme === 'light' ? '◐' : '○'}
+              </span>
+            </button>
+
+            {/* Resume CTA */}
+            <Link
+              href="/resume"
+              className="desktop-nav"
+              style={{
+                fontSize: '11px',
+                fontWeight: 500,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                color: 'var(--color-text)',
+                background: 'rgba(255, 255, 255, 0.04)',
+                border: '1px solid var(--color-border)',
+                padding: '8px 16px',
+                borderRadius: 'var(--radius-sm)',
+                textDecoration: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                transition: 'all 0.2s var(--ease-out)',
+                fontFamily: 'var(--font-mono)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = 'var(--color-accent-border)'
+                e.currentTarget.style.color = 'var(--color-accent)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'var(--color-border)'
+                e.currentTarget.style.color = 'var(--color-text)'
+              }}
+            >
+              <span>RESUME</span>
+              <span style={{ fontSize: '12px' }}>↗</span>
+            </Link>
+
+            {/* Mobile Menu Hamburger */}
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="mobile-burger"
+              style={{
+                display: 'none',
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '6px',
+                flexDirection: 'column',
+                gap: '5px',
+                zIndex: 110,
+              }}
+              aria-label="Toggle navigation menu"
+              aria-expanded={menuOpen}
+            >
               <span
-                key={i}
                 style={{
-                  display: 'block',
-                  width: '22px',
+                  width: '20px',
                   height: '1.5px',
                   background: 'var(--color-text)',
-                  transition: 'all 0.3s',
-                  transformOrigin: 'center',
-                  transform: menuOpen
-                    ? i === 0
-                      ? 'rotate(45deg) translate(4.5px, 4.5px)'
-                      : i === 2
-                      ? 'rotate(-45deg) translate(4.5px, -4.5px)'
-                      : 'scaleX(0)'
-                    : 'none',
+                  transition: 'transform 0.3s ease',
+                  transform: menuOpen ? 'rotate(45deg) translate(4.5px, 4.5px)' : 'none',
                 }}
               />
-            ))}
-          </button>
+              <span
+                style={{
+                  width: '20px',
+                  height: '1.5px',
+                  background: 'var(--color-text)',
+                  transition: 'opacity 0.3s ease',
+                  opacity: menuOpen ? 0 : 1,
+                }}
+              />
+              <span
+                style={{
+                  width: '20px',
+                  height: '1.5px',
+                  background: 'var(--color-text)',
+                  transition: 'transform 0.3s ease',
+                  transform: menuOpen ? 'rotate(-45deg) translate(4.5px, -4.5px)' : 'none',
+                }}
+              />
+            </button>
+          </div>
         </div>
       </header>
 
-      {/* Mobile overlay menu */}
+      {/* Mobile Drawer Navigation in exact order */}
       <div
         style={{
           position: 'fixed',
@@ -172,120 +332,54 @@ export default function Navbar() {
           transition: 'opacity 0.3s ease',
         }}
       >
-        {navLinks.map(({ href, label }) => (
+        {NAV_ITEMS.map((item) => (
           <Link
-            key={href}
-            href={href}
-            onClick={() => setMenuOpen(false)}
+            key={item.label}
+            href={item.href}
+            onClick={(e) => handleNavClick(item.href, e)}
             style={{
-              fontSize: '32px',
+              fontSize: '22px',
               fontWeight: 500,
-              letterSpacing: '-0.02em',
+              letterSpacing: '0.04em',
               color: 'var(--color-text)',
               textDecoration: 'none',
+              fontFamily: 'var(--font-mono)',
             }}
           >
-            {label}
+            {item.label}
           </Link>
         ))}
         <Link
           href="/resume"
           onClick={() => setMenuOpen(false)}
           style={{
-            fontSize: '14px',
+            marginTop: '16px',
+            fontSize: '13px',
             color: 'var(--color-accent)',
             textDecoration: 'none',
-            letterSpacing: '0.12em',
+            letterSpacing: '0.1em',
             textTransform: 'uppercase',
-            marginTop: '16px',
-            fontWeight: 500,
+            fontWeight: 600,
+            fontFamily: 'var(--font-mono)',
           }}
         >
-          RESUME →
+          VIEW RÉSUMÉ ↗
         </Link>
       </div>
 
       <style>{`
-        .navbar-link {
-          font-size: 13px;
-          color: var(--color-text-secondary);
-          letter-spacing: 0.04em;
-          text-decoration: none;
-          position: relative;
-          padding-bottom: 2px;
-          transition: color 0.2s ease;
+        .nav-link:hover {
+          color: var(--color-text) !important;
         }
-        .navbar-link::after {
-          content: '';
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          width: 0;
-          height: 1px;
-          background-color: var(--color-accent);
-          transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .navbar-link:hover {
-          color: var(--color-text);
-        }
-        .navbar-link:hover::after {
-          width: 100%;
-        }
-
-        .theme-toggle-btn {
-          background: var(--color-surface);
-          border: 1px solid var(--color-border);
-          border-radius: 50%;
-          width: 32px;
-          height: 32px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          color: var(--color-text);
-          transition: border-color 0.2s ease, transform 0.2s ease;
-        }
-        .theme-toggle-btn:hover {
-          border-color: var(--color-accent);
+        .theme-btn:hover {
+          border-color: var(--color-accent-border);
           transform: scale(1.05);
         }
-
-        .resume-btn {
-          font-size: 11px;
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
-          color: var(--color-text);
-          border: 1px solid var(--color-border);
-          padding: 8px 16px;
-          border-radius: 4px;
-          text-decoration: none;
-          font-weight: 500;
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          transition: all 0.2s ease;
-          background: transparent;
-        }
-        .resume-btn .resume-arrow {
-          transition: transform 0.2s ease;
-        }
-        .resume-btn:hover {
-          background: var(--color-text);
-          color: var(--color-bg);
-          border-color: var(--color-text);
-        }
-        .resume-btn:hover .resume-arrow {
-          transform: translateX(3px);
-        }
-
         @media (max-width: 768px) {
           .desktop-nav { display: none !important; }
           .mobile-burger { display: flex !important; }
         }
       `}</style>
-
-      {/* Nav spacer */}
-      <div style={{ height: '64px' }} />
     </>
   )
 }

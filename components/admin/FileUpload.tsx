@@ -70,6 +70,7 @@ export default function FileUpload({
       {displayUrl && (
         <div style={{ marginBottom: '12px', position: 'relative', display: 'inline-block' }}>
           {displayUrl.match(/\.(jpg|jpeg|png|webp|gif|avif)$/i) || preview ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
             <img
               src={displayUrl}
               alt="Preview"

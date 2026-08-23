@@ -4,9 +4,19 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
-  LayoutDashboard, FolderKanban, Award, GraduationCap,
-  Briefcase, Wrench, User, Settings, LogOut, ScrollText,
-  ChevronRight, X, Menu
+  LayoutDashboard,
+  FolderKanban,
+  Award,
+  GraduationCap,
+  Briefcase,
+  Wrench,
+  User,
+  Settings,
+  LogOut,
+  ScrollText,
+  ChevronRight,
+  X,
+  Menu,
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -22,25 +32,29 @@ const navItems = [
   { href: '/admin/settings', label: 'Settings', icon: Settings },
 ]
 
-export default function AdminSidebar() {
-  const pathname = usePathname()
-  const router = useRouter()
-  const [mobileOpen, setMobileOpen] = useState(false)
+interface SidebarContentProps {
+  pathname: string
+  onClose?: () => void
+  onLogout: () => void
+}
 
-  async function handleLogout() {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    router.push('/admin/login')
-  }
-
-  const SidebarContent = () => (
+function SidebarContent({ pathname, onClose, onLogout }: SidebarContentProps) {
+  return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Logo */}
       <div style={{ padding: '24px 20px', borderBottom: '1px solid #1E1E1E' }}>
         <div style={{ fontSize: '12px', letterSpacing: '0.12em', color: '#666', textTransform: 'uppercase' }}>
           BABUL KUMAR
         </div>
-        <div style={{ fontSize: '10px', color: '#444', letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: '2px' }}>
+        <div
+          style={{
+            fontSize: '10px',
+            color: '#444',
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            marginTop: '2px',
+          }}
+        >
           CMS Dashboard
         </div>
       </div>
@@ -53,7 +67,7 @@ export default function AdminSidebar() {
             <Link
               key={href}
               href={href}
-              onClick={() => setMobileOpen(false)}
+              onClick={onClose}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -66,14 +80,18 @@ export default function AdminSidebar() {
                 background: active ? '#1A1A1A' : 'transparent',
                 textDecoration: 'none',
                 transition: 'all 0.15s',
-                borderLeft: active ? '2px solid #B65C3A' : '2px solid transparent',
+                borderLeft: active ? '2px solid #E45D2C' : '2px solid transparent',
               }}
-              onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLAnchorElement).style.color = '#F5F5F5' }}
-              onMouseLeave={(e) => { if (!active) (e.currentTarget as HTMLAnchorElement).style.color = '#666' }}
+              onMouseEnter={(e) => {
+                if (!active) (e.currentTarget as HTMLAnchorElement).style.color = '#F5F5F5'
+              }}
+              onMouseLeave={(e) => {
+                if (!active) (e.currentTarget as HTMLAnchorElement).style.color = '#666'
+              }}
             >
-              <Icon size={15} />
+              <Icon size={15} style={{ color: active ? '#E45D2C' : 'inherit' }} />
               {label}
-              {active && <ChevronRight size={12} style={{ marginLeft: 'auto' }} />}
+              {active && <ChevronRight size={12} style={{ marginLeft: 'auto', color: '#E45D2C' }} />}
             </Link>
           )
         })}
@@ -99,7 +117,7 @@ export default function AdminSidebar() {
           <span style={{ fontSize: '12px' }}>↗</span> View Site
         </Link>
         <button
-          onClick={handleLogout}
+          onClick={onLogout}
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -115,7 +133,7 @@ export default function AdminSidebar() {
             textAlign: 'left',
             transition: 'color 0.15s',
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = '#C96B46')}
+          onMouseEnter={(e) => (e.currentTarget.style.color = '#E45D2C')}
           onMouseLeave={(e) => (e.currentTarget.style.color = '#555')}
         >
           <LogOut size={15} /> Log out
@@ -123,22 +141,37 @@ export default function AdminSidebar() {
       </div>
     </div>
   )
+}
+
+export default function AdminSidebar() {
+  const pathname = usePathname()
+  const router = useRouter()
+  const [mobileOpen, setMobileOpen] = useState(false)
+
+  async function handleLogout() {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    router.push('/admin/login')
+  }
 
   return (
     <>
       {/* Desktop sidebar */}
-      <aside style={{
-        width: '220px',
-        minWidth: '220px',
-        background: '#111',
-        borderRight: '1px solid #1E1E1E',
-        height: '100vh',
-        position: 'sticky',
-        top: 0,
-        display: 'flex',
-        flexDirection: 'column',
-      }} className="admin-sidebar-desktop">
-        <SidebarContent />
+      <aside
+        style={{
+          width: '220px',
+          minWidth: '220px',
+          background: '#111',
+          borderRight: '1px solid #1E1E1E',
+          height: '100vh',
+          position: 'sticky',
+          top: 0,
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+        className="admin-sidebar-desktop"
+      >
+        <SidebarContent pathname={pathname} onLogout={handleLogout} />
       </aside>
 
       {/* Mobile toggle */}
@@ -183,7 +216,11 @@ export default function AdminSidebar() {
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <SidebarContent />
+            <SidebarContent
+              pathname={pathname}
+              onClose={() => setMobileOpen(false)}
+              onLogout={handleLogout}
+            />
           </aside>
           <div style={{ flex: 1, background: 'rgba(0,0,0,0.5)' }} />
         </div>

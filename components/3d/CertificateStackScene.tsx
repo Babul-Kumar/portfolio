@@ -10,9 +10,6 @@ interface CertificateSheetProps {
   rotation: [number, number, number]
   index: number
   hovered: boolean
-  label: string
-  issuer: string
-  year: string
 }
 
 function CertificateSheet({
@@ -20,9 +17,6 @@ function CertificateSheet({
   rotation,
   index,
   hovered,
-  label,
-  issuer,
-  year,
 }: CertificateSheetProps) {
   const meshRef = useRef<THREE.Group>(null)
 
@@ -197,9 +191,6 @@ function StackGroup({
             position={sheet.position}
             rotation={sheet.rotation}
             hovered={hovered}
-            label={sheet.label}
-            issuer={sheet.issuer}
-            year={sheet.year}
           />
         ))}
       </group>

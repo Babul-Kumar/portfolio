@@ -5,24 +5,28 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { contactSchema, type ContactFormValues } from '@/lib/validations'
 
-const inp = {
+const inputStyle = {
   width: '100%',
-  background: 'transparent',
-  border: 'none',
-  borderBottom: '1px solid var(--color-border)',
-  padding: '12px 0',
+  background: 'var(--color-surface)',
+  border: '1px solid var(--color-border)',
+  borderRadius: 'var(--radius-sm)',
+  padding: '14px 16px',
   color: 'var(--color-text)',
-  fontSize: '16px',
+  fontSize: '15px',
   fontFamily: 'inherit',
   outline: 'none',
-  resize: 'vertical' as const,
-  transition: 'border-color 0.2s',
+  transition: 'border-color 0.2s, box-shadow 0.2s',
 }
 
 export default function ContactSection() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<ContactFormValues>({
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<ContactFormValues>({
     resolver: zodResolver(contactSchema),
   })
 
@@ -42,144 +46,280 @@ export default function ContactSection() {
     }
   }
 
+  const socialLinks = [
+    { label: 'GitHub', href: 'https://github.com/babul-kumar', meta: 'Open Source & Repositories' },
+    { label: 'LinkedIn', href: 'https://linkedin.com/in/babul-kumar', meta: 'Professional Network' },
+    { label: 'Kaggle', href: 'https://kaggle.com/babul-kumar', meta: 'ML Notebooks & Datasets' },
+    { label: 'Email', href: 'mailto:bk7321634@gmail.com', meta: 'bk7321634@gmail.com' },
+  ]
+
   return (
-    <section style={{ padding: 'var(--section-gap) var(--container-pad)' }}>
-      <div style={{ maxWidth: 'var(--container-max)', margin: '0 auto' }}>
-        {/* Asymmetric layout */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '80px', alignItems: 'start' }}>
-          {/* Left */}
+    <section id="contact" className="section">
+      <div className="container">
+        {/* Asymmetric Contact Grid */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'minmax(300px, 1fr) 1.2fr',
+            gap: '64px',
+            alignItems: 'start',
+          }}
+          className="contact-layout"
+        >
+          {/* Left Column: Direct Outreach & Socials */}
           <div>
-            <div className="text-label" style={{ marginBottom: '16px' }}>08 / Contact</div>
-            <h2 style={{
-              fontSize: 'clamp(36px, 5vw, 72px)',
-              fontWeight: 500,
-              letterSpacing: '-0.03em',
-              lineHeight: 0.95,
-              color: 'var(--color-text)',
-              marginBottom: '24px',
-            }}>
-              Let&apos;s<br />talk.
+            <div className="text-label" style={{ marginBottom: '16px' }}>
+              04 / Collaboration
+            </div>
+            <h2
+              style={{
+                fontSize: 'clamp(36px, 5.5vw, 68px)',
+                fontWeight: 700,
+                letterSpacing: '-0.03em',
+                lineHeight: 0.96,
+                color: 'var(--color-text)',
+                marginBottom: '24px',
+              }}
+            >
+              HAVE AN IDEA?<br />
+              <span style={{ color: 'var(--color-accent)' }}>LET&apos;S BUILD IT.</span>
             </h2>
-            <p style={{ fontSize: '15px', color: 'var(--color-text-secondary)', lineHeight: 1.7, marginBottom: '40px', maxWidth: '320px' }}>
-              Open to internships, research collaborations, and interesting conversations. Feel free to reach out.
+
+            <p
+              style={{
+                fontSize: '15px',
+                color: 'var(--color-text-secondary)',
+                lineHeight: 1.7,
+                marginBottom: '40px',
+                maxWidth: '380px',
+              }}
+            >
+              I am open to software engineering internships, AI/ML research collaborations,
+              and open-source projects. Feel free to reach out directly.
             </p>
 
-            {/* Direct links */}
+            {/* Direct Connect Cards */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {[
-                { label: 'GitHub', href: 'https://github.com/babul-kumar' },
-                { label: 'LinkedIn', href: 'https://linkedin.com/in/babul-kumar' },
-                { label: 'Kaggle', href: 'https://kaggle.com/babul-kumar' },
-              ].map(({ label, href }) => (
-                <a key={label} href={href} target="_blank" rel="noreferrer" style={{
-                  fontSize: '14px',
-                  color: 'var(--color-text-secondary)',
-                  textDecoration: 'none',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  transition: 'color 0.2s',
-                }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--color-accent)')}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--color-text-secondary)')}
+              {socialLinks.map(({ label, href, meta }) => (
+                <a
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="glass-card"
+                  style={{
+                    padding: '14px 20px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    textDecoration: 'none',
+                    transition: 'all 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = 'var(--color-accent-border)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = 'var(--color-border)'
+                  }}
                 >
-                  <span style={{ fontSize: '18px', opacity: 0.4 }}>↗</span> {label}
+                  <div>
+                    <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-text)' }}>
+                      {label}
+                    </div>
+                    <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
+                      {meta}
+                    </div>
+                  </div>
+                  <span style={{ fontSize: '14px', color: 'var(--color-accent)' }}>↗</span>
                 </a>
               ))}
             </div>
           </div>
 
-          {/* Right: Form */}
-          <div>
+          {/* Right Column: Interactive Contact Form */}
+          <div className="glass-card" style={{ padding: 'clamp(28px, 5vw, 48px)' }}>
             {status === 'success' ? (
-              <div style={{
-                padding: '48px',
-                background: 'var(--color-surface)',
-                border: '1px solid var(--color-border)',
-                borderRadius: '8px',
-                textAlign: 'center',
-              }}>
-                <div style={{ fontSize: '28px', marginBottom: '12px' }}>✓</div>
-                <h3 style={{ fontSize: '18px', fontWeight: 500, color: 'var(--color-text)', marginBottom: '8px' }}>Message sent</h3>
-                <p style={{ fontSize: '14px', color: 'var(--color-text-secondary)' }}>I&apos;ll get back to you soon.</p>
-                <button onClick={() => setStatus('idle')} style={{
-                  marginTop: '24px', background: 'none', border: '1px solid var(--color-border)',
-                  borderRadius: '4px', padding: '10px 20px', cursor: 'pointer',
-                  fontSize: '13px', color: 'var(--color-text)',
-                }}>
-                  Send another
+              <div
+                style={{
+                  padding: '48px 24px',
+                  textAlign: 'center',
+                }}
+              >
+                <div
+                  style={{
+                    width: '56px',
+                    height: '56px',
+                    borderRadius: '50%',
+                    background: 'var(--color-accent-bg)',
+                    border: '1px solid var(--color-accent)',
+                    color: 'var(--color-accent)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '24px',
+                    margin: '0 auto 20px',
+                  }}
+                >
+                  ✓
+                </div>
+                <h3
+                  style={{
+                    fontSize: '22px',
+                    fontWeight: 600,
+                    color: 'var(--color-text)',
+                    marginBottom: '8px',
+                  }}
+                >
+                  Message Sent Successfully
+                </h3>
+                <p
+                  style={{
+                    fontSize: '14px',
+                    color: 'var(--color-text-secondary)',
+                    marginBottom: '28px',
+                  }}
+                >
+                  Thank you for reaching out. I will get back to you shortly.
+                </p>
+                <button
+                  onClick={() => setStatus('idle')}
+                  className="btn-secondary"
+                >
+                  Send Another Message
                 </button>
               </div>
             ) : (
               <form onSubmit={handleSubmit(onSubmit)}>
-                <div style={{ marginBottom: '32px' }}>
-                  <label style={{ fontSize: '11px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-muted)', display: 'block', marginBottom: '4px' }}>
-                    Name
+                <div style={{ marginBottom: '24px' }}>
+                  <label
+                    style={{
+                      fontSize: '11px',
+                      fontFamily: 'var(--font-mono)',
+                      letterSpacing: '0.1em',
+                      textTransform: 'uppercase',
+                      color: 'var(--color-text-muted)',
+                      display: 'block',
+                      marginBottom: '8px',
+                      fontWeight: 500,
+                    }}
+                  >
+                    Your Name
                   </label>
                   <input
                     {...register('name')}
-                    style={inp}
-                    placeholder="Your name"
-                    onFocus={(e) => (e.target.style.borderBottomColor = 'var(--color-accent)')}
-                    onBlur={(e) => (e.target.style.borderBottomColor = 'var(--color-border)')}
+                    style={inputStyle}
+                    placeholder="Jane Doe"
+                    onFocus={(e) => {
+                      e.target.style.borderColor = 'var(--color-accent)'
+                      e.target.style.boxShadow = '0 0 12px var(--color-accent-glow)'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = 'var(--color-border)'
+                      e.target.style.boxShadow = 'none'
+                    }}
                   />
-                  {errors.name && <p style={{ fontSize: '12px', color: 'var(--color-accent)', marginTop: '4px' }}>{errors.name.message}</p>}
+                  {errors.name && (
+                    <p style={{ fontSize: '12px', color: 'var(--color-accent)', marginTop: '6px' }}>
+                      {errors.name.message}
+                    </p>
+                  )}
                 </div>
 
-                <div style={{ marginBottom: '32px' }}>
-                  <label style={{ fontSize: '11px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-muted)', display: 'block', marginBottom: '4px' }}>
-                    Email
+                <div style={{ marginBottom: '24px' }}>
+                  <label
+                    style={{
+                      fontSize: '11px',
+                      fontFamily: 'var(--font-mono)',
+                      letterSpacing: '0.1em',
+                      textTransform: 'uppercase',
+                      color: 'var(--color-text-muted)',
+                      display: 'block',
+                      marginBottom: '8px',
+                      fontWeight: 500,
+                    }}
+                  >
+                    Your Email Address
                   </label>
                   <input
                     {...register('email')}
                     type="email"
-                    style={inp}
-                    placeholder="your@email.com"
-                    onFocus={(e) => (e.target.style.borderBottomColor = 'var(--color-accent)')}
-                    onBlur={(e) => (e.target.style.borderBottomColor = 'var(--color-border)')}
+                    style={inputStyle}
+                    placeholder="jane@example.com"
+                    onFocus={(e) => {
+                      e.target.style.borderColor = 'var(--color-accent)'
+                      e.target.style.boxShadow = '0 0 12px var(--color-accent-glow)'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = 'var(--color-border)'
+                      e.target.style.boxShadow = 'none'
+                    }}
                   />
-                  {errors.email && <p style={{ fontSize: '12px', color: 'var(--color-accent)', marginTop: '4px' }}>{errors.email.message}</p>}
+                  {errors.email && (
+                    <p style={{ fontSize: '12px', color: 'var(--color-accent)', marginTop: '6px' }}>
+                      {errors.email.message}
+                    </p>
+                  )}
                 </div>
 
-                <div style={{ marginBottom: '40px' }}>
-                  <label style={{ fontSize: '11px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-muted)', display: 'block', marginBottom: '4px' }}>
-                    Message
+                <div style={{ marginBottom: '32px' }}>
+                  <label
+                    style={{
+                      fontSize: '11px',
+                      fontFamily: 'var(--font-mono)',
+                      letterSpacing: '0.1em',
+                      textTransform: 'uppercase',
+                      color: 'var(--color-text-muted)',
+                      display: 'block',
+                      marginBottom: '8px',
+                      fontWeight: 500,
+                    }}
+                  >
+                    Project / Message Details
                   </label>
                   <textarea
                     {...register('message')}
                     rows={5}
-                    style={inp}
-                    placeholder="What's on your mind?"
-                    onFocus={(e) => (e.target.style.borderBottomColor = 'var(--color-accent)')}
-                    onBlur={(e) => (e.target.style.borderBottomColor = 'var(--color-border)')}
+                    style={{ ...inputStyle, resize: 'vertical' as const }}
+                    placeholder="Tell me about your project, idea, or collaboration..."
+                    onFocus={(e) => {
+                      e.target.style.borderColor = 'var(--color-accent)'
+                      e.target.style.boxShadow = '0 0 12px var(--color-accent-glow)'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = 'var(--color-border)'
+                      e.target.style.boxShadow = 'none'
+                    }}
                   />
-                  {errors.message && <p style={{ fontSize: '12px', color: 'var(--color-accent)', marginTop: '4px' }}>{errors.message.message}</p>}
+                  {errors.message && (
+                    <p style={{ fontSize: '12px', color: 'var(--color-accent)', marginTop: '6px' }}>
+                      {errors.message.message}
+                    </p>
+                  )}
                 </div>
 
                 {status === 'error' && (
-                  <div style={{ marginBottom: '16px', fontSize: '13px', color: 'var(--color-accent)' }}>
-                    Something went wrong. Please try again.
+                  <div
+                    style={{
+                      marginBottom: '20px',
+                      fontSize: '13px',
+                      color: 'var(--color-accent)',
+                      padding: '10px 14px',
+                      borderRadius: 'var(--radius-sm)',
+                      background: 'var(--color-accent-bg)',
+                      border: '1px solid var(--color-accent-border)',
+                    }}
+                  >
+                    Failed to send message. Please try again or email directly at bk7321634@gmail.com.
                   </div>
                 )}
 
                 <button
                   type="submit"
                   disabled={status === 'loading'}
-                  style={{
-                    background: 'var(--color-text)',
-                    color: 'var(--color-bg)',
-                    border: 'none',
-                    padding: '14px 32px',
-                    borderRadius: '4px',
-                    fontSize: '13px',
-                    letterSpacing: '0.04em',
-                    cursor: status === 'loading' ? 'not-allowed' : 'pointer',
-                    opacity: status === 'loading' ? 0.7 : 1,
-                    transition: 'opacity 0.2s',
-                    fontWeight: 500,
-                  }}
+                  className="btn-primary"
+                  style={{ width: '100%', padding: '16px' }}
                 >
-                  {status === 'loading' ? 'Sending…' : 'Send message →'}
+                  {status === 'loading' ? 'Sending Message…' : 'Transmit Message →'}
                 </button>
               </form>
             )}
@@ -188,8 +328,11 @@ export default function ContactSection() {
       </div>
 
       <style>{`
-        @media (max-width: 768px) {
-          .contact-grid { grid-template-columns: 1fr !important; gap: 40px !important; }
+        @media (max-width: 860px) {
+          .contact-layout {
+            grid-template-columns: 1fr !important;
+            gap: 48px !important;
+          }
         }
       `}</style>
     </section>
