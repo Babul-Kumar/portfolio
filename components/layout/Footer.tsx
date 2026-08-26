@@ -20,8 +20,8 @@ export default function Footer() {
     <footer
       style={{
         borderTop: '1px solid var(--color-border)',
-        padding: '72px 0 40px',
-        background: 'var(--color-card-bg)',
+        padding: '56px 0 36px',
+        background: 'var(--color-surface)',
         position: 'relative',
         zIndex: 1,
       }}
@@ -31,7 +31,7 @@ export default function Footer() {
         style={{
           display: 'flex',
           flexDirection: 'column',
-          gap: '40px',
+          gap: '32px',
         }}
       >
         {/* Top row: Brand & Back to Top */}
@@ -47,27 +47,28 @@ export default function Footer() {
           <div>
             <div
               style={{
-                fontSize: 'clamp(32px, 5vw, 64px)',
+                fontSize: 'clamp(28px, 4.5vw, 56px)',
                 fontWeight: 700,
                 letterSpacing: '-0.03em',
                 lineHeight: 0.95,
                 color: 'var(--color-text)',
               }}
             >
-              BABUL<br />KUMAR
+              BABUL<br />
+              <span style={{ color: 'var(--color-accent)' }}>KUMAR</span>
             </div>
             <div
               style={{
                 fontSize: '12px',
                 letterSpacing: '0.12em',
-                color: 'var(--color-accent)',
+                color: 'var(--color-text-secondary)',
                 textTransform: 'uppercase',
-                marginTop: '12px',
+                marginTop: '10px',
                 fontFamily: 'var(--font-mono)',
-                fontWeight: 500,
+                fontWeight: 600,
               }}
             >
-              AI / ML · Full Stack · Software Engineering
+              AI / ML Engineer · Full Stack Developer
             </div>
           </div>
 
@@ -75,11 +76,12 @@ export default function Footer() {
             onClick={scrollToTop}
             aria-label="Scroll back to top"
             style={{
-              background: 'rgba(255, 255, 255, 0.04)',
+              background: 'var(--color-surface-2)',
               border: '1px solid var(--color-border)',
               borderRadius: 'var(--radius-sm)',
+              boxShadow: 'var(--shadow-sm)',
               padding: '10px 18px',
-              color: 'var(--color-text-secondary)',
+              color: 'var(--color-text)',
               fontSize: '11px',
               fontFamily: 'var(--font-mono)',
               letterSpacing: '0.08em',
@@ -89,14 +91,15 @@ export default function Footer() {
               alignItems: 'center',
               gap: '6px',
               transition: 'all 0.2s ease',
+              fontWeight: 600,
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.borderColor = 'var(--color-accent-border)'
-              e.currentTarget.style.color = 'var(--color-text)'
+              e.currentTarget.style.color = 'var(--color-accent)'
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.borderColor = 'var(--color-border)'
-              e.currentTarget.style.color = 'var(--color-text-secondary)'
+              e.currentTarget.style.color = 'var(--color-text)'
             }}
           >
             <span>Back to Top</span>
@@ -104,19 +107,19 @@ export default function Footer() {
           </button>
         </div>
 
-        {/* Bottom row: Social Links + Copyright */}
+        {/* Bottom row: Social Links + Tech Specs + Copyright */}
         <div
           style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
             flexWrap: 'wrap',
-            gap: '20px',
-            paddingTop: '32px',
+            gap: '16px',
+            paddingTop: '24px',
             borderTop: '1px solid var(--color-border-subtle)',
           }}
         >
-          <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
             {externalLinks.map(({ href, label }) => (
               <a
                 key={label}
@@ -129,8 +132,9 @@ export default function Footer() {
                   textDecoration: 'none',
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '4px',
+                  gap: '3px',
                   transition: 'color 0.2s ease',
+                  fontWeight: 500,
                 }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--color-accent)')}
                 onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--color-text-secondary)')}
@@ -145,6 +149,7 @@ export default function Footer() {
                 color: 'var(--color-text-secondary)',
                 textDecoration: 'none',
                 transition: 'color 0.2s ease',
+                fontWeight: 500,
               }}
               onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--color-accent)')}
               onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--color-text-secondary)')}
@@ -153,8 +158,8 @@ export default function Footer() {
             </Link>
           </div>
 
-          <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
-            © {year} Babul Kumar. Crafted with precision & Three.js.
+          <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
+            © {year} Babul Kumar. Architecture: Next.js 16 · Three.js · Supabase.
           </div>
         </div>
       </div>

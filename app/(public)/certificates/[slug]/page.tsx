@@ -1,12 +1,14 @@
-import { getCertificateBySlug, getAllCertificateSlugs } from '@/lib/data'
+import { getCertificateBySlug, getAllCertificateSlugs, getCertificates } from '@/lib/data'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import Image from 'next/image'
 import { formatDate, formatFullDate } from '@/lib/utils'
-import { ShieldCheck, ExternalLink, Download, ArrowLeft, Award } from 'lucide-react'
+import { ShieldCheck, ExternalLink, Download, ArrowLeft, ArrowRight } from 'lucide-react'
+import { getCertificatePublicUrl } from '@/lib/supabase/storage'
+import CertificateDocViewer from '@/components/certificates/CertificateDocViewer'
+import CertificateMedia from '@/components/certificates/CertificateMedia'
 
-export const revalidate = 3600
+export const revalidate = 60 // Revalidate every 60 seconds or on-demand
 
 export async function generateStaticParams() {
   const slugs = await getAllCertificateSlugs()
@@ -38,9 +40,14 @@ export default async function CertificateDetailPage({
   const cert = await getCertificateBySlug(slug)
   if (!cert) notFound()
 
+  const allCerts = await getCertificates()
+  const otherCerts = allCerts.filter((c) => c.slug !== slug).slice(0, 3)
+
+  const publicFileUrl = getCertificatePublicUrl(cert.file_url || cert.thumbnail_url)
+
   return (
     <article style={{ padding: '48px var(--container-pad) 96px', minHeight: '85vh' }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+      <div style={{ maxWidth: '1080px', margin: '0 auto' }}>
         {/* Back Link */}
         <Link
           href="/certificates"
@@ -54,375 +61,389 @@ export default async function CertificateDetailPage({
             display: 'inline-flex',
             alignItems: 'center',
             gap: '8px',
-            marginBottom: '36px',
+            marginBottom: '32px',
             fontWeight: 500,
             transition: 'color 0.2s',
           }}
           className="hover-accent-text"
         >
-          <ArrowLeft size={14} /> Back to Certificates
+          <ArrowLeft size={14} /> Back to All Certificates
         </Link>
 
-        {/* 2-Column Responsive Layout: Left Preview / Right Metadata */}
+        {/* Certificate Header Information */}
+        <div style={{ marginBottom: '32px', textAlign: 'center' }}>
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              marginBottom: '16px',
+            }}
+          >
+            <span
+              style={{
+                fontSize: '10px',
+                fontFamily: 'var(--font-mono)',
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                color: 'var(--color-accent)',
+                border: '1px solid var(--color-accent-border)',
+                background: 'var(--color-accent-bg)',
+                padding: '4px 10px',
+                borderRadius: 'var(--radius-sm)',
+                fontWeight: 600,
+              }}
+            >
+              {cert.category}
+            </span>
+            <span
+              style={{
+                fontSize: '11px',
+                fontFamily: 'var(--font-mono)',
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                color: 'var(--color-success)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                fontWeight: 600,
+              }}
+            >
+              <ShieldCheck size={13} /> VERIFIED CREDENTIAL
+            </span>
+          </div>
+
+          <h1
+            style={{
+              fontSize: 'clamp(26px, 3.5vw, 42px)',
+              fontWeight: 700,
+              letterSpacing: '-0.02em',
+              lineHeight: 1.15,
+              color: 'var(--color-text)',
+              marginBottom: '12px',
+              maxWidth: '800px',
+              marginInline: 'auto',
+            }}
+          >
+            {cert.title}
+          </h1>
+
+          <p style={{ fontSize: '15px', color: 'var(--color-text-secondary)', margin: 0 }}>
+            Issued by <strong style={{ color: 'var(--color-text)' }}>{cert.issuer}</strong>
+            {cert.issue_date && (
+              <span> · {formatDate(cert.issue_date, 'MMMM yyyy')}</span>
+            )}
+          </p>
+        </div>
+
+        {/* 1. Contained Professional Document Preview (Bounded width & height) */}
+        <div style={{ marginBottom: '48px' }}>
+          <CertificateDocViewer
+            publicFileUrl={publicFileUrl}
+            title={cert.title}
+            issuer={cert.issuer}
+            category={cert.category}
+            credentialId={cert.credential_id}
+          />
+        </div>
+
+        {/* 2. Structured Verification Details & Metadata */}
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: '1.15fr 1fr',
-            gap: '56px',
-            alignItems: 'start',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gap: '24px',
+            marginBottom: '40px',
           }}
-          className="cert-detail-grid"
         >
-          {/* Left Column: Visual Certificate Document with CSS 3D Tilt */}
+          {/* Metadata Card */}
           <div
-            className="glass-card card-3d-tilt"
+            className="glass-card"
             style={{
-              padding: 'clamp(28px, 4vw, 44px)',
-              background: 'radial-gradient(circle at 50% 0%, rgba(228, 93, 44, 0.08) 0%, var(--color-surface) 75%)',
-              border: '1px solid var(--color-border)',
-              borderRadius: 'var(--radius-lg)',
-              position: 'relative',
-              overflow: 'hidden',
-              minHeight: '440px',
+              padding: '24px',
+              background: '#101318',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '12px',
+            }}
+          >
+            <div
+              style={{
+                fontSize: '11px',
+                fontFamily: 'var(--font-mono)',
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                color: 'var(--color-accent)',
+                marginBottom: '16px',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+                paddingBottom: '8px',
+                fontWeight: 600,
+              }}
+            >
+              Credential Specifications
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <MetaRow label="Issuing Organization" value={cert.issuer} />
+              <MetaRow label="Domain Category" value={cert.category} />
+              {cert.issue_date && <MetaRow label="Date of Issue" value={formatFullDate(cert.issue_date)} />}
+              {cert.expiry_date && <MetaRow label="Valid Through" value={formatFullDate(cert.expiry_date)} />}
+              {cert.credential_id && <MetaRow label="Credential ID" value={cert.credential_id} mono />}
+            </div>
+          </div>
+
+          {/* Actions & Verification Card */}
+          <div
+            className="glass-card"
+            style={{
+              padding: '24px',
+              background: '#101318',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '12px',
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'space-between',
             }}
           >
-            {/* Background Guilloche / Security Pattern */}
-            <div
-              style={{
-                position: 'absolute',
-                inset: '12px',
-                border: '1px solid var(--color-border-subtle)',
-                borderRadius: 'var(--radius-md)',
-                pointerEvents: 'none',
-              }}
-            />
-
-            {/* Document Header */}
-            <div style={{ position: 'relative', zIndex: 1 }}>
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'flex-start',
-                  marginBottom: '28px',
-                }}
-              >
-                <div
-                  style={{
-                    width: '48px',
-                    height: '48px',
-                    borderRadius: 'var(--radius-sm)',
-                    background: 'var(--color-accent-bg)',
-                    border: '1px solid var(--color-accent-border)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'var(--color-accent)',
-                  }}
-                >
-                  <Award size={26} />
-                </div>
-
-                <div style={{ textAlign: 'right' }}>
-                  <div
-                    style={{
-                      fontSize: '10px',
-                      fontFamily: 'var(--font-mono)',
-                      color: 'var(--color-success)',
-                      letterSpacing: '0.12em',
-                      textTransform: 'uppercase',
-                      fontWeight: 600,
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                    }}
-                  >
-                    <ShieldCheck size={13} /> VERIFIED AUTHENTIC
-                  </div>
-                  <div
-                    style={{
-                      fontSize: '11px',
-                      color: 'var(--color-text-muted)',
-                      fontFamily: 'var(--font-mono)',
-                      marginTop: '2px',
-                    }}
-                  >
-                    {cert.category}
-                  </div>
-                </div>
-              </div>
-
-              {/* Document Text */}
+            <div>
               <div
                 style={{
                   fontSize: '11px',
                   fontFamily: 'var(--font-mono)',
+                  letterSpacing: '0.1em',
                   textTransform: 'uppercase',
-                  letterSpacing: '0.14em',
-                  color: 'var(--color-text-muted)',
-                  marginBottom: '8px',
-                }}
-              >
-                Specialization Credential
-              </div>
-
-              <h2
-                style={{
-                  fontSize: 'clamp(22px, 2.5vw, 32px)',
-                  fontWeight: 700,
-                  color: 'var(--color-text)',
-                  letterSpacing: '-0.02em',
-                  lineHeight: 1.15,
+                  color: '#10B981',
                   marginBottom: '16px',
-                }}
-              >
-                {cert.title}
-              </h2>
-
-              <div
-                style={{
-                  fontSize: '14px',
-                  color: 'var(--color-text-secondary)',
-                  marginBottom: '28px',
-                }}
-              >
-                Issued to <strong style={{ color: 'var(--color-text)' }}>Babul Kumar</strong> by{' '}
-                <strong style={{ color: 'var(--color-text)' }}>{cert.issuer}</strong>
-              </div>
-
-              {/* Optional Certificate Image Preview */}
-              {(cert.thumbnail_url || cert.file_url) && (
-                <div
-                  style={{
-                    position: 'relative',
-                    width: '100%',
-                    height: '200px',
-                    borderRadius: 'var(--radius-sm)',
-                    overflow: 'hidden',
-                    marginBottom: '20px',
-                    border: '1px solid var(--color-border)',
-                  }}
-                >
-                  <Image
-                    src={(cert.thumbnail_url || cert.file_url)!}
-                    alt={cert.title}
-                    fill
-                    sizes="(max-width: 768px) 100vw, 500px"
-                    style={{ objectFit: 'cover' }}
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* Document Security Footer */}
-            <div
-              style={{
-                position: 'relative',
-                zIndex: 1,
-                paddingTop: '20px',
-                borderTop: '1px solid var(--color-border)',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                flexWrap: 'wrap',
-                gap: '12px',
-                fontSize: '11px',
-                fontFamily: 'var(--font-mono)',
-                color: 'var(--color-text-muted)',
-              }}
-            >
-              <span>ID: {cert.credential_id ?? 'VERIFIED'}</span>
-              <span>{formatDate(cert.issue_date, 'MMM yyyy')}</span>
-            </div>
-          </div>
-
-          {/* Right Column: Editorial Metadata & Verification Actions */}
-          <div>
-            {/* Badges */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                marginBottom: '16px',
-                flexWrap: 'wrap',
-              }}
-            >
-              <span
-                style={{
-                  fontSize: '10px',
-                  fontFamily: 'var(--font-mono)',
-                  letterSpacing: '0.12em',
-                  textTransform: 'uppercase',
-                  color: 'var(--color-accent)',
-                  border: '1px solid var(--color-accent-border)',
-                  background: 'var(--color-accent-bg)',
-                  padding: '3px 8px',
-                  borderRadius: 'var(--radius-sm)',
-                  fontWeight: 600,
-                }}
-              >
-                {cert.category}
-              </span>
-              <span
-                style={{
-                  fontSize: '11px',
-                  fontFamily: 'var(--font-mono)',
-                  letterSpacing: '0.1em',
-                  textTransform: 'uppercase',
-                  color: 'var(--color-text-muted)',
-                }}
-              >
-                VERIFIED CREDENTIAL
-              </span>
-            </div>
-
-            {/* Title */}
-            <h1
-              style={{
-                fontSize: 'clamp(26px, 3.2vw, 42px)',
-                fontWeight: 700,
-                letterSpacing: '-0.02em',
-                lineHeight: 1.12,
-                color: 'var(--color-text)',
-                marginBottom: '28px',
-              }}
-            >
-              {cert.title}
-            </h1>
-
-            {/* Metadata Table Card */}
-            <div
-              className="glass-card"
-              style={{
-                padding: '24px',
-                marginBottom: '28px',
-              }}
-            >
-              <div
-                style={{
-                  fontSize: '11px',
-                  fontFamily: 'var(--font-mono)',
-                  letterSpacing: '0.1em',
-                  textTransform: 'uppercase',
-                  color: 'var(--color-accent)',
-                  marginBottom: '18px',
-                  borderBottom: '1px solid var(--color-border)',
+                  borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
                   paddingBottom: '8px',
                   fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
                 }}
               >
-                Verification Specifications
+                <ShieldCheck size={14} /> Official Verification
               </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <MetaRow label="Issuing Body" value={cert.issuer} />
-                {cert.issue_date && <MetaRow label="Date of Issue" value={formatFullDate(cert.issue_date)} />}
-                {cert.expiry_date && <MetaRow label="Valid Through" value={formatFullDate(cert.expiry_date)} />}
-                {cert.credential_id && <MetaRow label="Credential ID" value={cert.credential_id} mono />}
-              </div>
+              <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', lineHeight: 1.6, margin: '0 0 20px' }}>
+                This record verifies technical mastery and examination completion. You can verify
+                the credential authenticity directly with the issuing body or download the original file.
+              </p>
             </div>
 
-            {/* Description / Scope */}
-            {cert.description && (
-              <div style={{ marginBottom: '28px' }}>
-                <div
-                  style={{
-                    fontSize: '11px',
-                    fontFamily: 'var(--font-mono)',
-                    letterSpacing: '0.1em',
-                    textTransform: 'uppercase',
-                    color: 'var(--color-text-muted)',
-                    marginBottom: '10px',
-                    fontWeight: 500,
-                  }}
-                >
-                  Curriculum & Specialization Scope
-                </div>
-                <p style={{ fontSize: '15px', color: 'var(--color-text-secondary)', lineHeight: 1.75 }}>
-                  {cert.description}
-                </p>
-              </div>
-            )}
-
-            {/* Demonstrated Competencies */}
-            {cert.skills && cert.skills.length > 0 && (
-              <div style={{ marginBottom: '36px' }}>
-                <div
-                  style={{
-                    fontSize: '11px',
-                    fontFamily: 'var(--font-mono)',
-                    letterSpacing: '0.1em',
-                    textTransform: 'uppercase',
-                    color: 'var(--color-text-muted)',
-                    marginBottom: '12px',
-                    fontWeight: 500,
-                  }}
-                >
-                  Demonstrated Competencies
-                </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                  {cert.skills.map((skill) => (
-                    <span
-                      key={skill}
-                      style={{
-                        fontSize: '11px',
-                        fontFamily: 'var(--font-mono)',
-                        padding: '4px 10px',
-                        background: 'var(--color-surface-2)',
-                        border: '1px solid var(--color-border)',
-                        borderRadius: 'var(--radius-sm)',
-                        color: 'var(--color-text)',
-                      }}
-                    >
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Action Buttons */}
-            <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
               {cert.verification_url && (
                 <a
                   href={cert.verification_url}
                   target="_blank"
                   rel="noreferrer"
-                  className="btn-primary"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    background: 'linear-gradient(135deg, #E45D2C 0%, #FF8A3D 100%)',
+                    color: '#FFFFFF',
+                    borderRadius: '8px',
+                    padding: '10px 18px',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    textDecoration: 'none',
+                    boxShadow: '0 4px 12px rgba(228, 93, 44, 0.25)',
+                  }}
                 >
                   <span>Verify at {cert.issuer}</span>
                   <ExternalLink size={13} />
                 </a>
               )}
-              {cert.file_url && (
+
+              {publicFileUrl && (
                 <a
-                  href={cert.file_url}
+                  href={publicFileUrl}
                   target="_blank"
                   rel="noreferrer"
                   download
-                  className="btn-secondary"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    background: 'rgba(255, 255, 255, 0.06)',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    color: '#F5F5F5',
+                    borderRadius: '8px',
+                    padding: '10px 18px',
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    textDecoration: 'none',
+                  }}
                 >
-                  <span>Download Certificate</span>
                   <Download size={13} />
+                  <span>Download Document</span>
                 </a>
               )}
             </div>
           </div>
         </div>
-      </div>
 
-      <style>{`
-        @media (max-width: 860px) {
-          .cert-detail-grid {
-            grid-template-columns: 1fr !important;
-            gap: 36px !important;
-          }
-        }
-      `}</style>
+        {/* 3. Description & Curriculum */}
+        {cert.description && (
+          <div
+            style={{
+              marginBottom: '36px',
+              background: '#101318',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '12px',
+              padding: '24px',
+            }}
+          >
+            <div
+              style={{
+                fontSize: '11px',
+                fontFamily: 'var(--font-mono)',
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                color: 'var(--color-text-muted)',
+                marginBottom: '12px',
+                fontWeight: 600,
+              }}
+            >
+              Curriculum & Specialization Scope
+            </div>
+            <p
+              style={{
+                fontSize: '14px',
+                color: 'var(--color-text-secondary)',
+                lineHeight: 1.7,
+                margin: 0,
+              }}
+            >
+              {cert.description}
+            </p>
+          </div>
+        )}
+
+        {/* 4. Demonstrated Competencies */}
+        {cert.skills && cert.skills.length > 0 && (
+          <div
+            style={{
+              marginBottom: '56px',
+              background: '#101318',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '12px',
+              padding: '24px',
+            }}
+          >
+            <div
+              style={{
+                fontSize: '11px',
+                fontFamily: 'var(--font-mono)',
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                color: 'var(--color-text-muted)',
+                marginBottom: '14px',
+                fontWeight: 600,
+              }}
+            >
+              Demonstrated Competencies
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              {cert.skills.map((skill) => (
+                <span
+                  key={skill}
+                  style={{
+                    fontSize: '12px',
+                    fontFamily: 'var(--font-mono)',
+                    padding: '5px 12px',
+                    background: '#151922',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    borderRadius: '6px',
+                    color: '#E5E7EB',
+                  }}
+                >
+                  {skill}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 5. Related Certificates Section */}
+        {otherCerts.length > 0 && (
+          <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '40px' }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '24px',
+              }}
+            >
+              <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#F5F5F5', margin: 0 }}>
+                Other Specializations & Credentials
+              </h2>
+              <Link
+                href="/certificates"
+                style={{
+                  fontSize: '12px',
+                  color: 'var(--color-accent)',
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+              >
+                <span>View All ({allCerts.length})</span>
+                <ArrowRight size={13} />
+              </Link>
+            </div>
+
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                gap: '20px',
+              }}
+            >
+              {otherCerts.map((c) => (
+                <Link
+                  key={c.id}
+                  href={`/certificates/${c.slug}`}
+                  style={{ textDecoration: 'none', color: 'inherit' }}
+                >
+                  <div
+                    style={{
+                      background: '#101318',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      borderRadius: '10px',
+                      padding: '16px',
+                      transition: 'border-color 0.2s',
+                    }}
+                  >
+                    <CertificateMedia
+                      fileUrl={c.file_url}
+                      thumbnailUrl={c.thumbnail_url}
+                      title={c.title}
+                      issuer={c.issuer}
+                      category={c.category}
+                      aspectRatio="16/10"
+                    />
+                    <h3
+                      style={{
+                        fontSize: '14px',
+                        fontWeight: 600,
+                        color: '#F5F5F5',
+                        margin: '12px 0 4px',
+                      }}
+                    >
+                      {c.title}
+                    </h3>
+                    <p style={{ fontSize: '12px', color: '#9CA3AF', margin: 0 }}>
+                      {c.issuer} · {formatDate(c.issue_date, 'MMM yyyy')}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </article>
   )
 }

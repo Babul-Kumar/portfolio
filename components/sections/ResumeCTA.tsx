@@ -4,7 +4,7 @@ import Link from 'next/link'
 
 export default function ResumeCTASection({ resumeUrl }: { resumeUrl: string | null }) {
   return (
-    <section className="section" style={{ background: 'rgba(17, 17, 17, 0.5)' }}>
+    <section className="section" style={{ background: 'transparent' }}>
       <div className="container">
         <div
           className="glass-card"

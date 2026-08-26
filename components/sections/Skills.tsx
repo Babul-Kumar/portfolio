@@ -14,17 +14,18 @@ export default function SkillsSection({
     <section id="skills" className="section">
       <div className="container">
         {/* Section Header */}
-        <div style={{ marginBottom: '48px', borderBottom: '1px solid var(--color-border)', paddingBottom: '24px' }}>
-          <div className="text-label" style={{ marginBottom: '12px' }}>
-            05 / Capabilities
+        <div style={{ marginBottom: '36px', borderBottom: '1px solid var(--color-border)', paddingBottom: '20px' }}>
+          <div className="text-label" style={{ marginBottom: '8px' }}>
+            04 / Core Competencies & Tooling
           </div>
           <h2 className="text-display-sm">
-            TECHNOLOGY /<br />STACK
+            TECHNOLOGY<br />
+            <span style={{ color: 'var(--color-accent)' }}>MATRIX</span> & CAPABILITIES.
           </h2>
         </div>
 
         {/* Interactive 3D Technology Constellation */}
-        <div style={{ marginBottom: '64px' }}>
+        <div style={{ marginBottom: '40px' }}>
           <TechConstellationScene />
         </div>
 
@@ -33,13 +34,13 @@ export default function SkillsSection({
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-            gap: '32px',
+            gap: '24px',
           }}
         >
           {categories.map((category) => (
             <div
               key={category}
-              className="glass-card"
+              className="glass-card card-3d-tilt"
               style={{
                 padding: '24px',
               }}
@@ -51,30 +52,32 @@ export default function SkillsSection({
                   letterSpacing: '0.12em',
                   textTransform: 'uppercase',
                   color: 'var(--color-accent)',
-                  marginBottom: '18px',
+                  marginBottom: '16px',
                   paddingBottom: '10px',
                   borderBottom: '1px solid var(--color-border)',
+                  fontWeight: 600,
                 }}
               >
                 {category}
               </div>
 
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px' }}>
                 {skillsByCategory[category].map((skill) => (
                   <div
                     key={skill.id}
                     style={{
-                      padding: '6px 12px',
+                      padding: '5px 11px',
                       borderRadius: 'var(--radius-sm)',
                       background: skill.featured
-                        ? 'rgba(229, 106, 61, 0.08)'
-                        : 'rgba(255, 255, 255, 0.03)',
+                        ? 'var(--color-accent-bg)'
+                        : 'var(--color-surface)',
                       border: `1px solid ${
                         skill.featured ? 'var(--color-accent-border)' : 'var(--color-border)'
                       }`,
                       fontSize: '12px',
                       color: skill.featured ? 'var(--color-accent)' : 'var(--color-text)',
                       fontFamily: 'var(--font-mono)',
+                      fontWeight: 500,
                       transition: 'all 0.2s ease',
                       cursor: 'default',
                     }}

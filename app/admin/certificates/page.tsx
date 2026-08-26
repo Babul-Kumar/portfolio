@@ -1,18 +1,65 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import Image from 'next/image'
-import { Sparkles, Pencil, Trash2, Eye, EyeOff, ExternalLink, Award } from 'lucide-react'
+import {
+  Sparkles,
+  Pencil,
+  Trash2,
+  Eye,
+  EyeOff,
+  ExternalLink,
+  Award,
+  FileText,
+  Calendar,
+} from 'lucide-react'
 import type { Certificate } from '@/types'
 import { FALLBACK_CERTIFICATES } from '@/lib/data'
 import { formatDate } from '@/lib/utils'
 import { toast, Toaster } from 'sonner'
+import { getCertificatePublicUrl, isPdfDocument } from '@/lib/supabase/storage'
+import StatusBadge from '@/components/admin/StatusBadge'
+import SearchBar from '@/components/admin/SearchBar'
+import ConfirmDialog from '@/components/admin/ConfirmDialog'
+import { ContentCardSkeleton } from '@/components/admin/LoadingSkeleton'
+
+const DEFAULT_CATEGORIES = [
+  'All',
+  'AI / ML',
+  'Programming',
+  'Data',
+  'Cloud & DevOps',
+  'Frontend & Web',
+  'Backend & Systems',
+  'Software Engineering',
+  'Security & Networking',
+  'Other',
+]
 
 export default function AdminCertificatesPage() {
-  const [certs, setCerts] = useState<Certificate[]>([])
+  const [certs, setCerts] = useState<Certificate[]>(FALLBACK_CERTIFICATES)
   const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState('All')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid')
+
+  // Dynamically compute all unique categories from actual certificates
+  const dynamicCategories = useMemo(() => {
+    const present = new Set<string>()
+    for (const c of certs) {
+      if (c.category?.trim()) present.add(c.category.trim())
+    }
+    for (const def of DEFAULT_CATEGORIES) {
+      present.add(def)
+    }
+    return ['All', ...Array.from(present).filter((c) => c !== 'All')]
+  }, [certs])
+
+  // Confirm Delete Dialog State
+  const [deleteTarget, setDeleteTarget] = useState<Certificate | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     let active = true
@@ -25,7 +72,7 @@ export default function AdminCertificatesPage() {
           .order('issue_date', { ascending: false })
 
         if (active) {
-          if (!error && data && data.length > 0) {
+          if (!error && Array.isArray(data)) {
             setCerts(data)
           } else {
             setCerts(FALLBACK_CERTIFICATES)
@@ -45,15 +92,43 @@ export default function AdminCertificatesPage() {
     }
   }, [])
 
+  // Filtered Certificates
+  const filteredCerts = useMemo(() => {
+    return certs.filter((cert) => {
+      // Category match
+      if (selectedCategory !== 'All' && cert.category?.toLowerCase() !== selectedCategory.toLowerCase()) {
+        return false
+      }
+      // Status match
+      if (statusFilter === 'published' && !cert.published) return false
+      if (statusFilter === 'draft' && cert.published) return false
+      if (statusFilter === 'featured' && !cert.featured) return false
+
+      // Search query match
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim()
+        const titleMatch = cert.title.toLowerCase().includes(q)
+        const issuerMatch = cert.issuer.toLowerCase().includes(q)
+        const idMatch = cert.credential_id?.toLowerCase().includes(q)
+        const skillMatch = cert.skills?.some((s) => s.toLowerCase().includes(q))
+        return titleMatch || issuerMatch || idMatch || skillMatch
+      }
+      return true
+    })
+  }, [certs, selectedCategory, statusFilter, searchQuery])
+
   async function togglePublished(id: string, current: boolean, slug?: string) {
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
     const supabase = createClient()
 
     try {
       if (isUuid) {
-        const { error } = await supabase.from('certificates').update({ published: !current }).eq('id', id)
+        const { error } = await supabase
+          .from('certificates')
+          .update({ published: !current })
+          .eq('id', id)
         if (error) {
-          toast.error('Failed to update status in database')
+          toast.error('Database update failed')
         } else {
           toast.success(current ? 'Certificate unpublished' : 'Certificate published')
         }
@@ -68,254 +143,680 @@ export default function AdminCertificatesPage() {
     }
 
     setCerts((prev) => prev.map((c) => (c.id === id ? { ...c, published: !current } : c)))
+    try {
+      fetch('/api/admin/revalidate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'certificates', slug }),
+      }).catch(() => {})
+    } catch {}
   }
 
-  async function deleteCert(id: string, title: string, slug?: string) {
-    if (!confirm(`Delete certificate "${title}"? This cannot be undone.`)) return
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+  async function confirmDelete() {
+    if (!deleteTarget) return
+    setDeleting(true)
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      deleteTarget.id
+    )
     const supabase = createClient()
 
     try {
       if (isUuid) {
-        const { error } = await supabase.from('certificates').delete().eq('id', id)
+        const { error } = await supabase.from('certificates').delete().eq('id', deleteTarget.id)
         if (error) {
           toast.error(`Delete failed: ${error.message}`)
+          setDeleting(false)
           return
         }
-      } else if (slug) {
-        await supabase.from('certificates').delete().eq('slug', slug)
+      } else if (deleteTarget.slug) {
+        await supabase.from('certificates').delete().eq('slug', deleteTarget.slug)
       }
     } catch {
       // Ignored for non-uuid fallback item
     }
 
-    toast.success('Certificate deleted')
-    setCerts((prev) => prev.filter((c) => c.id !== id))
+    try {
+      fetch('/api/admin/revalidate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'certificates', slug: deleteTarget.slug }),
+      }).catch(() => {})
+    } catch {}
+
+    toast.success('Certificate deleted successfully')
+    setCerts((prev) => prev.filter((c) => c.id !== deleteTarget.id))
+    setDeleting(false)
+    setDeleteTarget(null)
   }
 
   return (
-    <div style={{ maxWidth: '1000px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <Toaster position="top-right" theme="dark" />
-      {/* Header */}
+
+      {/* 1. Header Row */}
       <div
         style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: '32px',
           flexWrap: 'wrap',
           gap: '16px',
+          paddingBottom: '16px',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
         }}
       >
         <div>
-          <h1 style={{ fontSize: '24px', fontWeight: 600, color: '#F5F5F5', letterSpacing: '-0.02em' }}>
+          <h1
+            style={{
+              fontSize: '24px',
+              fontWeight: 700,
+              color: '#F5F5F5',
+              margin: 0,
+              letterSpacing: '-0.02em',
+            }}
+          >
             Certificates & Credentials
           </h1>
-          <p style={{ fontSize: '13px', color: '#666', marginTop: '4px' }}>
-            {certs.length} verified credentials in portfolio
+          <p style={{ fontSize: '13px', color: '#9CA3AF', marginTop: '4px', margin: 0 }}>
+            {certs.length} verified credentials and certifications in portfolio
           </p>
         </div>
-        <Link
-          href="/admin/certificates/new"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px',
-            background: '#E45D2C',
-            color: '#fff',
-            textDecoration: 'none',
-            padding: '10px 18px',
-            borderRadius: '8px',
-            fontSize: '13px',
-            fontWeight: 500,
-            transition: 'background 0.15s',
-          }}
-        >
-          <Sparkles size={16} /> Add Certificate with AI ✨
-        </Link>
-      </div>
 
-      {loading ? (
-        <div style={{ color: '#666', fontSize: '14px', padding: '40px 0', textAlign: 'center' }}>
-          Loading certificates…
-        </div>
-      ) : certs.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '60px 0', color: '#666', background: '#141414', borderRadius: '10px', border: '1px solid #222' }}>
-          <p style={{ fontSize: '15px', color: '#AAA', marginBottom: '8px' }}>No certificates found</p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <Link
             href="/admin/certificates/new"
-            style={{ color: '#E45D2C', fontSize: '13px', textDecoration: 'none', fontWeight: 500 }}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              background: 'linear-gradient(135deg, #E45D2C 0%, #FF8A3D 100%)',
+              color: '#FFFFFF',
+              textDecoration: 'none',
+              padding: '9px 16px',
+              borderRadius: '8px',
+              fontSize: '13px',
+              fontWeight: 600,
+              boxShadow: '0 4px 12px rgba(228, 93, 44, 0.25)',
+              transition: 'all 0.15s',
+            }}
           >
-            Upload with Gemini AI →
+            <Sparkles size={15} /> Add with Gemini AI ✨
           </Link>
         </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {certs.map((cert) => (
-            <div
-              key={cert.id}
-              style={{
-                background: '#1A1A1A',
-                border: '1px solid #242424',
-                borderRadius: '8px',
-                padding: '16px 20px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '16px',
-                transition: 'border-color 0.15s',
-              }}
-            >
-              {cert.thumbnail_url ? (
-                <Image
-                  src={cert.thumbnail_url}
-                  alt=""
-                  width={44}
-                  height={44}
-                  style={{ objectFit: 'cover', borderRadius: '6px', border: '1px solid #2C2C2C', flexShrink: 0 }}
-                />
-              ) : (
-                <div
-                  style={{
-                    width: '44px',
-                    height: '44px',
-                    borderRadius: '6px',
-                    background: '#141414',
-                    border: '1px solid #2C2C2C',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#666',
-                    flexShrink: 0,
-                  }}
-                >
-                  <Award size={20} />
-                </div>
-              )}
+      </div>
 
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                  <span style={{ fontSize: '15px', color: '#F5F5F5', fontWeight: 500 }}>
-                    {cert.title}
-                  </span>
-                  {cert.featured && (
-                    <span
+      {/* 2. Search and Filter Bar */}
+      <SearchBar
+        value={searchQuery}
+        onChange={setSearchQuery}
+        placeholder="Search certificates by title, issuer, credential ID, or skill…"
+        categories={dynamicCategories}
+        selectedCategory={selectedCategory}
+        onSelectCategory={setSelectedCategory}
+        statusFilter={statusFilter}
+        onSelectStatus={setStatusFilter}
+        statusOptions={[
+          { label: 'All Status', value: 'all' },
+          { label: 'Published Only', value: 'published' },
+          { label: 'Drafts Only', value: 'draft' },
+          { label: 'Featured Only', value: 'featured' },
+        ]}
+        viewMode={viewMode}
+        onToggleViewMode={setViewMode}
+        totalCount={certs.length}
+        filteredCount={filteredCerts.length}
+      />
+
+      {/* 3. Main Content: Grid vs Table */}
+      {loading ? (
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+            gap: '20px',
+          }}
+        >
+          <ContentCardSkeleton />
+          <ContentCardSkeleton />
+          <ContentCardSkeleton />
+          <ContentCardSkeleton />
+        </div>
+      ) : filteredCerts.length === 0 ? (
+        <div
+          style={{
+            textAlign: 'center',
+            padding: '64px 20px',
+            background: '#101318',
+            borderRadius: '12px',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+          }}
+        >
+          <div
+            style={{
+              width: '48px',
+              height: '48px',
+              borderRadius: '50%',
+              background: 'rgba(228, 93, 44, 0.1)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#E45D2C',
+              margin: '0 auto 16px',
+            }}
+          >
+            <Award size={24} />
+          </div>
+          <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#F5F5F5', margin: '0 0 6px' }}>
+            No certificates match your search
+          </h3>
+          <p style={{ fontSize: '13px', color: '#9CA3AF', margin: '0 0 20px', maxWidth: '360px', marginInline: 'auto' }}>
+            Try resetting your search query or category filters to view all credentials.
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              setSearchQuery('')
+              setSelectedCategory('All')
+              setStatusFilter('all')
+            }}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '6px',
+              background: 'rgba(255, 255, 255, 0.08)',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              color: '#F5F5F5',
+              fontSize: '13px',
+              cursor: 'pointer',
+            }}
+          >
+            Reset All Filters
+          </button>
+        </div>
+      ) : viewMode === 'grid' ? (
+        /* GRID CARD VIEW */
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+            gap: '20px',
+          }}
+        >
+          {filteredCerts.map((cert) => {
+            const mediaUrl = getCertificatePublicUrl(cert.file_url || cert.thumbnail_url)
+            const isPdf = isPdfDocument(mediaUrl)
+
+            return (
+              <div
+                key={cert.id}
+                className="admin-cert-card"
+                style={{
+                  background: '#101318',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: '12px',
+                  padding: '20px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  gap: '16px',
+                  transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+                }}
+              >
+                {/* Media Preview Box */}
+                <div>
+                  <div
+                    style={{
+                      height: '140px',
+                      borderRadius: '8px',
+                      background: '#0B0D12',
+                      border: '1px solid rgba(255, 255, 255, 0.06)',
+                      overflow: 'hidden',
+                      position: 'relative',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginBottom: '14px',
+                    }}
+                  >
+                    {mediaUrl && !isPdf ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img
+                        src={mediaUrl}
+                        alt={cert.title}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          display: 'block',
+                        }}
+                      />
+                    ) : isPdf ? (
+                      <div
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          gap: '6px',
+                          color: '#E45D2C',
+                        }}
+                      >
+                        <FileText size={32} />
+                        <span
+                          style={{
+                            fontSize: '11px',
+                            fontWeight: 600,
+                            letterSpacing: '0.08em',
+                            textTransform: 'uppercase',
+                            fontFamily: 'var(--font-mono, monospace)',
+                          }}
+                        >
+                          PDF Document
+                        </span>
+                      </div>
+                    ) : (
+                      <div
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          gap: '6px',
+                          color: '#6B7280',
+                        }}
+                      >
+                        <Award size={32} />
+                        <span style={{ fontSize: '11px' }}>Verified Credential</span>
+                      </div>
+                    )}
+
+                    {/* Top Floating Badges */}
+                    <div
                       style={{
-                        fontSize: '10px',
-                        letterSpacing: '0.06em',
-                        textTransform: 'uppercase',
-                        color: '#E45D2C',
-                        background: 'rgba(228,93,44,0.12)',
-                        border: '1px solid rgba(228,93,44,0.25)',
-                        padding: '2px 6px',
-                        borderRadius: '4px',
-                        fontWeight: 500,
+                        position: 'absolute',
+                        top: '8px',
+                        left: '8px',
+                        display: 'flex',
+                        gap: '6px',
                       }}
                     >
-                      Featured
+                      <StatusBadge type="category" label={cert.category} />
+                    </div>
+
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: '8px',
+                        right: '8px',
+                        display: 'flex',
+                        gap: '6px',
+                      }}
+                    >
+                      {cert.featured && <StatusBadge type="featured" />}
+                      <StatusBadge type={cert.published ? 'published' : 'draft'} />
+                    </div>
+                  </div>
+
+                  {/* Title & Issuer */}
+                  <h3
+                    style={{
+                      fontSize: '15px',
+                      fontWeight: 600,
+                      color: '#F5F5F5',
+                      margin: '0 0 4px',
+                      lineHeight: 1.35,
+                    }}
+                  >
+                    {cert.title}
+                  </h3>
+
+                  <div
+                    style={{
+                      fontSize: '12px',
+                      color: '#9CA3AF',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      marginBottom: '10px',
+                    }}
+                  >
+                    <span style={{ fontWeight: 500, color: '#E45D2C' }}>{cert.issuer}</span>
+                    <span>·</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <Calendar size={11} /> {formatDate(cert.issue_date)}
                     </span>
-                  )}
-                </div>
+                  </div>
 
-                <div style={{ fontSize: '12px', color: '#777', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                  <span style={{ color: '#DDD' }}>{cert.issuer}</span>
-                  <span>·</span>
-                  <span>{formatDate(cert.issue_date, 'MMM yyyy')}</span>
-                  <span>·</span>
-                  <span style={{ color: '#AAA' }}>{cert.category}</span>
+                  {/* Credential ID */}
                   {cert.credential_id && (
-                    <>
-                      <span>·</span>
-                      <span style={{ fontFamily: 'monospace', color: '#666' }}>ID: {cert.credential_id}</span>
-                    </>
+                    <div
+                      style={{
+                        fontSize: '11px',
+                        color: '#6B7280',
+                        fontFamily: 'var(--font-mono, monospace)',
+                        background: 'rgba(255, 255, 255, 0.03)',
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        marginBottom: '12px',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      ID: {cert.credential_id}
+                    </div>
+                  )}
+
+                  {/* Skills Tags */}
+                  {cert.skills && cert.skills.length > 0 && (
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: '4px',
+                        marginBottom: '14px',
+                      }}
+                    >
+                      {cert.skills.slice(0, 4).map((skill) => (
+                        <span
+                          key={skill}
+                          style={{
+                            fontSize: '10px',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            background: '#151921',
+                            border: '1px solid rgba(255, 255, 255, 0.08)',
+                            color: '#D1D5DB',
+                          }}
+                        >
+                          {skill}
+                        </span>
+                      ))}
+                      {cert.skills.length > 4 && (
+                        <span style={{ fontSize: '10px', color: '#6B7280', padding: '2px 4px' }}>
+                          +{cert.skills.length - 4} more
+                        </span>
+                      )}
+                    </div>
                   )}
                 </div>
+
+                {/* Footer Action Toolbar */}
+                <div
+                  style={{
+                    paddingTop: '12px',
+                    borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  {/* Public Link */}
+                  <Link
+                    href={`/certificates/${cert.slug}`}
+                    target="_blank"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      fontSize: '12px',
+                      color: '#9CA3AF',
+                      textDecoration: 'none',
+                      transition: 'color 0.15s',
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = '#FFFFFF')}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = '#9CA3AF')}
+                  >
+                    <ExternalLink size={13} /> View Live
+                  </Link>
+
+                  {/* Quick Edit & Delete Actions */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    {/* Publish Toggle Button */}
+                    <button
+                      type="button"
+                      onClick={() => togglePublished(cert.id, cert.published, cert.slug)}
+                      style={{
+                        padding: '6px',
+                        borderRadius: '6px',
+                        background: 'rgba(255, 255, 255, 0.04)',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        color: cert.published ? '#10B981' : '#6B7280',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                      title={cert.published ? 'Unpublish certificate' : 'Publish certificate'}
+                    >
+                      {cert.published ? <Eye size={14} /> : <EyeOff size={14} />}
+                    </button>
+
+                    {/* Edit Link */}
+                    <Link
+                      href={`/admin/certificates/${cert.id}`}
+                      style={{
+                        padding: '6px',
+                        borderRadius: '6px',
+                        background: 'rgba(255, 255, 255, 0.04)',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        color: '#E5E7EB',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        textDecoration: 'none',
+                      }}
+                      title="Edit certificate details"
+                    >
+                      <Pencil size={14} />
+                    </Link>
+
+                    {/* Delete Trigger Button */}
+                    <button
+                      type="button"
+                      onClick={() => setDeleteTarget(cert)}
+                      style={{
+                        padding: '6px',
+                        borderRadius: '6px',
+                        background: 'rgba(239, 68, 68, 0.08)',
+                        border: '1px solid rgba(239, 68, 68, 0.2)',
+                        color: '#EF4444',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                      title="Delete certificate"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
               </div>
-
-              {/* Actions */}
-              <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                <Link
-                  href={`/certificates/${cert.slug}`}
-                  target="_blank"
+            )
+          })}
+        </div>
+      ) : (
+        /* DENSE TABLE VIEW */
+        <div
+          style={{
+            background: '#101318',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            borderRadius: '12px',
+            overflow: 'hidden',
+          }}
+        >
+          <div style={{ overflowX: 'auto' }}>
+            <table
+              style={{
+                width: '100%',
+                borderCollapse: 'collapse',
+                textAlign: 'left',
+                fontSize: '13px',
+              }}
+            >
+              <thead>
+                <tr
                   style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '6px',
-                    background: '#141414',
-                    border: '1px solid #282828',
-                    color: '#888',
-                    textDecoration: 'none',
+                    background: '#0D0F14',
+                    borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+                    color: '#8A8F98',
+                    fontSize: '11px',
+                    letterSpacing: '0.06em',
+                    textTransform: 'uppercase',
                   }}
-                  title="Preview on live website"
                 >
-                  <ExternalLink size={13} />
-                </Link>
+                  <th style={{ padding: '12px 20px' }}>Credential</th>
+                  <th style={{ padding: '12px 16px' }}>Category</th>
+                  <th style={{ padding: '12px 16px' }}>Issue Date</th>
+                  <th style={{ padding: '12px 16px' }}>Status</th>
+                  <th style={{ padding: '12px 20px', textAlign: 'right' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredCerts.map((cert) => {
+                  const mediaUrl = getCertificatePublicUrl(cert.file_url || cert.thumbnail_url)
+                  const isPdf = isPdfDocument(mediaUrl)
 
-                <button
-                  onClick={() => togglePublished(cert.id, cert.published, cert.slug)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '6px',
-                    background: '#141414',
-                    border: '1px solid #282828',
-                    cursor: 'pointer',
-                    color: cert.published ? '#4A7C59' : '#666',
-                  }}
-                  title={cert.published ? 'Published — click to unpublish' : 'Draft — click to publish'}
-                >
-                  {cert.published ? <Eye size={14} /> : <EyeOff size={14} />}
-                </button>
+                  return (
+                    <tr
+                      key={cert.id}
+                      style={{
+                        borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                        transition: 'background 0.12s',
+                      }}
+                      className="admin-table-row"
+                    >
+                      <td style={{ padding: '14px 20px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                          <div
+                            style={{
+                              width: '38px',
+                              height: '38px',
+                              borderRadius: '6px',
+                              background: '#141822',
+                              border: '1px solid rgba(255, 255, 255, 0.08)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              flexShrink: 0,
+                              overflow: 'hidden',
+                            }}
+                          >
+                            {mediaUrl && !isPdf ? (
+                              /* eslint-disable-next-line @next/next/no-img-element */
+                              <img
+                                src={mediaUrl}
+                                alt=""
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                              />
+                            ) : isPdf ? (
+                              <FileText size={18} style={{ color: '#E45D2C' }} />
+                            ) : (
+                              <Award size={18} style={{ color: '#8A8F98' }} />
+                            )}
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: 600, color: '#F5F5F5' }}>
+                              {cert.title}
+                            </div>
+                            <div style={{ fontSize: '11px', color: '#9CA3AF', marginTop: '2px' }}>
+                              {cert.issuer} {cert.credential_id && `· ID: ${cert.credential_id}`}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
 
-                <Link
-                  href={`/admin/certificates/${cert.id}`}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '6px',
-                    background: '#141414',
-                    border: '1px solid #282828',
-                    color: '#DDD',
-                    textDecoration: 'none',
-                  }}
-                  title="Edit certificate"
-                >
-                  <Pencil size={13} />
-                </Link>
+                      <td style={{ padding: '14px 16px' }}>
+                        <StatusBadge type="category" label={cert.category} />
+                      </td>
 
-                <button
-                  onClick={() => deleteCert(cert.id, cert.title, cert.slug)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '6px',
-                    background: '#141414',
-                    border: '1px solid #282828',
-                    cursor: 'pointer',
-                    color: '#666',
-                  }}
-                  title="Delete certificate"
-                  onMouseEnter={(e) => (e.currentTarget.style.color = '#E45D2C')}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = '#666')}
-                >
-                  <Trash2 size={13} />
-                </button>
-              </div>
-            </div>
-          ))}
+                      <td style={{ padding: '14px 16px', color: '#9CA3AF', fontSize: '12px' }}>
+                        {formatDate(cert.issue_date)}
+                      </td>
+
+                      <td style={{ padding: '14px 16px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <StatusBadge type={cert.published ? 'published' : 'draft'} />
+                          {cert.featured && <StatusBadge type="featured" />}
+                        </div>
+                      </td>
+
+                      <td style={{ padding: '14px 20px', textAlign: 'right' }}>
+                        <div
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                          }}
+                        >
+                          <Link
+                            href={`/certificates/${cert.slug}`}
+                            target="_blank"
+                            style={{
+                              color: '#9CA3AF',
+                              padding: '4px',
+                            }}
+                            title="View on public site"
+                          >
+                            <ExternalLink size={15} />
+                          </Link>
+
+                          <Link
+                            href={`/admin/certificates/${cert.id}`}
+                            style={{
+                              color: '#D1D5DB',
+                              padding: '4px',
+                            }}
+                            title="Edit certificate"
+                          >
+                            <Pencil size={15} />
+                          </Link>
+
+                          <button
+                            type="button"
+                            onClick={() => setDeleteTarget(cert)}
+                            style={{
+                              background: 'transparent',
+                              border: 'none',
+                              color: '#EF4444',
+                              cursor: 'pointer',
+                              padding: '4px',
+                            }}
+                            title="Delete certificate"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal Dialog */}
+      <ConfirmDialog
+        isOpen={Boolean(deleteTarget)}
+        title="Delete Certificate"
+        description="Are you sure you want to permanently delete this credential from your portfolio CMS and database?"
+        itemName={deleteTarget?.title}
+        confirmLabel="Delete Certificate"
+        loading={deleting}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
+
+      <style>{`
+        .admin-cert-card:hover {
+          border-color: rgba(255, 255, 255, 0.2) !important;
+          transform: translateY(-2px);
+          box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+        }
+        .admin-table-row:hover {
+          background: #141822 !important;
+        }
+      `}</style>
     </div>
   )
 }

@@ -5,30 +5,33 @@ import { createClient } from '@/lib/supabase/client'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { achievementSchema, type AchievementFormValues } from '@/lib/validations'
-import { slugify } from '@/lib/utils'
-import { Plus, Pencil, Trash2, Eye, EyeOff, Award } from 'lucide-react'
+import { slugify, formatDate } from '@/lib/utils'
+import { Plus, Pencil, Trash2, Eye, EyeOff, Award, ExternalLink } from 'lucide-react'
 import type { Achievement } from '@/types'
 import { FALLBACK_ACHIEVEMENTS } from '@/lib/data'
-import { formatDate } from '@/lib/utils'
 import { toast, Toaster } from 'sonner'
+import StatusBadge from '@/components/admin/StatusBadge'
+import ConfirmDialog from '@/components/admin/ConfirmDialog'
 
-const input = {
+const inputStyle = {
   width: '100%',
-  background: '#141414',
-  border: '1px solid #282828',
-  borderRadius: '6px',
-  padding: '10px 14px',
+  background: '#0D0F14',
+  border: '1px solid rgba(255, 255, 255, 0.1)',
+  borderRadius: '8px',
+  padding: '9px 12px',
   color: '#F5F5F5',
   fontSize: '13px',
   outline: 'none',
   fontFamily: 'inherit',
 }
-const label = {
+
+const labelStyle = {
   display: 'block',
   fontSize: '11px',
   letterSpacing: '0.08em',
   textTransform: 'uppercase' as const,
-  color: '#666',
+  color: '#8A8F98',
+  fontWeight: 600,
   marginBottom: '6px',
 }
 
@@ -71,38 +74,27 @@ function AchievementForm({
     try {
       const supabase = createClient()
       const payload = {
-        ...values,
+        title: values.title,
         slug: values.slug || slugify(values.title),
         organization: values.organization || null,
+        category: values.category,
         date: values.date || null,
         rank: values.rank || null,
         description: values.description || null,
         verification_url: values.verification_url || null,
+        featured: values.featured,
+        published: values.published,
       }
 
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(achievement?.id ?? '')
-
-      if (isEdit && isUuid) {
-        const { data: existing } = await supabase.from('achievements').select('id').eq('id', achievement!.id).single()
-        if (existing) {
-          const { error } = await supabase.from('achievements').update(payload).eq('id', achievement!.id)
-          if (error) {
-            toast.error(`Update failed: ${error.message}`)
-            setSaving(false)
-            return
-          }
-        } else {
-          const { error } = await supabase.from('achievements').insert(payload)
-          if (error) {
-            toast.error(`Save failed: ${error.message}`)
-            setSaving(false)
-            return
-          }
-        }
-      } else if (isEdit) {
-        const { data: existing } = await supabase.from('achievements').select('id').eq('slug', payload.slug).single()
-        if (existing) {
-          const { error } = await supabase.from('achievements').update(payload).eq('id', existing.id)
+      if (isEdit) {
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+          achievement.id
+        )
+        if (isUuid) {
+          const { error } = await supabase
+            .from('achievements')
+            .update(payload)
+            .eq('id', achievement.id)
           if (error) {
             toast.error(`Update failed: ${error.message}`)
             setSaving(false)
@@ -139,108 +131,131 @@ function AchievementForm({
     <form
       onSubmit={handleSubmit(onSubmit)}
       style={{
-        background: '#1A1A1A',
-        border: '1px solid #2C2C2C',
-        borderRadius: '10px',
+        background: '#101318',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        borderRadius: '12px',
         padding: '24px',
-        marginBottom: '24px',
+        marginBottom: '28px',
+        boxShadow: '0 8px 30px rgba(0, 0, 0, 0.5)',
       }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h2 style={{ color: '#F5F5F5', fontSize: '16px', fontWeight: 500 }}>
-          {isEdit ? 'Edit Achievement' : 'New Achievement'}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '20px',
+          paddingBottom: '12px',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+        }}
+      >
+        <h2 style={{ color: '#F5F5F5', fontSize: '15px', fontWeight: 600, margin: 0 }}>
+          {isEdit ? 'Edit Achievement' : 'New Achievement Record'}
         </h2>
         <button
           type="button"
           onClick={onCancel}
-          style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', fontSize: '13px' }}
+          style={{ background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer', fontSize: '13px' }}
         >
           Cancel
         </button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px' }}>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+          gap: '14px',
+          marginBottom: '14px',
+        }}
+      >
         <div>
-          <label style={label}>Title *</label>
+          <label style={labelStyle}>Title *</label>
           <input
             {...register('title')}
-            style={input}
+            style={inputStyle}
+            placeholder="e.g. Smart India Hackathon Winner"
             onBlur={() => {
               const curTitle = getValues('title')
               if (!isEdit && curTitle) setValue('slug', slugify(curTitle))
             }}
           />
           {errors.title && (
-            <p style={{ color: '#E45D2C', fontSize: '11px', marginTop: '4px' }}>{errors.title.message}</p>
+            <p style={{ color: '#E45D2C', fontSize: '11px', marginTop: '4px' }}>
+              {errors.title.message}
+            </p>
           )}
         </div>
+
         <div>
-          <label style={label}>Slug *</label>
-          <input {...register('slug')} style={input} />
+          <label style={labelStyle}>Slug *</label>
+          <input {...register('slug')} style={inputStyle} />
         </div>
+
         <div>
-          <label style={label}>Organization</label>
-          <input {...register('organization')} style={input} placeholder="e.g. OpenAI / University" />
+          <label style={labelStyle}>Organization</label>
+          <input {...register('organization')} style={inputStyle} placeholder="e.g. Ministry of Education / Tech Veda" />
         </div>
+
         <div>
-          <label style={label}>Category</label>
-          <select {...register('category')} style={input}>
+          <label style={labelStyle}>Category</label>
+          <select {...register('category')} style={inputStyle}>
             {['Hackathon', 'Competition', 'Award', 'Certification', 'Other'].map((c) => (
-              <option key={c}>{c}</option>
+              <option key={c} value={c}>
+                {c}
+              </option>
             ))}
           </select>
         </div>
+
         <div>
-          <label style={label}>Date</label>
-          <input type="date" {...register('date')} style={input} />
+          <label style={labelStyle}>Date</label>
+          <input type="date" {...register('date')} style={inputStyle} />
         </div>
+
         <div>
-          <label style={label}>Rank / Position</label>
-          <input {...register('rank')} style={input} placeholder="e.g. Winner, 1st Place, Finalist" />
+          <label style={labelStyle}>Rank / Position</label>
+          <input {...register('rank')} style={inputStyle} placeholder="e.g. 1st Place, National Winner" />
         </div>
       </div>
+
       <div style={{ marginBottom: '14px' }}>
-        <label style={label}>Description</label>
+        <label style={labelStyle}>Verification / Proof URL</label>
+        <input {...register('verification_url')} style={inputStyle} placeholder="https://..." />
+      </div>
+
+      <div style={{ marginBottom: '16px' }}>
+        <label style={labelStyle}>Description & Impact</label>
         <textarea
           {...register('description')}
-          style={{ ...input, minHeight: '80px', resize: 'vertical' as const }}
+          style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' as const }}
+          placeholder="Summary of project developed, team role, and achievements..."
         />
       </div>
-      <div style={{ marginBottom: '16px' }}>
-        <label style={label}>Verification URL</label>
-        <input {...register('verification_url')} style={input} placeholder="https://..." />
-      </div>
+
       <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
-        {(['featured', 'published'] as const).map((k) => (
-          <label
-            key={k}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              cursor: 'pointer',
-              color: '#888',
-              fontSize: '13px',
-            }}
-          >
-            <input type="checkbox" {...register(k)} style={{ accentColor: '#E45D2C' }} />
-            {k.charAt(0).toUpperCase() + k.slice(1)}
-          </label>
-        ))}
+        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', color: '#D1D5DB', fontSize: '13px' }}>
+          <input type="checkbox" {...register('featured')} style={{ accentColor: '#E45D2C' }} /> Featured Badge
+        </label>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', color: '#D1D5DB', fontSize: '13px' }}>
+          <input type="checkbox" {...register('published')} style={{ accentColor: '#E45D2C' }} /> Published on Public Portfolio
+        </label>
       </div>
+
       <div style={{ display: 'flex', gap: '10px' }}>
         <button
           type="submit"
           disabled={saving}
           style={{
-            background: '#E45D2C',
+            background: saving ? '#333' : 'linear-gradient(135deg, #E45D2C 0%, #FF8A3D 100%)',
             color: '#fff',
             border: 'none',
-            borderRadius: '6px',
-            padding: '10px 20px',
+            borderRadius: '8px',
+            padding: '10px 22px',
             fontSize: '13px',
-            fontWeight: 500,
-            cursor: 'pointer',
+            fontWeight: 600,
+            cursor: saving ? 'not-allowed' : 'pointer',
+            boxShadow: '0 4px 12px rgba(228, 93, 44, 0.25)',
           }}
         >
           {saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Create Achievement'}
@@ -248,7 +263,15 @@ function AchievementForm({
         <button
           type="button"
           onClick={onCancel}
-          style={{ background: 'none', border: '1px solid #333', borderRadius: '6px', color: '#888', padding: '10px 16px', fontSize: '13px', cursor: 'pointer' }}
+          style={{
+            background: 'transparent',
+            border: '1px solid rgba(255, 255, 255, 0.12)',
+            borderRadius: '8px',
+            color: '#D1D5DB',
+            padding: '10px 16px',
+            fontSize: '13px',
+            cursor: 'pointer',
+          }}
         >
           Cancel
         </button>
@@ -258,16 +281,20 @@ function AchievementForm({
 }
 
 export default function AdminAchievementsPage() {
-  const [achievements, setAchievements] = useState<Achievement[]>([])
-  const [loading, setLoading] = useState(true)
+  const [achievements, setAchievements] = useState<Achievement[]>(FALLBACK_ACHIEVEMENTS)
+  const [loading, setLoading] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<Achievement | undefined>()
+  const [deleteTarget, setDeleteTarget] = useState<Achievement | null>(null)
 
   async function load() {
     try {
       const supabase = createClient()
-      const { data, error } = await supabase.from('achievements').select('*').order('date', { ascending: false })
-      if (!error && data && data.length > 0) {
+      const { data, error } = await supabase
+        .from('achievements')
+        .select('*')
+        .order('date', { ascending: false })
+      if (!error && Array.isArray(data)) {
         setAchievements(data)
       } else {
         setAchievements(FALLBACK_ACHIEVEMENTS)
@@ -284,9 +311,12 @@ export default function AdminAchievementsPage() {
     async function loadData() {
       try {
         const supabase = createClient()
-        const { data, error } = await supabase.from('achievements').select('*').order('date', { ascending: false })
+        const { data, error } = await supabase
+          .from('achievements')
+          .select('*')
+          .order('date', { ascending: false })
         if (active) {
-          if (!error && data && data.length > 0) {
+          if (!error && Array.isArray(data)) {
             setAchievements(data)
           } else {
             setAchievements(FALLBACK_ACHIEVEMENTS)
@@ -306,27 +336,30 @@ export default function AdminAchievementsPage() {
     }
   }, [])
 
-  async function deleteItem(id: string, title: string, slug?: string) {
-    if (!confirm(`Delete achievement "${title}"? This cannot be undone.`)) return
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+  async function confirmDelete() {
+    if (!deleteTarget) return
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      deleteTarget.id
+    )
     const supabase = createClient()
 
     try {
       if (isUuid) {
-        const { error } = await supabase.from('achievements').delete().eq('id', id)
+        const { error } = await supabase.from('achievements').delete().eq('id', deleteTarget.id)
         if (error) {
           toast.error(`Delete failed: ${error.message}`)
           return
         }
-      } else if (slug) {
-        await supabase.from('achievements').delete().eq('slug', slug)
+      } else if (deleteTarget.slug) {
+        await supabase.from('achievements').delete().eq('slug', deleteTarget.slug)
       }
     } catch {
       // Ignored for non-uuid fallback item
     }
 
     toast.success('Achievement deleted')
-    setAchievements((prev) => prev.filter((a) => a.id !== id))
+    setAchievements((prev) => prev.filter((a) => a.id !== deleteTarget.id))
+    setDeleteTarget(null)
   }
 
   async function togglePublished(id: string, current: boolean, slug?: string) {
@@ -355,28 +388,41 @@ export default function AdminAchievementsPage() {
   }
 
   return (
-    <div style={{ maxWidth: '900px' }}>
+    <div style={{ maxWidth: '960px', margin: '0 auto' }}>
       <Toaster position="top-right" theme="dark" />
+
       {/* Header */}
       <div
         style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: '32px',
           flexWrap: 'wrap',
           gap: '16px',
+          paddingBottom: '20px',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+          marginBottom: '28px',
         }}
       >
         <div>
-          <h1 style={{ fontSize: '24px', fontWeight: 600, color: '#F5F5F5', letterSpacing: '-0.02em' }}>
+          <h1
+            style={{
+              fontSize: '24px',
+              fontWeight: 700,
+              color: '#F5F5F5',
+              margin: 0,
+              letterSpacing: '-0.02em',
+            }}
+          >
             Achievements & Awards
           </h1>
-          <p style={{ fontSize: '13px', color: '#666', marginTop: '4px' }}>
+          <p style={{ fontSize: '13px', color: '#9CA3AF', marginTop: '4px', margin: 0 }}>
             {achievements.length} competitive awards & honors in portfolio
           </p>
         </div>
+
         <button
+          type="button"
           onClick={() => {
             setEditing(undefined)
             setShowForm(!showForm)
@@ -385,15 +431,16 @@ export default function AdminAchievementsPage() {
             display: 'inline-flex',
             alignItems: 'center',
             gap: '8px',
-            background: showForm ? '#222' : '#E45D2C',
+            background: showForm ? '#1A1D24' : 'linear-gradient(135deg, #E45D2C 0%, #FF8A3D 100%)',
             color: '#fff',
             border: 'none',
-            padding: '10px 18px',
+            padding: '9px 18px',
             borderRadius: '8px',
             fontSize: '13px',
-            fontWeight: 500,
+            fontWeight: 600,
             cursor: 'pointer',
-            transition: 'background 0.15s',
+            boxShadow: showForm ? 'none' : '0 4px 12px rgba(228, 93, 44, 0.25)',
+            transition: 'all 0.15s',
           }}
         >
           <Plus size={16} /> {showForm ? 'Close Form' : 'Add Achievement'}
@@ -416,155 +463,161 @@ export default function AdminAchievementsPage() {
       )}
 
       {loading ? (
-        <div style={{ color: '#666', fontSize: '14px', padding: '40px 0', textAlign: 'center' }}>
+        <div style={{ color: '#6B7280', fontSize: '13px', padding: '40px 0', textAlign: 'center' }}>
           Loading achievements…
         </div>
       ) : achievements.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '60px 0', color: '#666', background: '#141414', borderRadius: '10px', border: '1px solid #222' }}>
-          <p style={{ fontSize: '15px', color: '#AAA', marginBottom: '8px' }}>No achievements yet.</p>
+        <div
+          style={{
+            textAlign: 'center',
+            padding: '60px 20px',
+            background: '#101318',
+            borderRadius: '12px',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+          }}
+        >
+          <p style={{ fontSize: '15px', color: '#AAA', marginBottom: '8px' }}>No achievements recorded yet.</p>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {achievements.map((item) => (
             <div
               key={item.id}
               style={{
-                background: '#1A1A1A',
-                border: '1px solid #242424',
-                borderRadius: '8px',
-                padding: '16px 20px',
+                background: '#101318',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                borderRadius: '12px',
+                padding: '18px 22px',
                 display: 'flex',
                 alignItems: 'center',
+                justifyContent: 'space-between',
                 gap: '16px',
                 transition: 'border-color 0.15s',
               }}
+              className="admin-hover-row"
             >
-              <div
-                style={{
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: '6px',
-                  background: '#141414',
-                  border: '1px solid #2C2C2C',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#E45D2C',
-                  flexShrink: 0,
-                }}
-              >
-                <Award size={18} />
-              </div>
-
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                  <span style={{ fontSize: '15px', color: '#F5F5F5', fontWeight: 500 }}>
-                    {item.title}
-                  </span>
-                  {item.rank && (
-                    <span
-                      style={{
-                        fontSize: '10px',
-                        letterSpacing: '0.06em',
-                        textTransform: 'uppercase',
-                        color: '#E45D2C',
-                        background: 'rgba(228,93,44,0.12)',
-                        border: '1px solid rgba(228,93,44,0.25)',
-                        padding: '2px 6px',
-                        borderRadius: '4px',
-                        fontWeight: 500,
-                      }}
-                    >
-                      {item.rank}
-                    </span>
-                  )}
-                </div>
-
-                <div style={{ fontSize: '12px', color: '#777', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                  <span style={{ color: '#AAA' }}>{item.category}</span>
-                  {item.organization && (
-                    <>
-                      <span>·</span>
-                      <span style={{ color: '#DDD' }}>{item.organization}</span>
-                    </>
-                  )}
-                  {item.date && (
-                    <>
-                      <span>·</span>
-                      <span>{formatDate(item.date, 'MMM yyyy')}</span>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                <button
-                  onClick={() => togglePublished(item.id, item.published, item.slug)}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', minWidth: 0, flex: 1 }}>
+                <div
                   style={{
+                    width: '42px',
+                    height: '42px',
+                    borderRadius: '8px',
+                    background: 'rgba(228, 93, 44, 0.1)',
+                    border: '1px solid rgba(228, 93, 44, 0.25)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '6px',
-                    background: '#141414',
-                    border: '1px solid #282828',
-                    cursor: 'pointer',
-                    color: item.published ? '#4A7C59' : '#666',
+                    color: '#E45D2C',
+                    flexShrink: 0,
                   }}
-                  title={item.published ? 'Published' : 'Draft'}
+                >
+                  <Award size={22} />
+                </div>
+
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '15px', fontWeight: 600, color: '#F5F5F5' }}>
+                      {item.title}
+                    </span>
+                    <StatusBadge type="category" label={item.category} />
+                    {item.featured && <StatusBadge type="featured" />}
+                  </div>
+
+                  <div style={{ fontSize: '12px', color: '#9CA3AF', marginTop: '3px' }}>
+                    {item.organization && <span>{item.organization}</span>}
+                    {item.rank && <span style={{ color: '#E45D2C', fontWeight: 500 }}> · {item.rank}</span>}
+                    {item.date && <span> · {formatDate(item.date)}</span>}
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                {item.verification_url && (
+                  <a
+                    href={item.verification_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ color: '#9CA3AF', padding: '6px' }}
+                    title="View proof URL"
+                  >
+                    <ExternalLink size={15} />
+                  </a>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => togglePublished(item.id, item.published, item.slug)}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.04)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    borderRadius: '6px',
+                    color: item.published ? '#10B981' : '#6B7280',
+                    cursor: 'pointer',
+                    padding: '6px',
+                  }}
+                  title={item.published ? 'Unpublish' : 'Publish'}
                 >
                   {item.published ? <Eye size={14} /> : <EyeOff size={14} />}
                 </button>
 
                 <button
+                  type="button"
                   onClick={() => {
                     setEditing(item)
                     setShowForm(true)
-                    window.scrollTo({ top: 0, behavior: 'smooth' })
                   }}
                   style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: '32px',
-                    height: '32px',
+                    background: 'rgba(255, 255, 255, 0.04)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
                     borderRadius: '6px',
-                    background: '#141414',
-                    border: '1px solid #282828',
+                    color: '#E5E7EB',
                     cursor: 'pointer',
-                    color: '#DDD',
+                    padding: '6px',
                   }}
                   title="Edit achievement"
                 >
-                  <Pencil size={13} />
+                  <Pencil size={14} />
                 </button>
 
                 <button
-                  onClick={() => deleteItem(item.id, item.title, item.slug)}
+                  type="button"
+                  onClick={() => setDeleteTarget(item)}
                   style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: '32px',
-                    height: '32px',
+                    background: 'rgba(239, 68, 68, 0.08)',
+                    border: '1px solid rgba(239, 68, 68, 0.2)',
                     borderRadius: '6px',
-                    background: '#141414',
-                    border: '1px solid #282828',
+                    color: '#EF4444',
                     cursor: 'pointer',
-                    color: '#666',
+                    padding: '6px',
                   }}
                   title="Delete achievement"
-                  onMouseEnter={(e) => (e.currentTarget.style.color = '#E45D2C')}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = '#666')}
                 >
-                  <Trash2 size={13} />
+                  <Trash2 size={14} />
                 </button>
               </div>
             </div>
           ))}
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmDialog
+        isOpen={Boolean(deleteTarget)}
+        title="Delete Achievement"
+        description="Are you sure you want to permanently delete this achievement record?"
+        itemName={deleteTarget?.title}
+        confirmLabel="Delete Achievement"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
+
+      <style>{`
+        .admin-hover-row:hover {
+          border-color: rgba(255, 255, 255, 0.18) !important;
+          background: #141822 !important;
+        }
+      `}</style>
     </div>
   )
 }

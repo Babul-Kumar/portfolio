@@ -18,16 +18,29 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
+  // FAST-PATH: If Supabase credentials are not configured, allow local testing of admin UI
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    return NextResponse.next()
+  }
+
+  // FAST-PATH: If no Supabase auth cookies exist in request, redirect immediately in 0ms
+  // without incurring an external network roundtrip
+  const cookies = request.cookies.getAll()
+  const hasAuthCookie = cookies.some(
+    (c) => c.name.includes('auth-token') || c.name.startsWith('sb-')
+  )
+
+  if (!hasAuthCookie) {
+    const loginUrl = new URL('/admin/login', request.url)
+    loginUrl.searchParams.set('redirectedFrom', pathname)
+    return NextResponse.redirect(loginUrl)
+  }
+
   let response = NextResponse.next({
     request: {
       headers: request.headers,
     },
   })
-
-  // If Supabase credentials are not configured, allow local testing of admin UI or redirect to login
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    return response
-  }
 
   const supabase = createServerClient(
     supabaseUrl,
@@ -52,11 +65,23 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  // Fast timeout race (1.5s max) to guarantee middleware never hangs the server response
+  try {
+    const getUserPromise = supabase.auth.getUser()
+    const timeoutPromise = new Promise<{ data: { user: null }; error: Error }>((resolve) =>
+      setTimeout(() => resolve({ data: { user: null }, error: new Error('Auth timeout') }), 1500)
+    )
 
-  if (!user) {
+    const {
+      data: { user },
+    } = await Promise.race([getUserPromise, timeoutPromise])
+
+    if (!user) {
+      const loginUrl = new URL('/admin/login', request.url)
+      loginUrl.searchParams.set('redirectedFrom', pathname)
+      return NextResponse.redirect(loginUrl)
+    }
+  } catch {
     const loginUrl = new URL('/admin/login', request.url)
     loginUrl.searchParams.set('redirectedFrom', pathname)
     return NextResponse.redirect(loginUrl)

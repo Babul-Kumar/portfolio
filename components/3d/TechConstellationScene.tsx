@@ -147,7 +147,7 @@ export default function TechConstellationScene() {
           width: '100%',
           aspectRatio: '1.25',
           minHeight: '380px',
-          background: 'radial-gradient(circle at 50% 50%, rgba(229, 106, 61, 0.08) 0%, rgba(17, 17, 17, 0.6) 60%, transparent 85%)',
+          background: 'radial-gradient(circle at 50% 50%, var(--color-accent-bg) 0%, transparent 75%)',
           borderRadius: 'var(--radius-lg)',
           border: '1px solid var(--color-border)',
           overflow: 'hidden',
@@ -174,10 +174,10 @@ export default function TechConstellationScene() {
                 y1="50%"
                 x2={`${node.x}%`}
                 y2={`${node.y}%`}
-                stroke={isHighlighted ? 'var(--color-accent)' : 'rgba(255, 255, 255, 0.08)'}
+                stroke={isHighlighted ? 'var(--color-accent)' : 'var(--color-border)'}
                 strokeWidth={isHighlighted ? 1.5 : 1}
                 strokeDasharray={isHighlighted ? 'none' : '4 4'}
-                opacity={isHighlighted ? 0.8 : 0.3}
+                opacity={isHighlighted ? 0.85 : 0.4}
                 style={{ transition: 'all 0.35s ease' }}
               />
             )
@@ -206,13 +206,13 @@ export default function TechConstellationScene() {
                     : 'var(--color-surface-2)'
                   : isCore
                   ? 'var(--color-accent-bg)'
-                  : 'rgba(20, 20, 20, 0.85)',
+                  : 'var(--color-surface)',
                 border: `1px solid ${
                   isSelected
                     ? 'var(--color-accent)'
                     : isCore
                     ? 'var(--color-accent-border)'
-                    : 'rgba(255, 255, 255, 0.12)'
+                    : 'var(--color-border)'
                 }`,
                 borderRadius: isCore ? 'var(--radius-md)' : 'var(--radius-full)',
                 padding: isCore ? '10px 18px' : '7px 14px',
@@ -223,8 +223,8 @@ export default function TechConstellationScene() {
                 cursor: 'pointer',
                 transition: 'all 0.25s var(--ease-out)',
                 boxShadow: isSelected
-                  ? '0 0 20px rgba(229, 106, 61, 0.35)'
-                  : '0 2px 8px rgba(0, 0, 0, 0.4)',
+                  ? '0 0 20px var(--color-accent-glow)'
+                  : 'var(--shadow-sm)',
                 whiteSpace: 'nowrap',
                 zIndex: isSelected ? 10 : 2,
                 backdropFilter: 'blur(8px)',

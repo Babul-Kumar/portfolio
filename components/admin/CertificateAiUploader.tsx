@@ -11,33 +11,51 @@ import {
   RotateCcw,
   X,
   Cpu,
+  ArrowRight,
+  ShieldAlert,
+  Calendar,
+  Building,
+  Tag,
+  Hash,
+  Award,
+  Layers,
 } from 'lucide-react'
 import { formatFileSize } from '@/lib/utils'
-import type { GeminiCertificateExtraction } from '@/types'
+import type {
+  CertificateAnalysisType,
+  AnyDocumentExtraction,
+} from '@/types'
 import { toast } from 'sonner'
 
 export type AnalysisStatus =
   | 'IDLE'
   | 'UPLOADED'
   | 'ANALYZING'
-  | 'SUCCESS'
-  | 'PARTIAL_SUCCESS'
+  | 'ANALYZED_PREVIEW'
+  | 'APPLIED'
   | 'ERROR'
 
 interface CertificateAiUploaderProps {
-  onExtractionSuccess: (extraction: GeminiCertificateExtraction, file: File, previewUrl: string) => void
+  type?: CertificateAnalysisType
+  onExtractionSuccess: (
+    extraction: AnyDocumentExtraction,
+    file: File,
+    previewUrl: string,
+    storageUrl?: string | null
+  ) => void
   onFileRemoved: () => void
   disabled?: boolean
 }
 
 const ANALYSIS_STEPS = [
-  'Reading certificate document…',
-  'Analyzing visual & text hierarchies with Gemini AI…',
-  'Extracting title, issuer, dates & credentials…',
-  'Validating structured schema & confidence scores…',
+  'Reading document buffer & visual layers…',
+  'Analyzing visual & text hierarchies with Google Gemini AI…',
+  'Extracting title, organization, dates, skills & credentials…',
+  'Validating schema, confidence metrics & duplicate checks…',
 ]
 
 export default function CertificateAiUploader({
+  type = 'training',
   onExtractionSuccess,
   onFileRemoved,
   disabled = false,
@@ -47,9 +65,19 @@ export default function CertificateAiUploader({
   const [status, setStatus] = useState<AnalysisStatus>('IDLE')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [activeStep, setActiveStep] = useState(0)
+  const [extractedData, setExtractedData] = useState<AnyDocumentExtraction | null>(null)
+  const [serverFileUrl, setServerFileUrl] = useState<string | null>(null)
+  const [duplicateAlert, setDuplicateAlert] = useState<string | null>(null)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
   const isPDF = file?.type === 'application/pdf'
+
+  const typeLabel =
+    type === 'training'
+      ? 'Training Certificate / Proof'
+      : type === 'co_curricular'
+      ? 'Activity Proof / Certificate'
+      : 'Certificate Document'
 
   const onDrop = useCallback(
     (acceptedFiles: File[], fileRejections: FileRejection[]) => {
@@ -65,6 +93,8 @@ export default function CertificateAiUploader({
       setFile(selectedFile)
       setStatus('UPLOADED')
       setErrorMessage(null)
+      setExtractedData(null)
+      setDuplicateAlert(null)
 
       if (selectedFile.type.startsWith('image/')) {
         const objectUrl = URL.createObjectURL(selectedFile)
@@ -73,7 +103,7 @@ export default function CertificateAiUploader({
         setPreviewUrl(null)
       }
 
-      toast.info(`Uploaded "${selectedFile.name}". Click "Analyze with Gemini" to auto-fill.`)
+      toast.info(`Selected "${selectedFile.name}". Click "Analyze with Gemini" to extract details.`)
     },
     []
   )
@@ -84,7 +114,7 @@ export default function CertificateAiUploader({
       'image/*': ['.jpg', '.jpeg', '.png', '.webp'],
       'application/pdf': ['.pdf'],
     },
-    maxSize: 15 * 1024 * 1024, // 15MB
+    maxSize: 20 * 1024 * 1024, // 20MB
     multiple: false,
     disabled: status === 'ANALYZING' || disabled,
   })
@@ -95,6 +125,9 @@ export default function CertificateAiUploader({
     setPreviewUrl(null)
     setStatus('IDLE')
     setErrorMessage(null)
+    setExtractedData(null)
+    setServerFileUrl(null)
+    setDuplicateAlert(null)
     if (intervalRef.current) clearInterval(intervalRef.current)
     onFileRemoved()
   }
@@ -105,19 +138,21 @@ export default function CertificateAiUploader({
     setStatus('ANALYZING')
     setErrorMessage(null)
     setActiveStep(0)
+    setDuplicateAlert(null)
 
-    // Progress animation ticker
+    // Progress step ticker animation
     let step = 0
     intervalRef.current = setInterval(() => {
       step = (step + 1) % ANALYSIS_STEPS.length
       setActiveStep(step)
-    }, 1200)
+    }, 1300)
 
     try {
       const formData = new FormData()
       formData.append('file', file)
+      formData.append('type', type)
 
-      const response = await fetch('/api/admin/certificates/analyze', {
+      const response = await fetch('/api/admin/ai/analyze-certificate', {
         method: 'POST',
         body: formData,
       })
@@ -130,28 +165,19 @@ export default function CertificateAiUploader({
         throw new Error(result.error || 'Failed to analyze certificate.')
       }
 
-      const extraction: GeminiCertificateExtraction = {
+      const extraction: AnyDocumentExtraction = {
         ...result.data,
         file_url: result.file_url ?? null,
       }
 
-      // Check if critical fields were extracted
-      const isPartial =
-        !extraction.title || !extraction.issuer || !extraction.issue_date
-
-      setStatus(isPartial ? 'PARTIAL_SUCCESS' : 'SUCCESS')
-
-      if (isPartial) {
-        toast.warning(
-          'Gemini extracted some details. Please review and complete remaining fields.'
-        )
-      } else {
-        toast.success(
-          'Certificate analyzed! Fields have been auto-populated with AI confidence scores.'
-        )
+      setExtractedData(extraction)
+      setServerFileUrl(result.file_url ?? null)
+      if (result.duplicateWarning) {
+        setDuplicateAlert(result.duplicateWarning)
       }
 
-      onExtractionSuccess(extraction, file, previewUrl || '')
+      setStatus('ANALYZED_PREVIEW')
+      toast.success('Document analysis completed! Review extracted metadata below.')
     } catch (err: unknown) {
       if (intervalRef.current) clearInterval(intervalRef.current)
       setStatus('ERROR')
@@ -161,33 +187,41 @@ export default function CertificateAiUploader({
     }
   }
 
+  function handleApplyToForm() {
+    if (!extractedData || !file) return
+
+    setStatus('APPLIED')
+    onExtractionSuccess(extractedData, file, previewUrl || '', serverFileUrl)
+    toast.success('Extracted details applied to the form! Please review and save.')
+  }
+
   return (
     <div
       style={{
-        background: 'rgba(255, 255, 255, 0.02)',
-        border: '1px solid var(--color-border)',
-        borderRadius: 'var(--radius-md)',
+        background: '#0D1117',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        borderRadius: '12px',
         padding: '24px',
-        marginBottom: '32px',
+        marginBottom: '28px',
         position: 'relative',
         overflow: 'hidden',
       }}
     >
-      {/* Subtle Gemini gradient glow accent */}
+      {/* Ambient decorative glow */}
       <div
         style={{
           position: 'absolute',
           top: 0,
           right: 0,
-          width: '240px',
-          height: '240px',
+          width: '280px',
+          height: '280px',
           background:
-            'radial-gradient(circle at 100% 0%, rgba(229, 106, 61, 0.12) 0%, transparent 70%)',
+            'radial-gradient(circle at 100% 0%, rgba(228, 93, 44, 0.12) 0%, transparent 70%)',
           pointerEvents: 'none',
         }}
       />
 
-      {/* Header */}
+      {/* Header Bar */}
       <div
         style={{
           display: 'flex',
@@ -195,44 +229,46 @@ export default function CertificateAiUploader({
           alignItems: 'center',
           flexWrap: 'wrap',
           gap: '12px',
-          marginBottom: '20px',
+          marginBottom: '18px',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div
             style={{
-              width: '28px',
-              height: '28px',
-              borderRadius: 'var(--radius-sm)',
-              background: 'var(--color-accent-bg)',
-              border: '1px solid var(--color-accent-border)',
+              width: '32px',
+              height: '32px',
+              borderRadius: '8px',
+              background: 'rgba(228, 93, 44, 0.12)',
+              border: '1px solid rgba(228, 93, 44, 0.25)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: 'var(--color-accent)',
+              color: '#FF8A3D',
             }}
           >
-            <Sparkles size={14} />
+            <Sparkles size={16} />
           </div>
           <div>
             <h3
               style={{
                 fontSize: '15px',
                 fontWeight: 600,
-                color: 'var(--color-text)',
+                color: '#F5F5F5',
                 letterSpacing: '-0.01em',
+                margin: 0,
               }}
             >
-              AI Certificate Auto-Fill
+              Gemini AI Document Auto-Fill
             </h3>
             <p
               style={{
                 fontSize: '12px',
-                color: 'var(--color-text-secondary)',
+                color: '#8A8F98',
                 fontFamily: 'var(--font-mono)',
+                margin: '2px 0 0',
               }}
             >
-              Upload certificate image or PDF to extract details with Google Gemini
+              Upload {typeLabel.toLowerCase()} (PDF, JPG, PNG, WEBP) to auto-extract structured details
             </p>
           </div>
         </div>
@@ -244,130 +280,143 @@ export default function CertificateAiUploader({
             style={{
               fontSize: '11px',
               fontFamily: 'var(--font-mono)',
-              color: 'var(--color-text-muted)',
-              background: 'none',
-              border: 'none',
+              color: '#8A8F98',
+              background: 'rgba(255, 255, 255, 0.04)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '6px',
+              padding: '5px 10px',
               cursor: 'pointer',
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '4px',
+              gap: '5px',
+              transition: 'all 0.15s',
             }}
-            className="hover-accent-text"
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = '#EF4444'
+              e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.3)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = '#8A8F98'
+              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)'
+            }}
           >
-            <X size={13} /> Remove File
+            <X size={13} /> Remove Document
           </button>
         )}
       </div>
 
-      {/* Dropzone or Uploaded Preview State */}
+      {/* Dropzone State */}
       {!file ? (
         <div
           {...getRootProps()}
           style={{
             border: `2px dashed ${
-              isDragActive ? 'var(--color-accent)' : 'var(--color-border)'
+              isDragActive ? '#E45D2C' : 'rgba(255, 255, 255, 0.12)'
             }`,
-            borderRadius: 'var(--radius-sm)',
+            borderRadius: '10px',
             padding: '36px 20px',
             textAlign: 'center',
             cursor: 'pointer',
-            background: isDragActive ? 'var(--color-accent-bg)' : 'rgba(255, 255, 255, 0.01)',
-            transition: 'all 0.2s ease',
+            background: isDragActive ? 'rgba(228, 93, 44, 0.06)' : '#101318',
+            transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
           }}
         >
           <input {...getInputProps()} />
           <div
             style={{
-              width: '44px',
-              height: '44px',
+              width: '46px',
+              height: '46px',
               borderRadius: '50%',
-              background: 'rgba(255, 255, 255, 0.04)',
-              border: '1px solid var(--color-border)',
+              background: isDragActive ? 'rgba(228, 93, 44, 0.15)' : 'rgba(255, 255, 255, 0.04)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               margin: '0 auto 12px',
-              color: 'var(--color-accent)',
+              color: isDragActive ? '#FF8A3D' : '#9CA3AF',
             }}
           >
-            <Upload size={20} />
+            <Upload size={22} />
           </div>
           <div
             style={{
               fontSize: '14px',
-              fontWeight: 500,
-              color: 'var(--color-text)',
+              fontWeight: 600,
+              color: '#F5F5F5',
               marginBottom: '4px',
             }}
           >
-            {isDragActive
-              ? 'Drop your certificate here…'
-              : 'Drag & drop certificate or click to browse'}
+            {isDragActive ? 'Drop document here…' : 'Drag & drop certificate or click to browse'}
           </div>
           <div
             style={{
               fontSize: '11px',
               fontFamily: 'var(--font-mono)',
-              color: 'var(--color-text-muted)',
+              color: '#6B7280',
             }}
           >
-            Supports JPG, PNG, WEBP, and PDF up to 15MB
+            Supports PDF, JPG, PNG, WEBP up to 20MB
           </div>
         </div>
       ) : (
         <div>
-          {/* File Card Banner */}
+          {/* File Badge Banner */}
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              padding: '14px 18px',
-              background: 'rgba(255, 255, 255, 0.03)',
-              border: '1px solid var(--color-border)',
-              borderRadius: 'var(--radius-sm)',
+              padding: '12px 16px',
+              background: '#13171F',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              borderRadius: '8px',
               marginBottom: '16px',
               flexWrap: 'wrap',
               gap: '12px',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
               {previewUrl && !isPDF ? (
                 /* eslint-disable-next-line @next/next/no-img-element */
                 <img
                   src={previewUrl}
-                  alt="Certificate Preview"
+                  alt="Certificate Document Preview"
                   style={{
                     width: '48px',
-                    height: '36px',
+                    height: '38px',
                     objectFit: 'cover',
-                    borderRadius: '4px',
-                    border: '1px solid var(--color-border)',
+                    borderRadius: '6px',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    flexShrink: 0,
                   }}
                 />
               ) : (
                 <div
                   style={{
                     width: '48px',
-                    height: '36px',
-                    borderRadius: '4px',
-                    background: 'var(--color-accent-bg)',
-                    border: '1px solid var(--color-accent-border)',
+                    height: '38px',
+                    borderRadius: '6px',
+                    background: 'rgba(228, 93, 44, 0.12)',
+                    border: '1px solid rgba(228, 93, 44, 0.25)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: 'var(--color-accent)',
+                    color: '#FF8A3D',
+                    flexShrink: 0,
                   }}
                 >
-                  <FileText size={18} />
+                  <FileText size={20} />
                 </div>
               )}
-              <div>
+              <div style={{ minWidth: 0 }}>
                 <div
                   style={{
                     fontSize: '13px',
                     fontWeight: 600,
-                    color: 'var(--color-text)',
+                    color: '#F5F5F5',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
                   }}
                 >
                   {file.name}
@@ -376,7 +425,7 @@ export default function CertificateAiUploader({
                   style={{
                     fontSize: '11px',
                     fontFamily: 'var(--font-mono)',
-                    color: 'var(--color-text-muted)',
+                    color: '#8A8F98',
                   }}
                 >
                   {formatFileSize(file.size)} · {isPDF ? 'PDF Document' : 'Image Document'}
@@ -384,70 +433,70 @@ export default function CertificateAiUploader({
               </div>
             </div>
 
-            {/* Status Badges */}
+            {/* Status Pill */}
             <div>
               {status === 'UPLOADED' && (
                 <span
                   style={{
                     fontSize: '11px',
                     fontFamily: 'var(--font-mono)',
-                    color: 'var(--color-text-muted)',
-                    padding: '3px 8px',
-                    background: 'rgba(255, 255, 255, 0.04)',
-                    borderRadius: 'var(--radius-sm)',
-                    border: '1px solid var(--color-border)',
+                    color: '#FF8A3D',
+                    padding: '3px 10px',
+                    background: 'rgba(228, 93, 44, 0.1)',
+                    borderRadius: '9999px',
+                    border: '1px solid rgba(228, 93, 44, 0.2)',
                   }}
                 >
                   Ready for AI Analysis
                 </span>
               )}
-              {status === 'SUCCESS' && (
+              {status === 'ANALYZED_PREVIEW' && (
+                <span
+                  style={{
+                    fontSize: '11px',
+                    fontFamily: 'var(--font-mono)',
+                    color: '#14B8A6',
+                    padding: '3px 10px',
+                    background: 'rgba(20, 184, 166, 0.1)',
+                    borderRadius: '9999px',
+                    border: '1px solid rgba(20, 184, 166, 0.2)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                  }}
+                >
+                  <Sparkles size={11} /> Analysis Ready
+                </span>
+              )}
+              {status === 'APPLIED' && (
                 <span
                   style={{
                     fontSize: '11px',
                     fontFamily: 'var(--font-mono)',
                     color: '#10B981',
-                    padding: '3px 8px',
+                    padding: '3px 10px',
                     background: 'rgba(16, 185, 129, 0.1)',
-                    borderRadius: 'var(--radius-sm)',
+                    borderRadius: '9999px',
                     border: '1px solid rgba(16, 185, 129, 0.2)',
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: '4px',
                   }}
                 >
-                  <CheckCircle2 size={12} /> Auto-Filled with Gemini
-                </span>
-              )}
-              {status === 'PARTIAL_SUCCESS' && (
-                <span
-                  style={{
-                    fontSize: '11px',
-                    fontFamily: 'var(--font-mono)',
-                    color: '#F59E0B',
-                    padding: '3px 8px',
-                    background: 'rgba(245, 158, 11, 0.1)',
-                    borderRadius: 'var(--radius-sm)',
-                    border: '1px solid rgba(245, 158, 11, 0.2)',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                  }}
-                >
-                  <AlertTriangle size={12} /> Partially Extracted
+                  <CheckCircle2 size={11} /> Applied to Form
                 </span>
               )}
             </div>
           </div>
 
-          {/* Analyzing Scanning Animation */}
+          {/* Analyzing Step-by-Step Scanning Animation */}
           {status === 'ANALYZING' && (
             <div
               style={{
                 padding: '24px 18px',
-                background: 'rgba(229, 106, 61, 0.04)',
-                border: '1px solid var(--color-accent-border)',
-                borderRadius: 'var(--radius-sm)',
+                background: 'rgba(228, 93, 44, 0.05)',
+                border: '1px solid rgba(228, 93, 44, 0.2)',
+                borderRadius: '10px',
                 marginBottom: '16px',
                 textAlign: 'center',
               }}
@@ -459,7 +508,7 @@ export default function CertificateAiUploader({
                   justifyContent: 'center',
                   gap: '8px',
                   marginBottom: '12px',
-                  color: 'var(--color-accent)',
+                  color: '#FF8A3D',
                   fontSize: '12px',
                   fontFamily: 'var(--font-mono)',
                   letterSpacing: '0.1em',
@@ -467,14 +516,14 @@ export default function CertificateAiUploader({
                   fontWeight: 600,
                 }}
               >
-                <Cpu size={15} className="pulse-slow" />
-                <span>✦ GEMINI MULTIMODAL INFERENCE</span>
+                <Cpu size={15} style={{ animation: 'spin 3s linear infinite' }} />
+                <span>✦ GOOGLE GEMINI MULTIMODAL INFERENCE</span>
               </div>
 
               <div
                 style={{
                   fontSize: '14px',
-                  color: 'var(--color-text)',
+                  color: '#F5F5F5',
                   fontWeight: 500,
                   marginBottom: '16px',
                 }}
@@ -482,7 +531,7 @@ export default function CertificateAiUploader({
                 {ANALYSIS_STEPS[activeStep]}
               </div>
 
-              {/* Progress Loading Bar */}
+              {/* Shimmer progress bar */}
               <div
                 style={{
                   height: '4px',
@@ -490,7 +539,7 @@ export default function CertificateAiUploader({
                   borderRadius: '2px',
                   overflow: 'hidden',
                   position: 'relative',
-                  maxWidth: '360px',
+                  maxWidth: '380px',
                   margin: '0 auto',
                 }}
               >
@@ -500,7 +549,7 @@ export default function CertificateAiUploader({
                     top: 0,
                     bottom: 0,
                     width: '40%',
-                    background: 'var(--color-accent)',
+                    background: 'linear-gradient(90deg, #E45D2C, #FF8A3D)',
                     borderRadius: '2px',
                     animation: 'scanBar 1.4s ease-in-out infinite alternate',
                   }}
@@ -509,14 +558,14 @@ export default function CertificateAiUploader({
             </div>
           )}
 
-          {/* Error Message & Retry */}
+          {/* Error Message & Retry Banner */}
           {status === 'ERROR' && (
             <div
               style={{
                 padding: '16px',
                 background: 'rgba(239, 68, 68, 0.08)',
                 border: '1px solid rgba(239, 68, 68, 0.3)',
-                borderRadius: 'var(--radius-sm)',
+                borderRadius: '8px',
                 marginBottom: '16px',
                 fontSize: '13px',
                 color: '#EF4444',
@@ -527,39 +576,441 @@ export default function CertificateAiUploader({
             >
               <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
               <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 600, marginBottom: '2px' }}>AI Analysis Notice</div>
+                <div style={{ fontWeight: 600, marginBottom: '2px' }}>AI Document Analysis Notice</div>
                 <div>{errorMessage}</div>
                 <div
                   style={{
                     fontSize: '12px',
-                    color: 'var(--color-text-secondary)',
+                    color: '#8A8F98',
                     marginTop: '6px',
                   }}
                 >
-                  You can retry or continue filling out the certificate fields manually below.
+                  You can retry analysis or continue filling out the form fields manually.
                 </div>
               </div>
             </div>
           )}
 
-          {/* Action Triggers */}
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-            {status !== 'ANALYZING' && (
+          {/* AI Extracted Preview Card (Shown before or after applying) */}
+          {extractedData && (status === 'ANALYZED_PREVIEW' || status === 'APPLIED') && (
+            <div
+              style={{
+                background: '#13171F',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '10px',
+                padding: '20px',
+                marginBottom: '16px',
+              }}
+            >
+              {/* Card Header */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: '16px',
+                  paddingBottom: '12px',
+                  borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+                  flexWrap: 'wrap',
+                  gap: '8px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Sparkles size={15} style={{ color: '#FF8A3D' }} />
+                  <span
+                    style={{
+                      fontSize: '12px',
+                      fontFamily: 'var(--font-mono)',
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.08em',
+                      color: '#F5F5F5',
+                    }}
+                  >
+                    AI Extracted Information
+                  </span>
+                </div>
+
+                <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: '#8A8F98' }}>
+                  Review details below before applying
+                </div>
+              </div>
+
+              {/* Warnings Banner (if any) */}
+              {((extractedData.warnings && extractedData.warnings.length > 0) ||
+                duplicateAlert ||
+                extractedData.recipient_warning) && (
+                <div
+                  style={{
+                    padding: '12px 14px',
+                    background: 'rgba(245, 158, 11, 0.08)',
+                    border: '1px solid rgba(245, 158, 11, 0.25)',
+                    borderRadius: '6px',
+                    marginBottom: '16px',
+                    fontSize: '12px',
+                    color: '#F59E0B',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '6px',
+                  }}
+                >
+                  {extractedData.recipient_warning && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <ShieldAlert size={14} style={{ flexShrink: 0 }} />
+                      <span>{extractedData.recipient_warning}</span>
+                    </div>
+                  )}
+
+                  {duplicateAlert && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <AlertTriangle size={14} style={{ flexShrink: 0 }} />
+                      <span>{duplicateAlert}</span>
+                    </div>
+                  )}
+
+                  {extractedData.warnings?.map((w, idx) => (
+                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <AlertTriangle size={14} style={{ flexShrink: 0 }} />
+                      <span>{w}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Extracted Details Grid */}
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                  gap: '14px',
+                  marginBottom: '16px',
+                }}
+              >
+                {/* Title */}
+                <div>
+                  <div
+                    style={{
+                      fontSize: '10px',
+                      fontFamily: 'var(--font-mono)',
+                      color: '#8A8F98',
+                      textTransform: 'uppercase',
+                      marginBottom: '3px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                    }}
+                  >
+                    <Layers size={11} /> Title
+                  </div>
+                  <div style={{ fontSize: '13px', fontWeight: 600, color: '#F5F5F5' }}>
+                    {extractedData.title || <span style={{ color: '#6B7280' }}>Not specified</span>}
+                  </div>
+                </div>
+
+                {/* Organization / Provider */}
+                <div>
+                  <div
+                    style={{
+                      fontSize: '10px',
+                      fontFamily: 'var(--font-mono)',
+                      color: '#8A8F98',
+                      textTransform: 'uppercase',
+                      marginBottom: '3px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                    }}
+                  >
+                    <Building size={11} />{' '}
+                    {type === 'training'
+                      ? 'Provider / Institution'
+                      : type === 'co_curricular'
+                      ? 'Organization / Host'
+                      : 'Issuer'}
+                  </div>
+                  <div style={{ fontSize: '13px', color: '#E2E8F0' }}>
+                    {'provider' in extractedData && extractedData.provider
+                      ? extractedData.provider
+                      : 'organization' in extractedData && extractedData.organization
+                      ? extractedData.organization
+                      : 'issuer' in extractedData && extractedData.issuer
+                      ? extractedData.issuer
+                      : <span style={{ color: '#6B7280' }}>Not detected</span>}
+                  </div>
+                </div>
+
+                {/* Category & Mode */}
+                <div>
+                  <div
+                    style={{
+                      fontSize: '10px',
+                      fontFamily: 'var(--font-mono)',
+                      color: '#8A8F98',
+                      textTransform: 'uppercase',
+                      marginBottom: '3px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                    }}
+                  >
+                    <Tag size={11} /> Category & Mode
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span
+                      style={{
+                        fontSize: '11px',
+                        fontFamily: 'var(--font-mono)',
+                        padding: '1px 7px',
+                        borderRadius: '4px',
+                        background: 'rgba(228, 93, 44, 0.12)',
+                        color: '#FF8A3D',
+                        fontWeight: 600,
+                      }}
+                    >
+                      {extractedData.category}
+                    </span>
+                    {'mode' in extractedData && extractedData.mode && (
+                      <span
+                        style={{
+                          fontSize: '11px',
+                          fontFamily: 'var(--font-mono)',
+                          padding: '1px 7px',
+                          borderRadius: '4px',
+                          background: 'rgba(20, 184, 166, 0.12)',
+                          color: '#14B8A6',
+                          fontWeight: 600,
+                        }}
+                      >
+                        {extractedData.mode}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Date */}
+                <div>
+                  <div
+                    style={{
+                      fontSize: '10px',
+                      fontFamily: 'var(--font-mono)',
+                      color: '#8A8F98',
+                      textTransform: 'uppercase',
+                      marginBottom: '3px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                    }}
+                  >
+                    <Calendar size={11} /> Date / Schedule
+                  </div>
+                  <div style={{ fontSize: '13px', color: '#E2E8F0' }}>
+                    {'start_date' in extractedData && extractedData.start_date
+                      ? extractedData.start_date +
+                        (extractedData.end_date ? ` to ${extractedData.end_date}` : '')
+                      : 'date' in extractedData && extractedData.date
+                      ? extractedData.date + (extractedData.end_date ? ` to ${extractedData.end_date}` : '')
+                      : 'issue_date' in extractedData && extractedData.issue_date
+                      ? extractedData.issue_date
+                      : <span style={{ color: '#6B7280' }}>Not stated</span>}
+                    {'duration' in extractedData && extractedData.duration && (
+                      <span style={{ color: '#8A8F98', marginLeft: '6px' }}>
+                        ({extractedData.duration})
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Credential ID */}
+                {extractedData.credential_id && (
+                  <div>
+                    <div
+                      style={{
+                        fontSize: '10px',
+                        fontFamily: 'var(--font-mono)',
+                        color: '#8A8F98',
+                        textTransform: 'uppercase',
+                        marginBottom: '3px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                      }}
+                    >
+                      <Hash size={11} /> Credential ID
+                    </div>
+                    <div
+                      style={{
+                        fontSize: '12px',
+                        fontFamily: 'var(--font-mono)',
+                        color: '#10B981',
+                      }}
+                    >
+                      {extractedData.credential_id}
+                    </div>
+                  </div>
+                )}
+
+                {/* Role / Achievement (if Co-Curricular) */}
+                {type === 'co_curricular' && 'role' in extractedData && (
+                  <div>
+                    <div
+                      style={{
+                        fontSize: '10px',
+                        fontFamily: 'var(--font-mono)',
+                        color: '#8A8F98',
+                        textTransform: 'uppercase',
+                        marginBottom: '3px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                      }}
+                    >
+                      <Award size={11} /> Role & Achievement
+                    </div>
+                    <div style={{ fontSize: '13px', color: '#E2E8F0' }}>
+                      {extractedData.role || 'Participant'}
+                      {extractedData.achievement ? ` · ${extractedData.achievement}` : ''}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Skills Tags */}
+              {extractedData.skills && extractedData.skills.length > 0 && (
+                <div style={{ marginTop: '10px' }}>
+                  <div
+                    style={{
+                      fontSize: '10px',
+                      fontFamily: 'var(--font-mono)',
+                      color: '#8A8F98',
+                      textTransform: 'uppercase',
+                      marginBottom: '6px',
+                    }}
+                  >
+                    Detected Skills:
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                    {extractedData.skills.map((s, idx) => (
+                      <span
+                        key={idx}
+                        style={{
+                          fontSize: '11px',
+                          fontFamily: 'var(--font-mono)',
+                          padding: '2px 8px',
+                          borderRadius: '4px',
+                          background: '#1A202C',
+                          border: '1px solid rgba(255, 255, 255, 0.08)',
+                          color: '#CBD5E1',
+                        }}
+                      >
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Action Trigger Buttons */}
+          <div
+            style={{
+              display: 'flex',
+              gap: '12px',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+            }}
+          >
+            {status === 'UPLOADED' && (
               <button
                 type="button"
                 onClick={handleAnalyze}
-                className="btn-primary"
                 style={{
-                  padding: '10px 20px',
+                  padding: '11px 22px',
+                  borderRadius: '6px',
+                  background: 'linear-gradient(135deg, #E45D2C 0%, #FF8A3D 100%)',
+                  border: 'none',
+                  color: '#FFFFFF',
                   fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  boxShadow: '0 4px 14px rgba(228, 93, 44, 0.35)',
+                  transition: 'all 0.2s',
                 }}
               >
-                <Sparkles size={14} />
-                <span>
-                  {status === 'SUCCESS' || status === 'PARTIAL_SUCCESS'
-                    ? 'Re-Analyze with Gemini ✨'
-                    : 'Analyze with Gemini ✨'}
-                </span>
+                <Sparkles size={15} />
+                <span>Analyze with Gemini ✨</span>
+              </button>
+            )}
+
+            {status === 'ANALYZED_PREVIEW' && (
+              <>
+                <button
+                  type="button"
+                  onClick={handleApplyToForm}
+                  style={{
+                    padding: '11px 24px',
+                    borderRadius: '6px',
+                    background: 'linear-gradient(135deg, #E45D2C 0%, #FF8A3D 100%)',
+                    border: 'none',
+                    color: '#FFFFFF',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    boxShadow: '0 4px 14px rgba(228, 93, 44, 0.35)',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  <ArrowRight size={15} />
+                  <span>Apply to Form</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleAnalyze}
+                  style={{
+                    padding: '11px 18px',
+                    borderRadius: '6px',
+                    background: '#13171F',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    color: '#8A8F98',
+                    fontSize: '13px',
+                    fontFamily: 'var(--font-mono)',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}
+                >
+                  <RotateCcw size={13} /> Re-Analyze Document
+                </button>
+              </>
+            )}
+
+            {status === 'APPLIED' && (
+              <button
+                type="button"
+                onClick={handleAnalyze}
+                style={{
+                  padding: '9px 16px',
+                  borderRadius: '6px',
+                  background: '#13171F',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  color: '#8A8F98',
+                  fontSize: '12px',
+                  fontFamily: 'var(--font-mono)',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+              >
+                <RotateCcw size={13} /> Re-Analyze with Gemini
               </button>
             )}
 
@@ -567,8 +1018,19 @@ export default function CertificateAiUploader({
               <button
                 type="button"
                 onClick={handleAnalyze}
-                className="btn-secondary"
-                style={{ padding: '10px 18px', fontSize: '13px' }}
+                style={{
+                  padding: '10px 18px',
+                  borderRadius: '6px',
+                  background: '#13171F',
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  color: '#FF8A3D',
+                  fontSize: '13px',
+                  fontFamily: 'var(--font-mono)',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
               >
                 <RotateCcw size={13} /> Retry Analysis
               </button>

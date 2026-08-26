@@ -1,14 +1,17 @@
 'use client'
 
-import AdminSidebar from './Sidebar'
+import { useState } from 'react'
 import { usePathname } from 'next/navigation'
+import AdminSidebar from './Sidebar'
+import AdminHeader from './AdminHeader'
 
 export default function AdminLayoutShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const isLoginPage = pathname === '/admin/login'
 
   if (isLoginPage) {
-    return <div className="admin-body" style={{ minHeight: '100vh' }}>{children}</div>
+    return <div className="admin-body" style={{ minHeight: '100vh', background: '#08090C' }}>{children}</div>
   }
 
   return (
@@ -17,22 +20,45 @@ export default function AdminLayoutShell({ children }: { children: React.ReactNo
       style={{
         display: 'flex',
         minHeight: '100vh',
-        background: '#0F0F0F',
+        background: '#07080B',
         color: '#F5F5F5',
-        fontFamily: 'system-ui, -apple-system, sans-serif',
+        fontFamily: 'var(--font-sans, system-ui, sans-serif)',
       }}
     >
-      <AdminSidebar />
-      <main
+      {/* Sidebar (Desktop sticky & Mobile Drawer) */}
+      <AdminSidebar
+        mobileOpen={mobileSidebarOpen}
+        onToggleMobile={() => setMobileSidebarOpen(!mobileSidebarOpen)}
+      />
+
+      {/* Main Content Area */}
+      <div
         style={{
           flex: 1,
-          padding: '32px',
-          overflowY: 'auto',
-          maxWidth: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          minWidth: 0,
+          background: '#080A0E',
         }}
       >
-        {children}
-      </main>
+        {/* Top Sticky Application Header */}
+        <AdminHeader
+          onToggleMobileSidebar={() => setMobileSidebarOpen(true)}
+        />
+
+        {/* Dynamic Page Content */}
+        <main
+          style={{
+            flex: 1,
+            padding: 'clamp(20px, 3.5vw, 36px)',
+            maxWidth: '1280px',
+            width: '100%',
+            margin: '0 auto',
+          }}
+        >
+          {children}
+        </main>
+      </div>
     </div>
   )
 }

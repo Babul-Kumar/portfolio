@@ -3,6 +3,8 @@ import type {
   Profile,
   Project,
   Certificate,
+  Training,
+  CoCurricularActivity,
   Achievement,
   Education,
   Experience,
@@ -23,7 +25,39 @@ interface CacheEntry<T> {
 
 const memoryCache = new Map<string, CacheEntry<unknown>>()
 const CACHE_TTL_MS = 60 * 1000 // 1 minute
-const QUERY_TIMEOUT_MS = 1500 // Max 1.5s network wait before fallback
+const QUERY_TIMEOUT_MS = 6000 // 6s network timeout before fallback
+
+export function invalidateCertificateCache(): void {
+  for (const key of memoryCache.keys()) {
+    if (key.startsWith('certs_') || key.startsWith('cert_')) {
+      memoryCache.delete(key)
+    }
+  }
+}
+
+export function invalidateProjectCache(): void {
+  for (const key of memoryCache.keys()) {
+    if (key.startsWith('projects_') || key.startsWith('project_')) {
+      memoryCache.delete(key)
+    }
+  }
+}
+
+export function invalidateTrainingCache(): void {
+  for (const key of memoryCache.keys()) {
+    if (key.startsWith('trainings_') || key.startsWith('training_') || key.startsWith('admin_trainings')) {
+      memoryCache.delete(key)
+    }
+  }
+}
+
+export function invalidateCoCurricularCache(): void {
+  for (const key of memoryCache.keys()) {
+    if (key.startsWith('co_curr_') || key.startsWith('admin_co_curr')) {
+      memoryCache.delete(key)
+    }
+  }
+}
 
 function getCached<T>(key: string): T | null {
   const entry = memoryCache.get(key)
@@ -227,82 +261,369 @@ export const FALLBACK_PROJECTS: Project[] = [
 
 export const FALLBACK_CERTIFICATES: Certificate[] = [
   {
-    id: '00000000-0000-4000-b000-000000000001',
-    title: 'Machine Learning Specialization',
-    slug: 'machine-learning-specialization',
-    issuer: 'Stanford Online & DeepLearning.AI',
+    id: '94341db2-b91e-4a4b-8486-4545c3350444',
+    title: "Intro to AI: A Beginner's Guide to Artificial Intelligence",
+    slug: 'intro-to-ai-a-beginners-guide-to-artificial-intelligence',
+    issuer: 'Udemy',
     category: 'AI / ML',
-    issue_date: '2026-01-10',
+    issue_date: '2026-08-20',
     expiry_date: null,
-    credential_id: 'STAN-ML-89241',
-    verification_url: 'https://coursera.org/verify/specialization',
-    file_url: null,
-    thumbnail_url: null,
+    credential_id: 'UC-71dc0a0c-e699-4442-af0f-6d23058fdf17',
+    verification_url: null,
     description:
-      'Comprehensive 3-course specialization covering supervised learning (linear regression, logistic regression, neural networks), unsupervised learning (clustering, anomaly detection, recommender systems), and reinforcement learning.',
-    skills: ['Supervised Learning', 'Neural Networks', 'Decision Trees', 'Unsupervised Learning', 'Python'],
+      'This certificate signifies completion of an introductory course designed to provide a foundational understanding of Artificial Intelligence for beginners.',
+    file_url:
+      'https://gmlgzuiuyhinxhjsbfkk.supabase.co/storage/v1/object/public/certificate/documents/1787773122588-gelv4k.png',
+    thumbnail_url:
+      'https://gmlgzuiuyhinxhjsbfkk.supabase.co/storage/v1/object/public/certificate/thumbnails/1787773168798-3wtxsd.png',
+    skills: ['Artificial Intelligence', 'AI Concepts'],
+    featured: false,
+    published: true,
+    created_at: nowIso,
+    updated_at: nowIso,
+  },
+  {
+    id: 'cff246a0-1ee6-47a9-91a6-56a80854a43c',
+    title: 'Generative AI for Beginners',
+    slug: 'generative-ai-for-beginners',
+    issuer: 'Infosys | Springboard',
+    category: 'AI / ML',
+    issue_date: '2026-08-20',
+    expiry_date: null,
+    credential_id: null,
+    verification_url: 'https://verify.onwingspan.com',
+    description:
+      'This certificate acknowledges successful completion of an introductory course on Generative AI, covering fundamental concepts for beginners.',
+    file_url:
+      'https://gmlgzuiuyhinxhjsbfkk.supabase.co/storage/v1/object/public/certificate/documents/1787773009454-gudxkq.png',
+    thumbnail_url:
+      'https://gmlgzuiuyhinxhjsbfkk.supabase.co/storage/v1/object/public/certificate/thumbnails/1787773044688-yzv4up.png',
+    skills: ['Generative AI', 'Artificial Intelligence'],
     featured: true,
     published: true,
     created_at: nowIso,
     updated_at: nowIso,
   },
   {
-    id: '00000000-0000-4000-b000-000000000002',
-    title: 'Deep Learning Specialization',
-    slug: 'deep-learning-specialization',
-    issuer: 'DeepLearning.AI',
+    id: 'ba8fc20d-89c4-40bd-b251-f618512f0c32',
+    title: 'AI for Everyone: Understanding and Applying the Basics',
+    slug: 'ai-for-everyone-understanding-and-applying-the-basics',
+    issuer: 'Udemy',
     category: 'AI / ML',
-    issue_date: '2025-10-15',
+    issue_date: '2026-08-20',
     expiry_date: null,
-    credential_id: 'DLAI-DL-44812',
-    verification_url: 'https://coursera.org/verify/specialization',
-    file_url: null,
-    thumbnail_url: null,
+    credential_id: 'UC-ae526453-a227-46b8-b857-1a60ef520482',
+    verification_url: 'https://ude.my/UC-ae526453-a227-46b8-b857-1a60ef520482',
     description:
-      'Deep dive into neural network architectures, hyperparameter tuning, Convolutional Neural Networks (CNNs), and Sequence Models (RNNs, LSTMs, Transformers).',
-    skills: ['Deep Learning', 'CNN', 'RNN', 'Transformers', 'TensorFlow', 'PyTorch'],
+      'This certificate signifies completion of a course focused on understanding and applying the fundamental concepts of Artificial Intelligence.',
+    file_url:
+      'https://gmlgzuiuyhinxhjsbfkk.supabase.co/storage/v1/object/public/certificate/documents/1787772882903-3tsl2c.png',
+    thumbnail_url:
+      'https://gmlgzuiuyhinxhjsbfkk.supabase.co/storage/v1/object/public/certificate/thumbnails/1787772920656-a2yx2r.png',
+    skills: ['Artificial Intelligence', 'AI Concepts', 'AI Application'],
     featured: true,
     published: true,
     created_at: nowIso,
     updated_at: nowIso,
   },
   {
-    id: '00000000-0000-4000-b000-000000000003',
-    title: 'TensorFlow Developer Certificate',
-    slug: 'tensorflow-developer-certificate',
-    issuer: 'Google',
-    category: 'AI / ML',
-    issue_date: '2025-06-20',
+    id: 'ce3615a0-75b7-42de-b7d5-0182abc9bc82',
+    title: 'Database Management System Part - 1',
+    slug: 'database-management-system-part-1',
+    issuer: 'Infosys',
+    category: 'Data',
+    issue_date: '2026-08-01',
     expiry_date: null,
-    credential_id: 'TF-DEV-77192',
-    verification_url: 'https://certificate.google.com/verify',
-    file_url: null,
-    thumbnail_url: null,
+    credential_id: null,
+    verification_url: 'https://verify.onwingspan.com',
     description:
-      'Demonstrated proficiency in building and training computer vision models, NLP tokenization pipelines, and time-series forecasting models using TensorFlow 2.x.',
-    skills: ['TensorFlow', 'Computer Vision', 'NLP', 'Time Series', 'Python'],
+      'This certificate signifies successful completion of the first part of a course on Database Management Systems, covering fundamental concepts and principles of managing data.',
+    file_url:
+      'https://gmlgzuiuyhinxhjsbfkk.supabase.co/storage/v1/object/public/certificate/documents/1787691126709-4iuhho.png',
+    thumbnail_url: null,
+    skills: ['Database Management System', 'Data Management'],
     featured: true,
     published: true,
     created_at: nowIso,
     updated_at: nowIso,
   },
   {
-    id: '00000000-0000-4000-b000-000000000004',
-    title: 'Full Stack Open',
-    slug: 'full-stack-open',
-    issuer: 'University of Helsinki',
-    category: 'Full Stack',
-    issue_date: '2024-12-05',
+    id: 'bc82b7b3-23f8-4c72-a32a-1bbd31ee3680',
+    title: 'Introduction to DSA with Proctored exam',
+    slug: 'introduction-to-dsa-with-proctored-exam',
+    issuer: 'CODING TANTRA',
+    category: 'Programming',
+    issue_date: '2025-01-24',
     expiry_date: null,
-    credential_id: 'UH-FSO-30918',
-    verification_url: 'https://studies.helsinki.fi/verify',
-    file_url: null,
-    thumbnail_url: null,
+    credential_id: 'CT-01/2025-ITD-184',
+    verification_url: null,
     description:
-      'Modern JavaScript-based web development covering React, Redux, Node.js, Express, REST APIs, GraphQL, TypeScript, and CI/CD pipelines.',
-    skills: ['React', 'Node.js', 'Express', 'TypeScript', 'GraphQL', 'PostgreSQL'],
+      'This certificate signifies the completion of a 15+ hour MOOC on Introduction to Data Structures and Algorithms, validated by a proctored examination. It demonstrates proficiency in fundamental programming concepts and problem-solving techniques.',
+    file_url:
+      'https://gmlgzuiuyhinxhjsbfkk.supabase.co/storage/v1/object/public/certificate/documents/1787688103605-pewnxi.png',
+    thumbnail_url:
+      'https://gmlgzuiuyhinxhjsbfkk.supabase.co/storage/v1/object/public/certificate/thumbnails/1787688125343-ldoziu.png',
+    skills: ['Data Structures', 'Algorithms', 'DSA'],
     featured: true,
     published: true,
+    created_at: nowIso,
+    updated_at: nowIso,
+  },
+  {
+    id: '76f96743-2a2d-4b11-a326-55393267222b',
+    title: 'Effective Time Management',
+    slug: 'effective-time-management',
+    issuer: 'Master Union',
+    category: 'Other',
+    issue_date: '2024-10-19',
+    expiry_date: null,
+    credential_id: 'MU/OCT24/ETM/A505',
+    verification_url: null,
+    description:
+      'This certificate acknowledges the completion of a short-duration MOOC on Effective Time Management, which included passing a comprehensive proctored examination. It demonstrates a strong commitment to developing effective time management skills, continuous improvement, and professional growth.',
+    file_url:
+      'https://gmlgzuiuyhinxhjsbfkk.supabase.co/storage/v1/object/public/certificate/documents/1787687052610-2s1bhe.png',
+    thumbnail_url:
+      'https://gmlgzuiuyhinxhjsbfkk.supabase.co/storage/v1/object/public/certificate/thumbnails/1787687066343-68osts.png',
+    skills: ['Time Management', 'Professional Growth', 'Continuous Improvement'],
+    featured: true,
+    published: true,
+    created_at: nowIso,
+    updated_at: nowIso,
+  },
+  {
+    id: '6accb593-2ad2-41a5-9a6d-7787c36ad177',
+    title: 'REACT.JS MOOC',
+    slug: 'reactjs-mooc',
+    issuer: 'TECH VEDA',
+    category: 'Programming',
+    issue_date: '2025-03-22',
+    expiry_date: null,
+    credential_id: 'TV/MAR25/RJ/337',
+    verification_url: null,
+    description:
+      'This certificate acknowledges the completion of a 15+ hour Massive Open Online Course (MOOC) on REACT.JS, which included passing a comprehensive proctored examination. It signifies a strong dedication to continuous learning and personal development in front-end web development.',
+    file_url:
+      'https://gmlgzuiuyhinxhjsbfkk.supabase.co/storage/v1/object/public/certificate/documents/1787686167405-gv62pm.png',
+    thumbnail_url:
+      'https://gmlgzuiuyhinxhjsbfkk.supabase.co/storage/v1/object/public/certificate/thumbnails/1787686172890-bvr11i.png',
+    skills: ['REACT.JS', 'Front-end Development', 'JavaScript'],
+    featured: true,
+    published: true,
+    created_at: nowIso,
+    updated_at: nowIso,
+  },
+]
+
+export const FALLBACK_TRAININGS: Training[] = [
+  {
+    id: '10000000-0000-4000-a000-000000000001',
+    title: 'Full-Stack Web & Applied AI Systems Engineering',
+    slug: 'full-stack-web-ai-systems-engineering',
+    provider: 'Centre for Professional Development',
+    organization: 'Lovely Professional University & Industry Partners',
+    category: 'Industrial Training',
+    description:
+      'Intensive industrial curriculum focused on architecting scalable full-stack applications with Next.js, FastAPI, and PostgreSQL, integrated with real-time AI inference pipelines, vector embeddings, and AST-aware agents.',
+    start_date: '2025-06-01',
+    end_date: '2025-07-25',
+    duration: '8 Weeks',
+    location: 'Punjab, India',
+    mode: 'Hybrid',
+    certificate_url: null,
+    image_url: null,
+    skills: ['Next.js', 'React', 'FastAPI', 'PostgreSQL', 'AI Agent Runtimes', 'Vector Embeddings'],
+    technologies: ['TypeScript', 'Python', 'Supabase', 'Tailwind CSS', 'Docker'],
+    credential_id: 'TRN-2025-FS-8812',
+    credential_url: null,
+    featured: true,
+    published: true,
+    display_order: 1,
+    created_at: nowIso,
+    updated_at: nowIso,
+  },
+  {
+    id: '10000000-0000-4000-a000-000000000002',
+    title: 'Applied Machine Learning & Neural Network Architectures',
+    slug: 'applied-machine-learning-neural-architectures',
+    provider: 'DeepLearning.AI & Coursera',
+    organization: 'DeepLearning.AI',
+    category: 'AI / ML',
+    description:
+      'Rigorous specialization covering gradient-boosted decision trees, deep neural networks, CNNs for computer vision, attention mechanisms, and fine-tuning transformer models for predictive analytics.',
+    start_date: '2025-01-10',
+    end_date: '2025-03-05',
+    duration: '8 Weeks',
+    location: 'Remote',
+    mode: 'Online',
+    certificate_url: null,
+    image_url: null,
+    skills: ['Supervised Learning', 'Deep Neural Networks', 'XGBoost', 'Feature Engineering', 'Model Evaluation'],
+    technologies: ['PyTorch', 'TensorFlow', 'Scikit-learn', 'NumPy', 'Pandas'],
+    credential_id: 'TRN-DL-2025-9041',
+    credential_url: null,
+    featured: true,
+    published: true,
+    display_order: 2,
+    created_at: nowIso,
+    updated_at: nowIso,
+  },
+  {
+    id: '10000000-0000-4000-a000-000000000003',
+    title: 'Cloud Architecture & Distributed Microservices Workshop',
+    slug: 'cloud-architecture-distributed-microservices',
+    provider: 'AWS Cloud Academy',
+    organization: 'Amazon Web Services Training & Certification',
+    category: 'Cloud & DevOps',
+    description:
+      'Hands-on technical workshop on designing highly available distributed cloud architectures, serverless RPC backends, container orchestration with Docker/K8s, and automated CI/CD deployment pipelines.',
+    start_date: '2024-09-01',
+    end_date: '2024-10-15',
+    duration: '6 Weeks',
+    location: 'Remote',
+    mode: 'Online',
+    certificate_url: null,
+    image_url: null,
+    skills: ['Cloud Infrastructure', 'Microservices', 'CI/CD Pipelines', 'Container Orchestration'],
+    technologies: ['AWS', 'Docker', 'GitHub Actions', 'Terraform', 'Linux'],
+    credential_id: 'TRN-AWS-2024-5519',
+    credential_url: null,
+    featured: false,
+    published: true,
+    display_order: 3,
+    created_at: nowIso,
+    updated_at: nowIso,
+  },
+  {
+    id: '10000000-0000-4000-a000-000000000004',
+    title: 'Advanced Data Structures & Algorithmic Engineering Bootcamp',
+    slug: 'advanced-data-structures-algorithmic-engineering',
+    provider: 'Coding Blocks & GeeksforGeeks',
+    organization: 'Algorithmic Systems Lab',
+    category: 'Workshop',
+    description:
+      'Comprehensive masterclass mastering dynamic programming, graph algorithms (Dijkstra, Tarjan, MST), advanced tree structures (Segment Trees, Trie, Fenwick), and optimal time-space complexity engineering.',
+    start_date: '2024-05-15',
+    end_date: '2024-07-20',
+    duration: '10 Weeks',
+    location: 'Remote',
+    mode: 'Online',
+    certificate_url: null,
+    image_url: null,
+    skills: ['Dynamic Programming', 'Graph Theory', 'Advanced Trees', 'Algorithmic Optimization'],
+    technologies: ['C++', 'Java', 'Python', 'Algorithms Analysis'],
+    credential_id: 'TRN-DSA-2024-1120',
+    credential_url: null,
+    featured: false,
+    published: true,
+    display_order: 4,
+    created_at: nowIso,
+    updated_at: nowIso,
+  },
+]
+
+export const FALLBACK_CO_CURRICULAR: CoCurricularActivity[] = [
+  {
+    id: '00000000-0000-4000-b500-000000000001',
+    title: 'Smart India Hackathon (SIH)',
+    slug: 'smart-india-hackathon',
+    organization: 'Ministry of Education & AICTE',
+    category: 'Hackathon',
+    description:
+      'Spearheaded a 6-member engineering team to design and develop an intelligent AI-driven disaster response and resource dispatch management system under a 36-hour continuous hackathon format.',
+    date: '2025-12-18',
+    end_date: '2025-12-20',
+    location: 'Nodal Centre, India',
+    mode: 'Offline',
+    role: 'Team Lead & Full-Stack Architect',
+    achievement: 'National Finalist',
+    skills: ['Team Leadership', 'System Architecture', 'Rapid Prototyping', 'Public Pitching'],
+    technologies: ['Next.js', 'FastAPI', 'PyTorch', 'PostgreSQL', 'WebSockets'],
+    image_url: null,
+    document_url: null,
+    credential_id: 'SIH-2025-FIN-842',
+    credential_url: null,
+    featured: true,
+    published: true,
+    display_order: 1,
+    created_at: nowIso,
+    updated_at: nowIso,
+  },
+  {
+    id: '00000000-0000-4000-b500-000000000002',
+    title: 'LPU Developer Community Tech Conclave',
+    slug: 'lpu-developer-community-tech-conclave',
+    organization: 'Developer Student Clubs & CSE Dept',
+    category: 'Technical Event',
+    description:
+      'Delivered an in-depth technical workshop on modern frontend architectures, WebGL/Three.js rendering pipelines, and building autonomous agentic tools to over 300 engineering students.',
+    date: '2025-10-15',
+    end_date: null,
+    location: 'Shanti Devi Mittal Auditorium, LPU',
+    mode: 'Offline',
+    role: 'Technical Speaker & Organizer',
+    achievement: 'Keynote Speaker — 300+ Attendees',
+    skills: ['Technical Speaking', 'Workshop Delivery', 'Community Building', 'Developer Evangelism'],
+    technologies: ['Three.js', 'React', 'TypeScript', 'WebGL', 'Next.js'],
+    image_url: null,
+    document_url: null,
+    credential_id: null,
+    credential_url: null,
+    featured: true,
+    published: true,
+    display_order: 2,
+    created_at: nowIso,
+    updated_at: nowIso,
+  },
+  {
+    id: '00000000-0000-4000-b500-000000000003',
+    title: 'Inter-University AI & Computer Vision Challenge',
+    slug: 'inter-university-ai-vision-challenge',
+    organization: 'IEEE Student Branch',
+    category: 'Competition',
+    description:
+      'Engineered a real-time object tracking and spatial depth estimation model using lightweight convolutional networks optimized for edge inference with high FPS constraints.',
+    date: '2025-08-22',
+    end_date: null,
+    location: 'Punjab, India',
+    mode: 'Hybrid',
+    role: 'Solo Participant & ML Engineer',
+    achievement: '1st Runner Up',
+    skills: ['Edge AI', 'Model Quantization', 'Spatial Analysis', 'Computer Vision'],
+    technologies: ['Python', 'OpenCV', 'PyTorch', 'TensorRT'],
+    image_url: null,
+    document_url: null,
+    credential_id: 'IEEE-CV-2025-082',
+    credential_url: null,
+    featured: true,
+    published: true,
+    display_order: 3,
+    created_at: nowIso,
+    updated_at: nowIso,
+  },
+  {
+    id: '00000000-0000-4000-b500-000000000004',
+    title: 'Global Open Source Contribution Sprint',
+    slug: 'global-open-source-contribution-sprint',
+    organization: 'Open Source Initiative & GitHub Community',
+    category: 'Open Source',
+    description:
+      'Collaborated with international developers to improve TypeScript AST parsers, developer CLI utilities, and automated accessibility auditing tools.',
+    date: '2025-05-10',
+    end_date: '2025-05-17',
+    location: 'Global / Remote',
+    mode: 'Online',
+    role: 'Core Contributor',
+    achievement: 'Merged 8 Major PRs into Developer Tooling Repos',
+    skills: ['Open Source Collaboration', 'AST Parsing', 'Git Workflows', 'CI/CD Automation'],
+    technologies: ['TypeScript', 'Node.js', 'GitHub Actions', 'Jest'],
+    image_url: null,
+    document_url: null,
+    credential_id: null,
+    credential_url: null,
+    featured: false,
+    published: true,
+    display_order: 4,
     created_at: nowIso,
     updated_at: nowIso,
   },
@@ -467,8 +788,8 @@ export async function getProjects(options?: {
       query = query.limit(options.limit)
     }
 
-    const { data } = await query
-    if (data && data.length > 0) return data
+    const { data, error } = await query
+    if (!error && Array.isArray(data)) return data
 
     let filtered = FALLBACK_PROJECTS.filter((p) => p.published)
     if (options?.category && options.category !== 'All') {
@@ -548,8 +869,8 @@ export async function getCertificates(options?: {
       query = query.limit(options.limit)
     }
 
-    const { data } = await query
-    if (data && data.length > 0) return data
+    const { data, error } = await query
+    if (!error && Array.isArray(data)) return data
 
     let filtered = FALLBACK_CERTIFICATES.filter((c) => c.published)
     if (options?.category && options.category !== 'All') {
@@ -580,7 +901,7 @@ export async function getCertificateBySlug(slug: string): Promise<Certificate | 
       .select('*')
       .eq('slug', slug)
       .eq('published', true)
-      .single()
+      .maybeSingle()
     return data || FALLBACK_CERTIFICATES.find((c) => c.slug === slug) || null
   })()
 
@@ -598,6 +919,249 @@ export async function getCertificateIssuers(): Promise<string[]> {
   const certs = await getCertificates()
   const issuers = [...new Set(certs.map((c) => c.issuer))]
   return issuers.sort()
+}
+
+// ============================================================
+// Training Queries
+// ============================================================
+export async function getTrainings(options?: {
+  category?: string
+  provider?: string
+  search?: string
+  limit?: number
+  featured?: boolean
+}): Promise<Training[]> {
+  const cacheKey = `trainings_${JSON.stringify(options ?? {})}`
+  const cached = getCached<Training[]>(cacheKey)
+  if (cached) return cached
+
+  const fetchPromise = (async () => {
+    const supabase = getPublicSupabase()
+    let query = supabase
+      .from('training')
+      .select('*')
+      .eq('published', true)
+      .order('featured', { ascending: false })
+      .order('display_order', { ascending: true })
+      .order('start_date', { ascending: false })
+
+    if (options?.category && options.category !== 'All') {
+      query = query.eq('category', options.category)
+    }
+    if (options?.provider) {
+      query = query.or(`provider.ilike.%${options.provider}%,organization.ilike.%${options.provider}%`)
+    }
+    if (options?.search) {
+      query = query.or(`title.ilike.%${options.search}%,provider.ilike.%${options.search}%,organization.ilike.%${options.search}%`)
+    }
+    if (options?.featured !== undefined) {
+      query = query.eq('featured', options.featured)
+    }
+    if (options?.limit) {
+      query = query.limit(options.limit)
+    }
+
+    const { data, error } = await query
+    if (!error && Array.isArray(data)) return data
+
+    let filtered = FALLBACK_TRAININGS.filter((t) => t.published)
+    if (options?.category && options.category !== 'All') {
+      filtered = filtered.filter((t) => t.category === options.category)
+    }
+    if (options?.featured !== undefined) {
+      filtered = filtered.filter((t) => t.featured === options.featured)
+    }
+    if (options?.limit) {
+      filtered = filtered.slice(0, options.limit)
+    }
+    return filtered
+  })()
+
+  const data = await withTimeout(fetchPromise, FALLBACK_TRAININGS)
+  setCache(cacheKey, data)
+  return data
+}
+
+export async function getPublishedTrainings(): Promise<Training[]> {
+  return getTrainings()
+}
+
+export async function getTrainingBySlug(slug: string): Promise<Training | null> {
+  const cached = getCached<Training>(`training_slug_${slug}`)
+  if (cached) return cached
+
+  const fetchPromise = (async () => {
+    const supabase = getPublicSupabase()
+    const { data, error } = await supabase
+      .from('training')
+      .select('*')
+      .eq('slug', slug)
+      .eq('published', true)
+      .maybeSingle()
+    if (!error && data) return data
+    return data || FALLBACK_TRAININGS.find((t) => t.slug === slug) || null
+  })()
+
+  const data = await withTimeout(fetchPromise, FALLBACK_TRAININGS.find((t) => t.slug === slug) || null)
+  if (data) setCache(`training_slug_${slug}`, data)
+  return data
+}
+
+export async function getTrainingById(id: string): Promise<Training | null> {
+  const cached = getCached<Training>(`training_id_${id}`)
+  if (cached) return cached
+
+  const fetchPromise = (async () => {
+    const supabase = getPublicSupabase()
+    const { data, error } = await supabase
+      .from('training')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle()
+    if (!error && data) return data
+    return data || FALLBACK_TRAININGS.find((t) => t.id === id) || null
+  })()
+
+  const data = await withTimeout(fetchPromise, FALLBACK_TRAININGS.find((t) => t.id === id) || null)
+  if (data) setCache(`training_id_${id}`, data)
+  return data
+}
+
+export async function getAllTrainingSlugs(): Promise<string[]> {
+  const list = await getTrainings()
+  return list.map((t) => t.slug)
+}
+
+export async function getTrainingProviders(): Promise<string[]> {
+  const list = await getTrainings()
+  const providers = [...new Set(list.map((t) => t.provider || t.organization).filter(Boolean) as string[])]
+  return providers.sort()
+}
+
+// ============================================================
+// Co-Curricular Activities Queries
+// ============================================================
+export async function getCoCurricularActivities(options?: {
+  category?: string
+  mode?: string
+  search?: string
+  limit?: number
+  featured?: boolean
+}): Promise<CoCurricularActivity[]> {
+  const cacheKey = `co_curr_${JSON.stringify(options ?? {})}`
+  const cached = getCached<CoCurricularActivity[]>(cacheKey)
+  if (cached) return cached
+
+  const fetchPromise = (async () => {
+    const supabase = getPublicSupabase()
+    let query = supabase
+      .from('co_curricular_activities')
+      .select('*')
+      .eq('published', true)
+      .order('display_order', { ascending: true })
+      .order('date', { ascending: false })
+
+    if (options?.category && options.category !== 'All') {
+      query = query.eq('category', options.category)
+    }
+    if (options?.mode && options.mode !== 'All') {
+      query = query.eq('mode', options.mode)
+    }
+    if (options?.featured !== undefined) {
+      query = query.eq('featured', options.featured)
+    }
+    if (options?.limit) {
+      query = query.limit(options.limit)
+    }
+
+    const { data, error } = await query
+    if (!error && Array.isArray(data)) return data
+
+    let filtered = FALLBACK_CO_CURRICULAR.filter((a) => a.published)
+    if (options?.category && options.category !== 'All') {
+      filtered = filtered.filter((a) => a.category?.toLowerCase() === options.category?.toLowerCase())
+    }
+    if (options?.mode && options.mode !== 'All') {
+      filtered = filtered.filter((a) => a.mode?.toLowerCase() === options.mode?.toLowerCase())
+    }
+    if (options?.featured !== undefined) {
+      filtered = filtered.filter((a) => a.featured === options.featured)
+    }
+    if (options?.search) {
+      const q = options.search.toLowerCase().trim()
+      filtered = filtered.filter(
+        (a) =>
+          a.title.toLowerCase().includes(q) ||
+          (a.organization && a.organization.toLowerCase().includes(q)) ||
+          (a.role && a.role.toLowerCase().includes(q)) ||
+          (a.achievement && a.achievement.toLowerCase().includes(q)) ||
+          (a.skills && a.skills.some((s) => s.toLowerCase().includes(q)))
+      )
+    }
+    if (options?.limit) {
+      filtered = filtered.slice(0, options.limit)
+    }
+    return filtered
+  })()
+
+  const data = await withTimeout(fetchPromise, FALLBACK_CO_CURRICULAR)
+  setCache(cacheKey, data)
+  return data
+}
+
+export async function getPublishedCoCurricularActivities(options?: {
+  category?: string
+  limit?: number
+}): Promise<CoCurricularActivity[]> {
+  return getCoCurricularActivities(options)
+}
+
+export async function getFeaturedCoCurricularActivities(limit = 3): Promise<CoCurricularActivity[]> {
+  return getCoCurricularActivities({ featured: true, limit })
+}
+
+export async function getCoCurricularActivityBySlug(slug: string): Promise<CoCurricularActivity | null> {
+  const cached = getCached<CoCurricularActivity>(`co_curr_slug_${slug}`)
+  if (cached) return cached
+
+  const fetchPromise = (async () => {
+    const supabase = getPublicSupabase()
+    const { data } = await supabase
+      .from('co_curricular_activities')
+      .select('*')
+      .eq('slug', slug)
+      .eq('published', true)
+      .maybeSingle()
+    return data || FALLBACK_CO_CURRICULAR.find((a) => a.slug === slug) || null
+  })()
+
+  const data = await withTimeout(fetchPromise, FALLBACK_CO_CURRICULAR.find((a) => a.slug === slug) || null)
+  if (data) setCache(`co_curr_slug_${slug}`, data)
+  return data
+}
+
+export async function getCoCurricularActivityById(id: string): Promise<CoCurricularActivity | null> {
+  const cached = getCached<CoCurricularActivity>(`co_curr_id_${id}`)
+  if (cached) return cached
+
+  const fetchPromise = (async () => {
+    const supabase = getPublicSupabase()
+    const { data } = await supabase
+      .from('co_curricular_activities')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle()
+    return data || FALLBACK_CO_CURRICULAR.find((a) => a.id === id) || null
+  })()
+
+  const data = await withTimeout(fetchPromise, FALLBACK_CO_CURRICULAR.find((a) => a.id === id) || null)
+  if (data) setCache(`co_curr_id_${id}`, data)
+  return data
+}
+
+export async function getAllCoCurricularSlugs(): Promise<string[]> {
+  const list = await getCoCurricularActivities()
+  return list.map((a) => a.slug)
 }
 
 export async function getAchievements(options?: {
@@ -627,8 +1191,8 @@ export async function getAchievements(options?: {
       query = query.limit(options.limit)
     }
 
-    const { data } = await query
-    if (data && data.length > 0) return data
+    const { data, error } = await query
+    if (!error && Array.isArray(data)) return data
     return FALLBACK_ACHIEVEMENTS
   })()
 
@@ -648,12 +1212,12 @@ export async function getEducation(): Promise<Education[]> {
 
   const fetchPromise = (async () => {
     const supabase = getPublicSupabase()
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('education')
       .select('*')
       .eq('published', true)
       .order('sort_order', { ascending: true })
-    if (data && data.length > 0) return data
+    if (!error && Array.isArray(data)) return data
     return FALLBACK_EDUCATION
   })()
 
@@ -668,12 +1232,12 @@ export async function getExperience(): Promise<Experience[]> {
 
   const fetchPromise = (async () => {
     const supabase = getPublicSupabase()
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('experience')
       .select('*')
       .eq('published', true)
       .order('sort_order', { ascending: true })
-    if (data && data.length > 0) return data
+    if (!error && Array.isArray(data)) return data
     return FALLBACK_EXPERIENCE
   })()
 
@@ -700,8 +1264,8 @@ export async function getSkills(options?: { featured?: boolean }): Promise<Skill
       query = query.eq('featured', options.featured)
     }
 
-    const { data } = await query
-    if (data && data.length > 0) return data
+    const { data, error } = await query
+    if (!error && Array.isArray(data)) return data
     return FALLBACK_SKILLS
   })()
 
@@ -724,6 +1288,8 @@ export async function getPortfolioStats(): Promise<PortfolioStats> {
     certificates: FALLBACK_CERTIFICATES.length,
     achievements: FALLBACK_ACHIEVEMENTS.length,
     hackathons: FALLBACK_ACHIEVEMENTS.filter((a) => a.category === 'Hackathon').length,
+    trainings: FALLBACK_TRAININGS.length,
+    coCurricular: FALLBACK_CO_CURRICULAR.length,
   }
 
   const fetchPromise = (async () => {
@@ -733,6 +1299,8 @@ export async function getPortfolioStats(): Promise<PortfolioStats> {
       { count: certificates },
       { count: achievements },
       { count: hackathons },
+      { count: trainings },
+      { count: coCurricular },
     ] = await Promise.all([
       supabase.from('projects').select('*', { count: 'exact', head: true }).eq('published', true),
       supabase.from('certificates').select('*', { count: 'exact', head: true }).eq('published', true),
@@ -742,6 +1310,8 @@ export async function getPortfolioStats(): Promise<PortfolioStats> {
         .select('*', { count: 'exact', head: true })
         .eq('published', true)
         .eq('category', 'Hackathon'),
+      supabase.from('training').select('*', { count: 'exact', head: true }).eq('published', true),
+      supabase.from('co_curricular_activities').select('*', { count: 'exact', head: true }).eq('published', true),
     ])
 
     return {
@@ -749,6 +1319,8 @@ export async function getPortfolioStats(): Promise<PortfolioStats> {
       certificates: certificates ?? fallbackStats.certificates,
       achievements: achievements ?? fallbackStats.achievements,
       hackathons: hackathons ?? fallbackStats.hackathons,
+      trainings: trainings ?? fallbackStats.trainings,
+      coCurricular: coCurricular ?? fallbackStats.coCurricular,
     }
   })()
 
@@ -762,9 +1334,14 @@ export async function getSiteSetting(key: string): Promise<string | null> {
   if (cached !== null) return cached
 
   const fetchPromise = (async () => {
-    const supabase = getPublicSupabase()
-    const { data } = await supabase.from('site_settings').select('value').eq('key', key).single()
-    return data?.value ?? null
+    try {
+      const supabase = getPublicSupabase()
+      const { data } = await supabase.from('site_settings').select('value').eq('key', key).single()
+      const row = data as { value?: string } | null
+      return row?.value ?? null
+    } catch {
+      return null
+    }
   })()
 
   const data = await withTimeout(fetchPromise, null)
@@ -777,128 +1354,267 @@ export async function getSiteSetting(key: string): Promise<string | null> {
 // ============================================================
 
 export async function getAdminProjects(): Promise<Project[]> {
-  try {
-    const supabase = getPublicSupabase()
-    const { data } = await supabase.from('projects').select('*').order('sort_order', { ascending: true })
-    if (data && data.length > 0) return data
-    return FALLBACK_PROJECTS
-  } catch {
-    return FALLBACK_PROJECTS
-  }
+  const cached = getCached<Project[]>('admin_projects')
+  if (cached !== null) return cached
+
+  const fetchPromise = (async () => {
+    try {
+      const supabase = getPublicSupabase()
+      const { data, error } = await supabase.from('projects').select('*').order('sort_order', { ascending: true })
+      if (!error && Array.isArray(data)) return data
+      return FALLBACK_PROJECTS
+    } catch {
+      return FALLBACK_PROJECTS
+    }
+  })()
+
+  const data = await withTimeout(fetchPromise, FALLBACK_PROJECTS, 1000)
+  setCache('admin_projects', data)
+  return data
 }
 
 export async function getAdminCertificates(): Promise<Certificate[]> {
-  try {
-    const supabase = getPublicSupabase()
-    const { data } = await supabase.from('certificates').select('*').order('issue_date', { ascending: false })
-    if (data && data.length > 0) return data
-    return FALLBACK_CERTIFICATES
-  } catch {
-    return FALLBACK_CERTIFICATES
-  }
+  const cached = getCached<Certificate[]>('admin_certificates')
+  if (cached !== null) return cached
+
+  const fetchPromise = (async () => {
+    try {
+      const supabase = getPublicSupabase()
+      const { data, error } = await supabase.from('certificates').select('*').order('issue_date', { ascending: false })
+      if (!error && Array.isArray(data)) return data
+      return FALLBACK_CERTIFICATES
+    } catch {
+      return FALLBACK_CERTIFICATES
+    }
+  })()
+
+  const data = await withTimeout(fetchPromise, FALLBACK_CERTIFICATES, 1000)
+  setCache('admin_certificates', data)
+  return data
 }
 
 export async function getAdminAchievements(): Promise<Achievement[]> {
-  try {
-    const supabase = getPublicSupabase()
-    const { data } = await supabase.from('achievements').select('*').order('date', { ascending: false })
-    if (data && data.length > 0) return data
-    return FALLBACK_ACHIEVEMENTS
-  } catch {
-    return FALLBACK_ACHIEVEMENTS
-  }
+  const cached = getCached<Achievement[]>('admin_achievements')
+  if (cached !== null) return cached
+
+  const fetchPromise = (async () => {
+    try {
+      const supabase = getPublicSupabase()
+      const { data, error } = await supabase.from('achievements').select('*').order('date', { ascending: false })
+      if (!error && Array.isArray(data)) return data
+      return FALLBACK_ACHIEVEMENTS
+    } catch {
+      return FALLBACK_ACHIEVEMENTS
+    }
+  })()
+
+  const data = await withTimeout(fetchPromise, FALLBACK_ACHIEVEMENTS, 1000)
+  setCache('admin_achievements', data)
+  return data
 }
 
 export async function getAdminEducation(): Promise<Education[]> {
-  try {
-    const supabase = getPublicSupabase()
-    const { data } = await supabase.from('education').select('*').order('sort_order', { ascending: true })
-    if (data && data.length > 0) return data
-    return FALLBACK_EDUCATION
-  } catch {
-    return FALLBACK_EDUCATION
-  }
+  const cached = getCached<Education[]>('admin_education')
+  if (cached !== null) return cached
+
+  const fetchPromise = (async () => {
+    try {
+      const supabase = getPublicSupabase()
+      const { data, error } = await supabase.from('education').select('*').order('sort_order', { ascending: true })
+      if (!error && Array.isArray(data)) return data
+      return FALLBACK_EDUCATION
+    } catch {
+      return FALLBACK_EDUCATION
+    }
+  })()
+
+  const data = await withTimeout(fetchPromise, FALLBACK_EDUCATION, 1000)
+  setCache('admin_education', data)
+  return data
 }
 
 export async function getAdminExperience(): Promise<Experience[]> {
-  try {
-    const supabase = getPublicSupabase()
-    const { data } = await supabase.from('experience').select('*').order('sort_order', { ascending: true })
-    if (data && data.length > 0) return data
-    return FALLBACK_EXPERIENCE
-  } catch {
-    return FALLBACK_EXPERIENCE
-  }
+  const cached = getCached<Experience[]>('admin_experience')
+  if (cached !== null) return cached
+
+  const fetchPromise = (async () => {
+    try {
+      const supabase = getPublicSupabase()
+      const { data, error } = await supabase.from('experience').select('*').order('sort_order', { ascending: true })
+      if (!error && Array.isArray(data)) return data
+      return FALLBACK_EXPERIENCE
+    } catch {
+      return FALLBACK_EXPERIENCE
+    }
+  })()
+
+  const data = await withTimeout(fetchPromise, FALLBACK_EXPERIENCE, 1000)
+  setCache('admin_experience', data)
+  return data
 }
 
 export async function getAdminSkills(): Promise<Skill[]> {
-  try {
-    const supabase = getPublicSupabase()
-    const { data } = await supabase.from('skills').select('*').order('category').order('sort_order')
-    if (data && data.length > 0) return data
-    return FALLBACK_SKILLS
-  } catch {
-    return FALLBACK_SKILLS
-  }
+  const cached = getCached<Skill[]>('admin_skills')
+  if (cached !== null) return cached
+
+  const fetchPromise = (async () => {
+    try {
+      const supabase = getPublicSupabase()
+      const { data, error } = await supabase.from('skills').select('*').order('category').order('sort_order')
+      if (!error && Array.isArray(data)) return data
+      return FALLBACK_SKILLS
+    } catch {
+      return FALLBACK_SKILLS
+    }
+  })()
+
+  const data = await withTimeout(fetchPromise, FALLBACK_SKILLS, 1000)
+  setCache('admin_skills', data)
+  return data
 }
 
 export async function getAdminProfile(): Promise<Profile> {
-  try {
-    const supabase = getPublicSupabase()
-    const { data } = await supabase.from('profiles').select('*').limit(1).single()
-    return data || FALLBACK_PROFILE
-  } catch {
-    return FALLBACK_PROFILE
-  }
+  const cached = getCached<Profile>('admin_profile')
+  if (cached !== null) return cached
+
+  const fetchPromise = (async () => {
+    try {
+      const supabase = getPublicSupabase()
+      const { data } = await supabase.from('profiles').select('*').limit(1).single()
+      return data || FALLBACK_PROFILE
+    } catch {
+      return FALLBACK_PROFILE
+    }
+  })()
+
+  const data = await withTimeout(fetchPromise, FALLBACK_PROFILE, 1000)
+  setCache('admin_profile', data)
+  return data
+}
+
+export async function getAdminTrainings(): Promise<Training[]> {
+  const cached = getCached<Training[]>('admin_trainings')
+  if (cached !== null) return cached
+
+  const fetchPromise = (async () => {
+    try {
+      const supabase = getPublicSupabase()
+      const { data, error } = await supabase
+        .from('training')
+        .select('*')
+        .order('display_order', { ascending: true })
+        .order('start_date', { ascending: false })
+      if (!error && Array.isArray(data)) return data
+      return FALLBACK_TRAININGS
+    } catch {
+      return FALLBACK_TRAININGS
+    }
+  })()
+
+  const data = await withTimeout(fetchPromise, FALLBACK_TRAININGS, 1000)
+  setCache('admin_trainings', data)
+  return data
+}
+
+export async function getAdminCoCurricularActivities(): Promise<CoCurricularActivity[]> {
+  const cached = getCached<CoCurricularActivity[]>('admin_co_curr')
+  if (cached) return cached
+
+  const fetchPromise = (async () => {
+    try {
+      const supabase = getPublicSupabase()
+      const { data, error } = await supabase
+        .from('co_curricular_activities')
+        .select('*')
+        .order('display_order', { ascending: true })
+        .order('date', { ascending: false })
+      if (!error && Array.isArray(data)) return data
+      return FALLBACK_CO_CURRICULAR
+    } catch {
+      return FALLBACK_CO_CURRICULAR
+    }
+  })()
+
+  const data = await withTimeout(fetchPromise, FALLBACK_CO_CURRICULAR, 1000)
+  setCache('admin_co_curr', data)
+  return data
 }
 
 export async function getAdminDashboardStats(): Promise<{
   projects: number
   certificates: number
+  trainings: number
+  coCurricular: number
   achievements: number
   education: number
   experience: number
   skills: number
   messages: number
 }> {
-  try {
-    const supabase = getPublicSupabase()
-    const [
-      { count: projects },
-      { count: certificates },
-      { count: achievements },
-      { count: education },
-      { count: experience },
-      { count: skills },
-      { count: messages },
-    ] = await Promise.all([
-      supabase.from('projects').select('*', { count: 'exact', head: true }),
-      supabase.from('certificates').select('*', { count: 'exact', head: true }),
-      supabase.from('achievements').select('*', { count: 'exact', head: true }),
-      supabase.from('education').select('*', { count: 'exact', head: true }),
-      supabase.from('experience').select('*', { count: 'exact', head: true }),
-      supabase.from('skills').select('*', { count: 'exact', head: true }),
-      supabase.from('contact_messages').select('*', { count: 'exact', head: true }).eq('read', false),
+  const cached = getCached<{
+    projects: number
+    certificates: number
+    trainings: number
+    coCurricular: number
+    achievements: number
+    education: number
+    experience: number
+    skills: number
+    messages: number
+  }>('admin_dashboard_stats')
+  if (cached !== null) return cached
+
+  const fetchPromise = (async () => {
+    const [projects, certs, trainings, coCurr, achievements, education, experience, skills] = await Promise.all([
+      getAdminProjects(),
+      getAdminCertificates(),
+      getAdminTrainings(),
+      getAdminCoCurricularActivities(),
+      getAdminAchievements(),
+      getAdminEducation(),
+      getAdminExperience(),
+      getAdminSkills(),
     ])
 
-    return {
-      projects: (projects && projects > 0) ? projects : FALLBACK_PROJECTS.length,
-      certificates: (certificates && certificates > 0) ? certificates : FALLBACK_CERTIFICATES.length,
-      achievements: (achievements && achievements > 0) ? achievements : FALLBACK_ACHIEVEMENTS.length,
-      education: (education && education > 0) ? education : FALLBACK_EDUCATION.length,
-      experience: (experience && experience > 0) ? experience : FALLBACK_EXPERIENCE.length,
-      skills: (skills && skills > 0) ? skills : FALLBACK_SKILLS.length,
-      messages: messages ?? 0,
+    let unreadMessages = 0
+    try {
+      const supabase = getPublicSupabase()
+      const { count } = await supabase
+        .from('contact_messages')
+        .select('*', { count: 'exact', head: true })
+        .eq('read', false)
+      unreadMessages = count ?? 0
+    } catch {
+      unreadMessages = 0
     }
-  } catch {
+
     return {
-      projects: FALLBACK_PROJECTS.length,
-      certificates: FALLBACK_CERTIFICATES.length,
-      achievements: FALLBACK_ACHIEVEMENTS.length,
-      education: FALLBACK_EDUCATION.length,
-      experience: FALLBACK_EXPERIENCE.length,
-      skills: FALLBACK_SKILLS.length,
-      messages: 0,
+      projects: projects.length,
+      certificates: certs.length,
+      trainings: trainings.length,
+      coCurricular: coCurr.length,
+      achievements: achievements.length,
+      education: education.length,
+      experience: experience.length,
+      skills: skills.length,
+      messages: unreadMessages,
     }
+  })()
+
+  const fallbackStats = {
+    projects: FALLBACK_PROJECTS.length,
+    certificates: FALLBACK_CERTIFICATES.length,
+    trainings: FALLBACK_TRAININGS.length,
+    coCurricular: FALLBACK_CO_CURRICULAR.length,
+    achievements: FALLBACK_ACHIEVEMENTS.length,
+    education: FALLBACK_EDUCATION.length,
+    experience: FALLBACK_EXPERIENCE.length,
+    skills: FALLBACK_SKILLS.length,
+    messages: 0,
   }
+
+  const data = await withTimeout(fetchPromise, fallbackStats, 1000)
+  setCache('admin_dashboard_stats', data)
+  return data
 }
+

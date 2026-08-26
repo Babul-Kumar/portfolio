@@ -61,27 +61,27 @@ export default function ContactSection() {
           style={{
             display: 'grid',
             gridTemplateColumns: 'minmax(300px, 1fr) 1.2fr',
-            gap: '64px',
+            gap: 'clamp(32px, 5vw, 64px)',
             alignItems: 'start',
           }}
           className="contact-layout"
         >
           {/* Left Column: Direct Outreach & Socials */}
           <div>
-            <div className="text-label" style={{ marginBottom: '16px' }}>
-              04 / Collaboration
+            <div className="text-label" style={{ marginBottom: '12px' }}>
+              07 / High-Impact Collaboration
             </div>
             <h2
               style={{
-                fontSize: 'clamp(36px, 5.5vw, 68px)',
+                fontSize: 'clamp(34px, 4.8vw, 60px)',
                 fontWeight: 700,
                 letterSpacing: '-0.03em',
-                lineHeight: 0.96,
+                lineHeight: 0.98,
                 color: 'var(--color-text)',
-                marginBottom: '24px',
+                marginBottom: '20px',
               }}
             >
-              HAVE AN IDEA?<br />
+              HAVE A VISION?<br />
               <span style={{ color: 'var(--color-accent)' }}>LET&apos;S BUILD IT.</span>
             </h2>
 

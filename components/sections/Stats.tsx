@@ -60,7 +60,7 @@ export default function StatsSection({ stats }: { stats: PortfolioStats }) {
         borderTop: '1px solid var(--color-border)',
         borderBottom: '1px solid var(--color-border)',
         padding: '48px var(--container-pad)',
-        background: 'rgba(17, 17, 17, 0.4)',
+        background: 'var(--color-surface)',
       }}
     >
       <div

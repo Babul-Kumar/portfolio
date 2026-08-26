@@ -2,18 +2,22 @@ import type { Metadata } from 'next'
 import {
   getProfile,
   getProjects,
+  getTrainings,
   getCertificates,
+  getCoCurricularActivities,
   getEducation,
   getExperience,
 } from '@/lib/data'
 import HeroSection from '@/components/sections/Hero'
 import EducationExperienceSection from '@/components/sections/EducationExperience'
+import TrainingSection from '@/components/sections/TrainingSection'
 import CertificatePreviewSection from '@/components/sections/CertificatePreview'
+import CoCurricularSection from '@/components/sections/CoCurricularSection'
 import SelectedWorkSection from '@/components/sections/SelectedWork'
 import ContactSection from '@/components/sections/Contact'
 
-export const revalidate = 3600 // Revalidate every hour
-
+export const revalidate = 60 // Revalidate every 60 seconds
+ 
 export const metadata: Metadata = {
   title: 'Babul Kumar — AI / ML & Full-Stack Software Engineer',
   description:
@@ -21,11 +25,13 @@ export const metadata: Metadata = {
 }
 
 export default async function HomePage() {
-  const [profile, projects, certificates, education, experience] =
+  const [profile, projects, trainings, certificates, coCurricular, education, experience] =
     await Promise.all([
       getProfile(),
       getProjects({ featured: true, limit: 6 }),
-      getCertificates({ featured: true, limit: 6 }),
+      getTrainings({ limit: 3 }),
+      getCertificates(),
+      getCoCurricularActivities({ featured: true, limit: 3 }),
       getEducation(),
       getExperience(),
     ])
@@ -38,13 +44,19 @@ export default async function HomePage() {
       {/* 02: About Section (#about) */}
       <EducationExperienceSection education={education} experience={experience} />
 
-      {/* 03: Certificates Section (#certificates) */}
+      {/* 03: Training Section (#training) */}
+      <TrainingSection trainings={trainings} />
+
+      {/* 04: Certificates Section (#certificates) */}
       <CertificatePreviewSection certificates={certificates} />
 
-      {/* 04: Work Section (#work) */}
+      {/* 05: Co-Curricular Section (#co-curricular) */}
+      <CoCurricularSection activities={coCurricular} />
+
+      {/* 06: Work Section (#work) */}
       <SelectedWorkSection projects={projects} />
 
-      {/* 05: Contact Section (#contact) */}
+      {/* 07: Contact Section (#contact) */}
       <ContactSection />
     </>
   )

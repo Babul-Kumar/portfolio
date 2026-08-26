@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { generateFilePath, normalizeBucketName, BUCKETS } from '@/lib/supabase/storage'
 
 const ALLOWED_TYPES = [
@@ -9,13 +10,20 @@ const ALLOWED_TYPES = [
 ]
 const MAX_SIZE = 20 * 1024 * 1024 // 20 MB
 
-export async function POST(request: NextRequest) {
-  // Verify auth
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key'
 
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export async function POST(request: NextRequest) {
+  // 1. Verify authenticated admin session
+  const supabase = await createClient()
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  const { data: { session } } = await supabase.auth.getSession()
+
+  if (userError || !user) {
+    return NextResponse.json(
+      { error: 'Your admin session has expired. Please log in again.' },
+      { status: 401 }
+    )
   }
 
   try {
@@ -57,32 +65,51 @@ export async function POST(request: NextRequest) {
     const arrayBuffer = await file.arrayBuffer()
     const fileBuffer = new Uint8Array(arrayBuffer)
 
-    // Prefer service role client if configured, otherwise use user client
+    // Build authenticated storage client
     let storageClient = supabase
-    try {
-      if (
-        process.env.SUPABASE_SERVICE_ROLE_KEY &&
-        process.env.SUPABASE_SERVICE_ROLE_KEY !== process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-      ) {
+    const hasDistinctServiceKey =
+      process.env.SUPABASE_SERVICE_ROLE_KEY &&
+      process.env.SUPABASE_SERVICE_ROLE_KEY !== process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY &&
+      !process.env.SUPABASE_SERVICE_ROLE_KEY.startsWith('sb_publishable_')
+
+    if (hasDistinctServiceKey) {
+      try {
         storageClient = createAdminClient() as unknown as typeof supabase
+      } catch {
+        storageClient = supabase
       }
-    } catch {
-      storageClient = supabase
+    } else if (session?.access_token) {
+      // Forward the active user's JWT access token to Supabase Storage
+      storageClient = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
+        global: {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        },
+        auth: { persistSession: false },
+      }) as unknown as typeof supabase
     }
+
+    console.log('Server Storage Upload Request:', {
+      userId: user.id,
+      email: user.email,
+      bucket,
+      filePath,
+      fileType: file.type,
+      fileSize: `${(file.size / 1024).toFixed(1)} KB`,
+      authMethod: hasDistinctServiceKey ? 'service_role' : session?.access_token ? 'user_jwt' : 'ssr_client',
+    })
 
     const { data, error } = await storageClient.storage
       .from(bucket)
       .upload(filePath, fileBuffer, {
         contentType: file.type,
-        upsert: true,
+        upsert: false,
       })
 
     if (error) {
       console.error(`Upload error to bucket "${bucket}":`, error)
-      const errorMsg = error.message.includes('row-level security')
-        ? `Storage RLS Policy Violation: Please run the storage policies SQL in Supabase SQL Editor for bucket "${bucket}", or set the bucket to Public in Supabase Dashboard.`
-        : error.message
-      return NextResponse.json({ error: errorMsg }, { status: 400 })
+      return NextResponse.json({ error: error.message }, { status: 400 })
     }
 
     const { data: { publicUrl } } = storageClient.storage

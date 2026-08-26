@@ -8,32 +8,38 @@ import { profileSchema, type ProfileFormValues } from '@/lib/validations'
 import FileUpload from '@/components/admin/FileUpload'
 import { FALLBACK_PROFILE } from '@/lib/data'
 import { Toaster, toast } from 'sonner'
+import { uploadFileFromBrowser } from '@/lib/supabase/storage-client'
+import { User, GraduationCap, Globe, Save } from 'lucide-react'
 
-const input = {
+const inputStyle = {
   width: '100%',
-  background: '#141414',
-  border: '1px solid #282828',
-  borderRadius: '6px',
+  background: '#0D0F14',
+  border: '1px solid rgba(255, 255, 255, 0.1)',
+  borderRadius: '8px',
   padding: '10px 14px',
   color: '#F5F5F5',
   fontSize: '13px',
   outline: 'none',
   fontFamily: 'inherit',
+  transition: 'border-color 0.15s',
 }
-const label = {
+
+const labelStyle = {
   display: 'block',
   fontSize: '11px',
   letterSpacing: '0.08em',
   textTransform: 'uppercase' as const,
-  color: '#666',
+  color: '#8A8F98',
+  fontWeight: 600,
   marginBottom: '6px',
 }
-const section = {
-  background: '#1A1A1A',
-  border: '1px solid #242424',
-  borderRadius: '10px',
+
+const sectionStyle = {
+  background: '#101318',
+  border: '1px solid rgba(255, 255, 255, 0.08)',
+  borderRadius: '12px',
   padding: '24px',
-  marginBottom: '20px',
+  marginBottom: '24px',
 }
 
 export default function AdminProfilePage() {
@@ -97,20 +103,16 @@ export default function AdminProfilePage() {
   async function handleAvatarUpload(file: File) {
     setUploading(true)
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('bucket', 'profile picture')
-      formData.append('prefix', 'avatar')
-      const res = await fetch('/api/admin/upload', { method: 'POST', body: formData })
-      const data = await res.json()
-      if (data.url) {
-        setAvatarUrl(data.url)
-        toast.success('Avatar uploaded')
+      const result = await uploadFileFromBrowser('profile picture', file, 'avatar')
+      if (result.url) {
+        setAvatarUrl(result.url)
+        toast.success('Avatar uploaded to Supabase Storage')
       } else {
-        toast.error(data.error || 'Upload failed')
+        toast.error(result.error || 'Upload failed')
       }
-    } catch {
-      toast.error('Upload failed')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Upload failed'
+      toast.error(msg)
     } finally {
       setUploading(false)
     }
@@ -126,7 +128,6 @@ export default function AdminProfilePage() {
         graduation_year: values.graduation_year ? Number(values.graduation_year) : null,
       }
 
-      // Check if profile exists in database
       const { data: existing } = await supabase.from('profiles').select('id').limit(1).single()
 
       if (existing?.id) {
@@ -155,27 +156,86 @@ export default function AdminProfilePage() {
   }
 
   return (
-    <div style={{ maxWidth: '800px' }}>
+    <div style={{ maxWidth: '860px', margin: '0 auto' }}>
       <Toaster position="top-right" theme="dark" />
-      <div style={{ marginBottom: '32px' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: 600, color: '#F5F5F5', letterSpacing: '-0.02em' }}>
-          Personal Profile & Bio
-        </h1>
-        <p style={{ fontSize: '13px', color: '#666', marginTop: '4px' }}>
-          Manage your public identity, bio narratives, academic details, and contact points
-        </p>
+
+      {/* Header */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '16px',
+          paddingBottom: '20px',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+          marginBottom: '28px',
+        }}
+      >
+        <div>
+          <h1
+            style={{
+              fontSize: '24px',
+              fontWeight: 700,
+              color: '#F5F5F5',
+              margin: 0,
+              letterSpacing: '-0.02em',
+            }}
+          >
+            Personal Profile & Narrative
+          </h1>
+          <p style={{ fontSize: '13px', color: '#9CA3AF', marginTop: '4px', margin: 0 }}>
+            Manage your public identity, bio narratives, academic credentials, and contact points
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleSubmit(onSubmit)}
+          disabled={saving}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            background: saving ? '#333' : 'linear-gradient(135deg, #E45D2C 0%, #FF8A3D 100%)',
+            color: '#FFFFFF',
+            border: 'none',
+            borderRadius: '8px',
+            padding: '10px 20px',
+            fontSize: '13px',
+            fontWeight: 600,
+            cursor: saving ? 'not-allowed' : 'pointer',
+            boxShadow: '0 4px 12px rgba(228, 93, 44, 0.25)',
+            transition: 'all 0.15s',
+          }}
+        >
+          <Save size={15} />
+          {saving ? 'Saving…' : 'Save Changes'}
+        </button>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)}>
-        {/* Avatar */}
-        <div style={section}>
-          <h2 style={{ fontSize: '14px', fontWeight: 500, color: '#F5F5F5', marginBottom: '16px' }}>
-            Profile Photograph
-          </h2>
+        {/* Section 1: Avatar Image */}
+        <div style={sectionStyle}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontSize: '14px',
+              fontWeight: 600,
+              color: '#F5F5F5',
+              marginBottom: '16px',
+            }}
+          >
+            <User size={16} style={{ color: '#E45D2C' }} />
+            <span>Profile Photo</span>
+          </div>
+
           <FileUpload
-            label="Avatar Image"
+            label="Avatar Headshot"
             accept={{ 'image/*': ['.jpg', '.jpeg', '.png', '.webp'] }}
-            hint="JPG, PNG or WebP · Max 5MB"
+            hint="JPG, PNG, or WebP · Max 5MB"
             maxSize={5 * 1024 * 1024}
             onFileSelect={handleAvatarUpload}
             currentUrl={avatarUrl}
@@ -184,114 +244,198 @@ export default function AdminProfilePage() {
           />
         </div>
 
-        {/* Identity */}
-        <div style={section}>
-          <h2 style={{ fontSize: '14px', fontWeight: 500, color: '#F5F5F5', marginBottom: '16px' }}>
-            Identity & Narrative
-          </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px' }}>
+        {/* Section 2: Identity & Narrative */}
+        <div style={sectionStyle}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontSize: '14px',
+              fontWeight: 600,
+              color: '#F5F5F5',
+              marginBottom: '16px',
+            }}
+          >
+            <User size={16} style={{ color: '#E45D2C' }} />
+            <span>Identity & Narrative</span>
+          </div>
+
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+              gap: '14px',
+              marginBottom: '14px',
+            }}
+          >
             <div>
-              <label style={label}>Full Name *</label>
-              <input {...register('name')} style={input} />
+              <label style={labelStyle}>Full Name *</label>
+              <input {...register('name')} style={inputStyle} placeholder="Babul Kumar" />
             </div>
             <div>
-              <label style={label}>Display Name</label>
-              <input {...register('display_name')} style={input} placeholder="BABUL KUMAR" />
+              <label style={labelStyle}>Display Brand Name</label>
+              <input {...register('display_name')} style={inputStyle} placeholder="BABUL KUMAR" />
             </div>
           </div>
+
           <div style={{ marginBottom: '14px' }}>
-            <label style={label}>Tagline</label>
-            <input {...register('tagline')} style={input} placeholder="Computer Science · AI / ML · Full Stack" />
+            <label style={labelStyle}>Tagline / Subtitle</label>
+            <input
+              {...register('tagline')}
+              style={inputStyle}
+              placeholder="Computer Science · AI / ML · Full Stack Engineer"
+            />
           </div>
+
           <div style={{ marginBottom: '14px' }}>
-            <label style={label}>Short Bio (Hero & Preview)</label>
-            <textarea {...register('bio')} style={{ ...input, minHeight: '80px', resize: 'vertical' as const }} />
+            <label style={labelStyle}>Short Bio (Hero & Previews)</label>
+            <textarea
+              {...register('bio')}
+              style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' as const }}
+              placeholder="Concise 2-sentence summary of your technical focus and strengths…"
+            />
           </div>
+
           <div>
-            <label style={label}>Extended Narrative (About Section)</label>
-            <textarea {...register('bio_extended')} style={{ ...input, minHeight: '110px', resize: 'vertical' as const }} />
+            <label style={labelStyle}>Extended Bio (About Section)</label>
+            <textarea
+              {...register('bio_extended')}
+              style={{ ...inputStyle, minHeight: '120px', resize: 'vertical' as const }}
+              placeholder="Full narrative covering your engineering journey, philosophy, and projects…"
+            />
           </div>
         </div>
 
-        {/* Academics & Status */}
-        <div style={section}>
-          <h2 style={{ fontSize: '14px', fontWeight: 500, color: '#F5F5F5', marginBottom: '16px' }}>
-            Academic Profile
-          </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px' }}>
+        {/* Section 3: Academics & Education Profile */}
+        <div style={sectionStyle}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontSize: '14px',
+              fontWeight: 600,
+              color: '#F5F5F5',
+              marginBottom: '16px',
+            }}
+          >
+            <GraduationCap size={16} style={{ color: '#E45D2C' }} />
+            <span>Academic Background</span>
+          </div>
+
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+              gap: '14px',
+              marginBottom: '14px',
+            }}
+          >
             <div>
-              <label style={label}>University</label>
-              <input {...register('university')} style={input} />
+              <label style={labelStyle}>University / Institute</label>
+              <input {...register('university')} style={inputStyle} placeholder="University name" />
             </div>
             <div>
-              <label style={label}>Degree Program</label>
-              <input {...register('degree')} style={input} />
+              <label style={labelStyle}>Degree Program</label>
+              <input {...register('degree')} style={inputStyle} placeholder="e.g. B.Tech Computer Science" />
             </div>
             <div>
-              <label style={label}>Graduation Year</label>
-              <input type="number" {...register('graduation_year')} style={input} />
+              <label style={labelStyle}>Graduation Year</label>
+              <input type="number" {...register('graduation_year')} style={inputStyle} placeholder="2026" />
             </div>
             <div>
-              <label style={label}>Location</label>
-              <input {...register('location')} style={input} />
+              <label style={labelStyle}>Location / Base</label>
+              <input {...register('location')} style={inputStyle} placeholder="e.g. India" />
             </div>
           </div>
+
           <div>
-            <label style={label}>Available For</label>
-            <input {...register('available_for')} style={input} placeholder="Internships, Research Collaborations, Open Source" />
+            <label style={labelStyle}>Currently Available For</label>
+            <input
+              {...register('available_for')}
+              style={inputStyle}
+              placeholder="Full-time Roles, Internships, Research Collaborations"
+            />
           </div>
         </div>
 
-        {/* Contact & Socials */}
-        <div style={section}>
-          <h2 style={{ fontSize: '14px', fontWeight: 500, color: '#F5F5F5', marginBottom: '16px' }}>
-            Links & Contact Points
-          </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+        {/* Section 4: Social Links & Contact Points */}
+        <div style={sectionStyle}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontSize: '14px',
+              fontWeight: 600,
+              color: '#F5F5F5',
+              marginBottom: '16px',
+            }}
+          >
+            <Globe size={16} style={{ color: '#E45D2C' }} />
+            <span>Links & Contact Points</span>
+          </div>
+
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+              gap: '14px',
+            }}
+          >
             <div>
-              <label style={label}>Email</label>
-              <input {...register('email')} type="email" style={input} />
+              <label style={labelStyle}>Email Address</label>
+              <input {...register('email')} type="email" style={inputStyle} placeholder="you@example.com" />
             </div>
             <div>
-              <label style={label}>Phone</label>
-              <input {...register('phone')} style={input} />
+              <label style={labelStyle}>Phone (Optional)</label>
+              <input {...register('phone')} style={inputStyle} placeholder="+91..." />
             </div>
             <div>
-              <label style={label}>GitHub URL</label>
-              <input {...register('github_url')} style={input} />
+              <label style={labelStyle}>GitHub Profile URL</label>
+              <input {...register('github_url')} style={inputStyle} placeholder="https://github.com/..." />
             </div>
             <div>
-              <label style={label}>LinkedIn URL</label>
-              <input {...register('linkedin_url')} style={input} />
+              <label style={labelStyle}>LinkedIn Profile URL</label>
+              <input {...register('linkedin_url')} style={inputStyle} placeholder="https://linkedin.com/in/..." />
             </div>
             <div>
-              <label style={label}>Kaggle URL</label>
-              <input {...register('kaggle_url')} style={input} />
+              <label style={labelStyle}>Kaggle / LeetCode URL</label>
+              <input {...register('kaggle_url')} style={inputStyle} placeholder="https://kaggle.com/..." />
             </div>
             <div>
-              <label style={label}>Portfolio URL</label>
-              <input {...register('portfolio_url')} style={input} />
+              <label style={labelStyle}>Canonical Portfolio URL</label>
+              <input {...register('portfolio_url')} style={inputStyle} placeholder="https://..." />
             </div>
           </div>
         </div>
 
-        <button
-          type="submit"
-          disabled={saving}
-          style={{
-            background: saving ? '#333' : '#E45D2C',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '8px',
-            padding: '12px 28px',
-            fontSize: '13px',
-            fontWeight: 500,
-            cursor: saving ? 'not-allowed' : 'pointer',
-            transition: 'background 0.15s',
-          }}
-        >
-          {saving ? 'Saving Profile…' : 'Save Profile Changes'}
-        </button>
+        {/* Bottom Save Action */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '32px' }}>
+          <button
+            type="submit"
+            disabled={saving}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              background: saving ? '#333' : 'linear-gradient(135deg, #E45D2C 0%, #FF8A3D 100%)',
+              color: '#FFFFFF',
+              border: 'none',
+              borderRadius: '8px',
+              padding: '12px 28px',
+              fontSize: '14px',
+              fontWeight: 600,
+              cursor: saving ? 'not-allowed' : 'pointer',
+              boxShadow: '0 4px 14px rgba(228, 93, 44, 0.3)',
+              transition: 'all 0.15s',
+            }}
+          >
+            <Save size={16} />
+            {saving ? 'Saving Profile…' : 'Save Profile Changes'}
+          </button>
+        </div>
       </form>
     </div>
   )

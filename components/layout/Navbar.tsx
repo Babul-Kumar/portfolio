@@ -4,10 +4,12 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect, useSyncExternalStore } from 'react'
 
-// Strict Section Order: ABOUT -> CERTIFICATES -> WORK -> CONTACT
+// Strict Section Order: ABOUT -> TRAINING -> CERTIFICATES -> CO-CURRICULAR -> WORK -> CONTACT
 const NAV_ITEMS = [
   { label: 'ABOUT', href: '/#about', path: '/about' },
+  { label: 'TRAINING', href: '/#training', path: '/training' },
   { label: 'CERTIFICATES', href: '/#certificates', path: '/certificates' },
+  { label: 'CO-CURRICULAR', href: '/#co-curricular', path: '/co-curricular' },
   { label: 'WORK', href: '/#work', path: '/projects' },
   { label: 'CONTACT', href: '/#contact', path: '/contact' },
 ]
@@ -41,11 +43,11 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // Active section tracker on homepage in exact order: about, certificates, work, contact
+  // Active section tracker on homepage in exact order: about, training, certificates, co-curricular, work, contact
   useEffect(() => {
     if (!isHome) return
 
-    const sections = ['about', 'certificates', 'work', 'contact']
+    const sections = ['about', 'training', 'certificates', 'co-curricular', 'work', 'contact']
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -98,12 +100,16 @@ export default function Navbar() {
           alignItems: 'center',
           background: scrolled
             ? 'var(--color-card-bg)'
-            : 'transparent',
+            : theme === 'light'
+              ? 'rgba(250, 248, 245, 0.72)'
+              : 'transparent',
           borderBottom: scrolled
             ? '1px solid var(--color-border)'
-            : '1px solid transparent',
-          backdropFilter: scrolled ? 'blur(16px)' : 'none',
-          WebkitBackdropFilter: scrolled ? 'blur(16px)' : 'none',
+            : theme === 'light'
+              ? '1px solid rgba(28, 25, 23, 0.06)'
+              : '1px solid transparent',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
           transition: 'all 0.35s var(--ease-out)',
         }}
       >
@@ -213,7 +219,7 @@ export default function Navbar() {
               onClick={toggleTheme}
               aria-label={theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme'}
               style={{
-                background: 'rgba(255, 255, 255, 0.04)',
+                background: theme === 'light' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.04)',
                 border: '1px solid var(--color-border)',
                 borderRadius: 'var(--radius-full)',
                 width: '36px',
@@ -223,6 +229,7 @@ export default function Navbar() {
                 justifyContent: 'center',
                 cursor: 'pointer',
                 color: 'var(--color-text)',
+                boxShadow: theme === 'light' ? 'var(--shadow-sm)' : 'none',
                 transition: 'all 0.2s ease',
               }}
               className="theme-btn"
@@ -242,7 +249,7 @@ export default function Navbar() {
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase',
                 color: 'var(--color-text)',
-                background: 'rgba(255, 255, 255, 0.04)',
+                background: theme === 'light' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.04)',
                 border: '1px solid var(--color-border)',
                 padding: '8px 16px',
                 borderRadius: 'var(--radius-sm)',
@@ -250,6 +257,7 @@ export default function Navbar() {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '6px',
+                boxShadow: theme === 'light' ? 'var(--shadow-sm)' : 'none',
                 transition: 'all 0.2s var(--ease-out)',
                 fontFamily: 'var(--font-mono)',
               }}

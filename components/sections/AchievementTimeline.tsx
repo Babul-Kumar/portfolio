@@ -124,11 +124,11 @@ function YearBlock({ year, items }: { year: string; items: Achievement[] }) {
                 position: 'absolute',
                 left: '-37px',
                 top: '24px',
-                width: '9px',
-                height: '9px',
+                width: '7px',
+                height: '7px',
                 borderRadius: '50%',
-                background: item.featured ? 'var(--color-accent)' : 'rgba(255, 255, 255, 0.2)',
-                boxShadow: item.featured ? '0 0 10px var(--color-accent)' : 'none',
+                background: item.featured ? 'var(--color-accent)' : 'var(--color-border)',
+                boxShadow: item.featured ? '0 0 10px var(--color-accent-glow)' : 'none',
               }}
             />
 

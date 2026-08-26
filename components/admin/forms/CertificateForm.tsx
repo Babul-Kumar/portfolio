@@ -13,8 +13,9 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import FileUpload from '@/components/admin/FileUpload'
 import CertificateAiUploader from '@/components/admin/CertificateAiUploader'
-import type { Certificate, GeminiCertificateExtraction, ExtractionConfidence } from '@/types'
+import type { Certificate, GeminiCertificateExtraction, ExtractionConfidence, AnyDocumentExtraction } from '@/types'
 import { toast, Toaster } from 'sonner'
+import { uploadFileFromBrowser } from '@/lib/supabase/storage-client'
 import {
   CheckCircle2,
   AlertTriangle,
@@ -88,56 +89,65 @@ export default function AdminCertificateForm({ certificate }: { certificate?: Ce
   })
 
   function handleAiExtraction(
-    extraction: GeminiCertificateExtraction,
+    extraction: AnyDocumentExtraction,
     file: File,
-    previewUrl: string
+    previewUrl: string,
+    storageUrl?: string | null
   ) {
+    const certData = extraction as GeminiCertificateExtraction
     setAiExtracted(true)
-    setConfidence(extraction.confidence)
-
-    if (extraction.title) {
-      setValue('title', extraction.title, { shouldValidate: true })
-      setValue('slug', slugify(extraction.title), { shouldValidate: true })
+    if (certData.confidence) {
+      setConfidence(certData.confidence)
     }
 
-    if (extraction.issuer) {
-      setValue('issuer', extraction.issuer, { shouldValidate: true })
+    if (certData.title) {
+      setValue('title', certData.title, { shouldValidate: true })
+      if (!isEdit || !getValues('slug')) {
+        setValue('slug', slugify(certData.title), { shouldValidate: true })
+      }
     }
 
-    if (extraction.category) {
-      setValue('category', extraction.category, { shouldValidate: true })
+    if (certData.issuer) {
+      setValue('issuer', certData.issuer, { shouldValidate: true })
     }
 
-    if (extraction.issue_date) {
-      setValue('issue_date', extraction.issue_date, { shouldValidate: true })
+    if (certData.category) {
+      setValue('category', certData.category, { shouldValidate: true })
     }
 
-    if (extraction.expiry_date) {
-      setValue('expiry_date', extraction.expiry_date, { shouldValidate: true })
+    if (certData.issue_date) {
+      setValue('issue_date', certData.issue_date, { shouldValidate: true })
     }
 
-    if (extraction.credential_id) {
-      setValue('credential_id', extraction.credential_id, { shouldValidate: true })
+    if (certData.expiry_date) {
+      setValue('expiry_date', certData.expiry_date, { shouldValidate: true })
     }
 
-    if (extraction.verification_url) {
-      setValue('verification_url', extraction.verification_url, { shouldValidate: true })
+    if (certData.credential_id) {
+      setValue('credential_id', certData.credential_id, { shouldValidate: true })
     }
 
-    if (extraction.description) {
-      setValue('description', extraction.description, { shouldValidate: true })
+    if (certData.verification_url) {
+      setValue('verification_url', certData.verification_url, { shouldValidate: true })
     }
 
-    if (extraction.skills && extraction.skills.length > 0) {
-      setValue('skills', extraction.skills.join(', '), { shouldValidate: true })
+    if (certData.description) {
+      setValue('description', certData.description, { shouldValidate: true })
     }
 
-    if (extraction.file_url) {
-      setFileUrl(extraction.file_url)
+    if (certData.skills && certData.skills.length > 0) {
+      setValue('skills', certData.skills.join(', '), { shouldValidate: true })
+    }
+
+    const docUrl = storageUrl || certData.file_url || null
+    if (docUrl) {
+      setFileUrl(docUrl)
     }
 
     if (previewUrl) {
       setPreviewDocumentUrl(previewUrl)
+    } else if (docUrl) {
+      setPreviewDocumentUrl(docUrl)
     }
   }
 
@@ -150,21 +160,17 @@ export default function AdminCertificateForm({ certificate }: { certificate?: Ce
   async function handleFileUpload(file: File) {
     setUploadingFile(true)
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('bucket', 'certificate')
-      formData.append('prefix', 'documents')
-      const res = await fetch('/api/admin/upload', { method: 'POST', body: formData })
-      const data = await res.json()
-      if (data.url) {
-        setFileUrl(data.url)
-        setPreviewDocumentUrl(data.url)
-        toast.success('Document uploaded')
+      const result = await uploadFileFromBrowser('certificate', file, 'documents')
+      if (result.url) {
+        setFileUrl(result.url)
+        setPreviewDocumentUrl(result.url)
+        toast.success('Document uploaded to Supabase Storage')
       } else {
-        toast.error(data.error || 'Upload failed')
+        toast.error(result.error || 'Upload failed')
       }
-    } catch {
-      toast.error('Upload failed')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Upload failed'
+      toast.error(msg)
     } finally {
       setUploadingFile(false)
     }
@@ -173,20 +179,16 @@ export default function AdminCertificateForm({ certificate }: { certificate?: Ce
   async function handleThumbUpload(file: File) {
     setUploadingThumb(true)
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('bucket', 'certificate')
-      formData.append('prefix', 'thumbnails')
-      const res = await fetch('/api/admin/upload', { method: 'POST', body: formData })
-      const data = await res.json()
-      if (data.url) {
-        setThumbUrl(data.url)
-        toast.success('Thumbnail uploaded')
+      const result = await uploadFileFromBrowser('certificate', file, 'thumbnails')
+      if (result.url) {
+        setThumbUrl(result.url)
+        toast.success('Thumbnail uploaded to Supabase Storage')
       } else {
-        toast.error(data.error || 'Upload failed')
+        toast.error(result.error || 'Upload failed')
       }
-    } catch {
-      toast.error('Upload failed')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Upload failed'
+      toast.error(msg)
     } finally {
       setUploadingThumb(false)
     }
@@ -265,11 +267,22 @@ export default function AdminCertificateForm({ certificate }: { certificate?: Ce
         }
       }
 
+      // Invalidate cache and revalidate public routes
+      try {
+        await fetch('/api/admin/revalidate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'certificates', slug: payload.slug }),
+        })
+      } catch {
+        // Non-blocking
+      }
+
       toast.success(isEdit ? 'Certificate updated successfully' : 'Certificate created successfully')
       setTimeout(() => {
         router.push('/admin/certificates')
         router.refresh()
-      }, 600)
+      }, 500)
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to save certificate'
       toast.error(message)
@@ -329,6 +342,7 @@ export default function AdminCertificateForm({ certificate }: { certificate?: Ce
 
       {/* Prominent AI Upload & Extraction Component */}
       <CertificateAiUploader
+        type="certificate"
         onExtractionSuccess={handleAiExtraction}
         onFileRemoved={handleFileRemoved}
       />
@@ -634,7 +648,7 @@ export default function AdminCertificateForm({ certificate }: { certificate?: Ce
             {/* Description */}
             <div style={{ marginBottom: '20px' }}>
               <label style={labelStyle}>
-                <span>Curriculum Description</span>
+                <span>Program / Course Description</span>
                 {renderConfidenceBadge('description')}
               </label>
               <textarea

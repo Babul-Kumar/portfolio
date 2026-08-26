@@ -5,32 +5,43 @@ import { createClient } from '@/lib/supabase/client'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { skillSchema, type SkillFormValues } from '@/lib/validations'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2, Star } from 'lucide-react'
 import type { Skill } from '@/types'
 import { FALLBACK_SKILLS } from '@/lib/data'
 import { toast, Toaster } from 'sonner'
+import ConfirmDialog from '@/components/admin/ConfirmDialog'
 
-const input = {
+const inputStyle = {
   width: '100%',
-  background: '#141414',
-  border: '1px solid #282828',
-  borderRadius: '6px',
-  padding: '10px 14px',
+  background: '#0D0F14',
+  border: '1px solid rgba(255, 255, 255, 0.1)',
+  borderRadius: '8px',
+  padding: '9px 12px',
   color: '#F5F5F5',
   fontSize: '13px',
   outline: 'none',
   fontFamily: 'inherit',
 }
-const label = {
+
+const labelStyle = {
   display: 'block',
   fontSize: '10px',
   letterSpacing: '0.08em',
   textTransform: 'uppercase' as const,
-  color: '#666',
+  color: '#8A8F98',
+  fontWeight: 600,
   marginBottom: '5px',
 }
 
-const CATEGORIES = ['Programming', 'AI / ML', 'Frontend', 'Backend', 'Database', 'DevOps & Tools', 'Tools']
+const CATEGORIES = [
+  'Programming',
+  'AI / ML',
+  'Frontend',
+  'Backend',
+  'Database',
+  'DevOps & Tools',
+  'Tools',
+]
 const LEVELS = ['Beginner', 'Intermediate', 'Advanced', 'Expert']
 
 function AddSkillForm({ onAdd }: { onAdd: () => void }) {
@@ -55,7 +66,7 @@ function AddSkillForm({ onAdd }: { onAdd: () => void }) {
         setSaving(false)
         return
       }
-      toast.success('Skill added')
+      toast.success('Skill added to matrix')
       reset()
       setSaving(false)
       onAdd()
@@ -70,38 +81,68 @@ function AddSkillForm({ onAdd }: { onAdd: () => void }) {
     <form
       onSubmit={handleSubmit(onSubmit)}
       style={{
-        background: '#1A1A1A',
-        border: '1px solid #282828',
-        borderRadius: '10px',
+        background: '#101318',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+        borderRadius: '12px',
         padding: '20px 24px',
         marginBottom: '28px',
       }}
     >
-      <h3 style={{ color: '#F5F5F5', fontSize: '14px', marginBottom: '14px', fontWeight: 500 }}>
-        Add New Technical Skill
-      </h3>
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr 1fr 1fr auto', gap: '12px', alignItems: 'end' }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          color: '#F5F5F5',
+          fontSize: '14px',
+          marginBottom: '14px',
+          fontWeight: 600,
+        }}
+      >
+        <Plus size={16} style={{ color: '#E45D2C' }} />
+        <span>Add New Skill to Matrix</span>
+      </div>
+
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr)) auto',
+          gap: '12px',
+          alignItems: 'end',
+        }}
+      >
         <div>
-          <label style={label}>Skill Name *</label>
-          <input {...register('name')} style={input} placeholder="e.g. PyTorch / Next.js" />
-          {errors.name && <p style={{ color: '#E45D2C', fontSize: '11px', marginTop: '4px' }}>{errors.name.message}</p>}
+          <label style={labelStyle}>Skill Name *</label>
+          <input {...register('name')} style={inputStyle} placeholder="e.g. PyTorch / Next.js" />
+          {errors.name && (
+            <p style={{ color: '#E45D2C', fontSize: '11px', marginTop: '4px' }}>
+              {errors.name.message}
+            </p>
+          )}
         </div>
+
         <div>
-          <label style={label}>Category</label>
-          <select {...register('category')} style={input}>
+          <label style={labelStyle}>Category</label>
+          <select {...register('category')} style={inputStyle}>
             {CATEGORIES.map((c) => (
-              <option key={c}>{c}</option>
+              <option key={c} value={c}>
+                {c}
+              </option>
             ))}
           </select>
         </div>
+
         <div>
-          <label style={label}>Proficiency</label>
-          <select {...register('level')} style={input}>
+          <label style={labelStyle}>Proficiency Level</label>
+          <select {...register('level')} style={inputStyle}>
             {LEVELS.map((l) => (
-              <option key={l}>{l}</option>
+              <option key={l} value={l}>
+                {l}
+              </option>
             ))}
           </select>
         </div>
+
         <div style={{ display: 'flex', gap: '12px', paddingBottom: '8px' }}>
           <label
             style={{
@@ -109,29 +150,32 @@ function AddSkillForm({ onAdd }: { onAdd: () => void }) {
               alignItems: 'center',
               gap: '6px',
               cursor: 'pointer',
-              color: '#888',
+              color: '#D1D5DB',
               fontSize: '12px',
             }}
           >
-            <input type="checkbox" {...register('featured')} style={{ accentColor: '#E45D2C' }} /> Featured
+            <input type="checkbox" {...register('featured')} style={{ accentColor: '#E45D2C' }} />{' '}
+            Featured
           </label>
         </div>
+
         <button
           type="submit"
           disabled={saving}
           style={{
-            background: '#E45D2C',
+            background: saving ? '#333' : 'linear-gradient(135deg, #E45D2C 0%, #FF8A3D 100%)',
             color: '#fff',
             border: 'none',
-            borderRadius: '6px',
+            borderRadius: '8px',
             padding: '10px 18px',
             fontSize: '13px',
-            fontWeight: 500,
-            cursor: 'pointer',
+            fontWeight: 600,
+            cursor: saving ? 'not-allowed' : 'pointer',
             whiteSpace: 'nowrap',
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
+            boxShadow: '0 4px 12px rgba(228, 93, 44, 0.25)',
           }}
         >
           <Plus size={14} /> {saving ? '…' : 'Add Skill'}
@@ -142,14 +186,19 @@ function AddSkillForm({ onAdd }: { onAdd: () => void }) {
 }
 
 export default function AdminSkillsPage() {
-  const [skills, setSkills] = useState<Skill[]>([])
-  const [loading, setLoading] = useState(true)
+  const [skills, setSkills] = useState<Skill[]>(FALLBACK_SKILLS)
+  const [loading, setLoading] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<Skill | null>(null)
 
   async function load() {
     try {
       const supabase = createClient()
-      const { data, error } = await supabase.from('skills').select('*').order('category').order('sort_order')
-      if (!error && data && data.length > 0) {
+      const { data, error } = await supabase
+        .from('skills')
+        .select('*')
+        .order('category')
+        .order('sort_order')
+      if (!error && Array.isArray(data)) {
         setSkills(data)
       } else {
         setSkills(FALLBACK_SKILLS)
@@ -166,9 +215,13 @@ export default function AdminSkillsPage() {
     async function loadData() {
       try {
         const supabase = createClient()
-        const { data, error } = await supabase.from('skills').select('*').order('category').order('sort_order')
+        const { data, error } = await supabase
+          .from('skills')
+          .select('*')
+          .order('category')
+          .order('sort_order')
         if (active) {
-          if (!error && data && data.length > 0) {
+          if (!error && Array.isArray(data)) {
             setSkills(data)
           } else {
             setSkills(FALLBACK_SKILLS)
@@ -188,27 +241,34 @@ export default function AdminSkillsPage() {
     }
   }, [])
 
-  async function deleteSkill(id: string, name: string, category?: string) {
-    if (!confirm(`Delete skill "${name}"?`)) return
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+  async function confirmDeleteSkill() {
+    if (!deleteTarget) return
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      deleteTarget.id
+    )
     const supabase = createClient()
 
     try {
       if (isUuid) {
-        const { error } = await supabase.from('skills').delete().eq('id', id)
+        const { error } = await supabase.from('skills').delete().eq('id', deleteTarget.id)
         if (error) {
           toast.error('Failed to delete skill')
           return
         }
-      } else if (name && category) {
-        await supabase.from('skills').delete().eq('name', name).eq('category', category)
+      } else if (deleteTarget.name && deleteTarget.category) {
+        await supabase
+          .from('skills')
+          .delete()
+          .eq('name', deleteTarget.name)
+          .eq('category', deleteTarget.category)
       }
     } catch {
       // Ignored for non-uuid fallback item
     }
 
     toast.success('Skill deleted')
-    setSkills((prev) => prev.filter((s) => s.id !== id))
+    setSkills((prev) => prev.filter((s) => s.id !== deleteTarget.id))
+    setDeleteTarget(null)
   }
 
   const grouped = skills.reduce<Record<string, Skill[]>>((acc, s) => {
@@ -218,73 +278,139 @@ export default function AdminSkillsPage() {
   }, {})
 
   return (
-    <div style={{ maxWidth: '900px' }}>
+    <div style={{ maxWidth: '960px', margin: '0 auto' }}>
       <Toaster position="top-right" theme="dark" />
-      <div style={{ marginBottom: '32px' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: 600, color: '#F5F5F5', letterSpacing: '-0.02em' }}>
-          Skills & Technologies
-        </h1>
-        <p style={{ fontSize: '13px', color: '#666', marginTop: '4px' }}>
-          {skills.length} technical skills across {Object.keys(grouped).length} categories
-        </p>
+
+      {/* Header */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          paddingBottom: '20px',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+          marginBottom: '28px',
+        }}
+      >
+        <div>
+          <h1
+            style={{
+              fontSize: '24px',
+              fontWeight: 700,
+              color: '#F5F5F5',
+              margin: 0,
+              letterSpacing: '-0.02em',
+            }}
+          >
+            Skills & Competency Matrix
+          </h1>
+          <p style={{ fontSize: '13px', color: '#9CA3AF', marginTop: '4px', margin: 0 }}>
+            {skills.length} technical skills across {Object.keys(grouped).length} categories
+          </p>
+        </div>
       </div>
 
       <AddSkillForm onAdd={load} />
 
       {loading ? (
-        <div style={{ color: '#666', fontSize: '14px', padding: '40px 0', textAlign: 'center' }}>
+        <div style={{ color: '#6B7280', fontSize: '13px', padding: '40px 0', textAlign: 'center' }}>
           Loading skills matrix…
         </div>
       ) : (
         Object.entries(grouped).map(([category, catSkills]) => (
-          <div key={category} style={{ marginBottom: '28px' }}>
-            <h3
+          <div
+            key={category}
+            style={{
+              background: '#101318',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '12px',
+              padding: '20px 24px',
+              marginBottom: '20px',
+            }}
+          >
+            <div
               style={{
-                fontSize: '11px',
-                letterSpacing: '0.1em',
-                textTransform: 'uppercase',
-                color: '#777',
-                marginBottom: '12px',
-                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: '14px',
               }}
             >
-              {category} <span style={{ color: '#555', fontWeight: 400 }}>({catSkills.length})</span>
-            </h3>
+              <h3
+                style={{
+                  fontSize: '11px',
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  color: '#E45D2C',
+                  fontWeight: 600,
+                  fontFamily: 'var(--font-mono, monospace)',
+                  margin: 0,
+                }}
+              >
+                {category}
+              </h3>
+              <span style={{ fontSize: '11px', color: '#6B7280' }}>
+                {catSkills.length} skills
+              </span>
+            </div>
+
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
               {catSkills.map((skill) => (
                 <div
                   key={skill.id}
                   style={{
-                    display: 'flex',
+                    display: 'inline-flex',
                     alignItems: 'center',
                     gap: '8px',
-                    background: '#1A1A1A',
-                    border: `1px solid ${skill.featured ? 'rgba(228,93,44,0.4)' : '#242424'}`,
-                    borderRadius: '6px',
-                    padding: '8px 14px',
-                    transition: 'all 0.15s',
+                    padding: '6px 10px',
+                    borderRadius: '8px',
+                    background: '#0D0F14',
+                    border: `1px solid ${
+                      skill.featured
+                        ? 'rgba(228, 93, 44, 0.35)'
+                        : 'rgba(255, 255, 255, 0.08)'
+                    }`,
+                    fontSize: '12px',
+                    color: '#F5F5F5',
+                    transition: 'border-color 0.15s',
                   }}
                 >
-                  <span style={{ fontSize: '13px', color: '#F5F5F5', fontWeight: skill.featured ? 500 : 400 }}>
-                    {skill.name}
-                  </span>
-                  <span style={{ fontSize: '11px', color: '#666', background: '#141414', padding: '1px 6px', borderRadius: '4px' }}>
-                    {skill.level}
-                  </span>
+                  <span style={{ fontWeight: 500 }}>{skill.name}</span>
+
+                  {skill.level && (
+                    <span
+                      style={{
+                        fontSize: '10px',
+                        color: '#9CA3AF',
+                        fontFamily: 'var(--font-mono, monospace)',
+                        background: 'rgba(255, 255, 255, 0.04)',
+                        padding: '1px 5px',
+                        borderRadius: '4px',
+                      }}
+                    >
+                      {skill.level}
+                    </span>
+                  )}
+
+                  {skill.featured && (
+                    <Star size={11} fill="#E45D2C" style={{ color: '#E45D2C' }} />
+                  )}
+
                   <button
-                    onClick={() => deleteSkill(skill.id, skill.name, category)}
+                    type="button"
+                    onClick={() => setDeleteTarget(skill)}
                     style={{
-                      background: 'none',
+                      background: 'transparent',
                       border: 'none',
+                      color: '#6B7280',
                       cursor: 'pointer',
-                      color: '#444',
-                      padding: '0 0 0 4px',
+                      padding: '2px',
                       display: 'flex',
                       alignItems: 'center',
                     }}
-                    title="Delete skill"
-                    onMouseEnter={(e) => (e.currentTarget.style.color = '#E45D2C')}
-                    onMouseLeave={(e) => (e.currentTarget.style.color = '#444')}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = '#EF4444')}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = '#6B7280')}
+                    aria-label={`Delete ${skill.name}`}
                   >
                     <Trash2 size={12} />
                   </button>
@@ -294,6 +420,17 @@ export default function AdminSkillsPage() {
           </div>
         ))
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmDialog
+        isOpen={Boolean(deleteTarget)}
+        title="Delete Skill"
+        description="Are you sure you want to remove this skill from your technical matrix?"
+        itemName={deleteTarget?.name}
+        confirmLabel="Delete Skill"
+        onConfirm={confirmDeleteSkill}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   )
 }

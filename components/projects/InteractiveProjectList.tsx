@@ -32,7 +32,8 @@ export default function InteractiveProjectList({ projects }: { projects: Project
                 border: `1px solid ${isActive ? 'var(--color-accent)' : 'var(--color-border)'}`,
                 borderRadius: 'var(--radius-sm)',
                 color: isActive ? '#FFFFFF' : 'var(--color-text-secondary)',
-                background: isActive ? 'var(--color-accent)' : 'rgba(255, 255, 255, 0.03)',
+                background: isActive ? 'var(--color-accent)' : 'var(--color-surface)',
+                boxShadow: isActive ? 'var(--shadow-accent)' : 'var(--shadow-sm)',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
               }}
@@ -113,7 +114,7 @@ export default function InteractiveProjectList({ projects }: { projects: Project
                         letterSpacing: '0.1em',
                         textTransform: 'uppercase',
                         color: 'var(--color-text-secondary)',
-                        background: 'rgba(255, 255, 255, 0.04)',
+                        background: 'var(--color-surface-2)',
                         border: '1px solid var(--color-border)',
                         padding: '3px 8px',
                         borderRadius: 'var(--radius-sm)',
@@ -174,8 +175,8 @@ export default function InteractiveProjectList({ projects }: { projects: Project
                         fontFamily: 'var(--font-mono)',
                         padding: '3px 8px',
                         borderRadius: 'var(--radius-sm)',
-                        background: 'rgba(255, 255, 255, 0.03)',
-                        border: '1px solid var(--color-border-subtle)',
+                        background: 'var(--color-surface-2)',
+                        border: '1px solid var(--color-border)',
                         color: 'var(--color-text-secondary)',
                       }}
                     >

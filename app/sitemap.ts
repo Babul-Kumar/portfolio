@@ -1,12 +1,19 @@
 import { MetadataRoute } from 'next'
-import { getAllProjectSlugs, getAllCertificateSlugs } from '@/lib/data'
+import {
+  getAllProjectSlugs,
+  getAllCertificateSlugs,
+  getAllTrainingSlugs,
+  getAllCoCurricularSlugs,
+} from '@/lib/data'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://babul.dev'
 
-  const [projectSlugs, certificateSlugs] = await Promise.all([
+  const [projectSlugs, certificateSlugs, trainingSlugs, coCurrSlugs] = await Promise.all([
     getAllProjectSlugs(),
     getAllCertificateSlugs(),
+    getAllTrainingSlugs(),
+    getAllCoCurricularSlugs(),
   ])
 
   const staticRoutes: MetadataRoute.Sitemap = [
@@ -21,6 +28,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/training`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.85,
+    },
+    {
+      url: `${baseUrl}/co-curricular`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.85,
     },
     {
       url: `${baseUrl}/projects`,
@@ -80,5 +99,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }))
 
-  return [...staticRoutes, ...dynamicProjectRoutes, ...dynamicCertificateRoutes]
+  const dynamicTrainingRoutes: MetadataRoute.Sitemap = trainingSlugs.map((slug) => ({
+    url: `${baseUrl}/training/${slug}`,
+    lastModified: new Date(),
+    changeFrequency: 'monthly',
+    priority: 0.75,
+  }))
+
+  const dynamicCoCurricularRoutes: MetadataRoute.Sitemap = coCurrSlugs.map((slug) => ({
+    url: `${baseUrl}/co-curricular/${slug}`,
+    lastModified: new Date(),
+    changeFrequency: 'monthly',
+    priority: 0.75,
+  }))
+
+  return [
+    ...staticRoutes,
+    ...dynamicProjectRoutes,
+    ...dynamicCertificateRoutes,
+    ...dynamicTrainingRoutes,
+    ...dynamicCoCurricularRoutes,
+  ]
 }

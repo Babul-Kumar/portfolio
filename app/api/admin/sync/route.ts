@@ -8,6 +8,8 @@ import {
   FALLBACK_EDUCATION,
   FALLBACK_EXPERIENCE,
   FALLBACK_SKILLS,
+  FALLBACK_TRAININGS,
+  FALLBACK_CO_CURRICULAR,
 } from '@/lib/data'
 
 export const dynamic = 'force-dynamic'
@@ -29,6 +31,8 @@ export async function POST() {
       profile: { inserted: 0, updated: 0, skipped: 0, errors: [] },
       projects: { inserted: 0, updated: 0, skipped: 0, errors: [] },
       certificates: { inserted: 0, updated: 0, skipped: 0, errors: [] },
+      training: { inserted: 0, updated: 0, skipped: 0, errors: [] },
+      co_curricular: { inserted: 0, updated: 0, skipped: 0, errors: [] },
       achievements: { inserted: 0, updated: 0, skipped: 0, errors: [] },
       education: { inserted: 0, updated: 0, skipped: 0, errors: [] },
       experience: { inserted: 0, updated: 0, skipped: 0, errors: [] },
@@ -78,7 +82,31 @@ export async function POST() {
       }
     }
 
-    // 4. Sync Achievements
+    // 4. Sync Training
+    for (const trn of FALLBACK_TRAININGS) {
+      const { data: existing } = await supabase.from('training').select('id').eq('slug', trn.slug).single()
+      if (!existing) {
+        const { error } = await supabase.from('training').insert(stripMeta(trn as unknown as Record<string, unknown>))
+        if (error) report.training.errors.push(`${trn.title}: ${error.message}`)
+        else report.training.inserted++
+      } else {
+        report.training.skipped++
+      }
+    }
+
+    // 5. Sync Co-Curricular Activities
+    for (const act of FALLBACK_CO_CURRICULAR) {
+      const { data: existing } = await supabase.from('co_curricular_activities').select('id').eq('slug', act.slug).single()
+      if (!existing) {
+        const { error } = await supabase.from('co_curricular_activities').insert(stripMeta(act as unknown as Record<string, unknown>))
+        if (error) report.co_curricular.errors.push(`${act.title}: ${error.message}`)
+        else report.co_curricular.inserted++
+      } else {
+        report.co_curricular.skipped++
+      }
+    }
+
+    // 6. Sync Achievements
     for (const ach of FALLBACK_ACHIEVEMENTS) {
       const { data: existing } = await supabase.from('achievements').select('id').eq('slug', ach.slug).single()
       if (!existing) {
@@ -90,7 +118,7 @@ export async function POST() {
       }
     }
 
-    // 5. Sync Education
+    // 7. Sync Education
     for (const edu of FALLBACK_EDUCATION) {
       const { data: existing } = await supabase
         .from('education')
@@ -107,7 +135,7 @@ export async function POST() {
       }
     }
 
-    // 6. Sync Experience
+    // 8. Sync Experience
     for (const exp of FALLBACK_EXPERIENCE) {
       const { data: existing } = await supabase
         .from('experience')
@@ -124,7 +152,7 @@ export async function POST() {
       }
     }
 
-    // 7. Sync Skills
+    // 9. Sync Skills
     for (const skill of FALLBACK_SKILLS) {
       const { data: existing } = await supabase
         .from('skills')
