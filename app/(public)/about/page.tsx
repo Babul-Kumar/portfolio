@@ -32,7 +32,7 @@ export default async function AboutPage() {
             Identity & Engineering Philosophy
           </div>
           <h1 className="text-display">
-            ABOUT<br />BABUL
+            ABOUT<br />BABUL KUMAR
           </h1>
         </div>
 
