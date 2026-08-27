@@ -43,8 +43,8 @@
 
   /* Global Layout Container & Intentional Density */
   --section-gap:   clamp(56px, 6.5vw, 96px);
-  --container-max: 1360px;
-  --container-pad: clamp(20px, 4.5vw, 56px);
+  --container-max: min(94vw, 1800px);
+  --container-pad: clamp(16px, 2.5vw, 40px);
 
   /* Precise Architectural Radii */
   --radius-sm:  4px;
@@ -154,11 +154,38 @@ body::before {
 }
 
 /* --- Global Container & Section Density --- */
-.container {
-  width: 100%;
-  max-width: var(--container-max);
-  margin-inline: auto;
-  padding-inline: var(--container-pad);
+.container,
+div.container {
+  width: 100% !important;
+  max-width: var(--container-max, min(94vw, 1800px)) !important;
+  margin-inline: auto !important;
+  padding-inline: var(--container-pad, clamp(16px, 2.5vw, 40px)) !important;
+}
+
+@media (min-width: 40rem) {
+  .container, div.container {
+    max-width: var(--container-max, min(94vw, 1800px)) !important;
+  }
+}
+@media (min-width: 48rem) {
+  .container, div.container {
+    max-width: var(--container-max, min(94vw, 1800px)) !important;
+  }
+}
+@media (min-width: 64rem) {
+  .container, div.container {
+    max-width: var(--container-max, min(94vw, 1800px)) !important;
+  }
+}
+@media (min-width: 80rem) {
+  .container, div.container {
+    max-width: var(--container-max, min(94vw, 1800px)) !important;
+  }
+}
+@media (min-width: 96rem) {
+  .container, div.container {
+    max-width: var(--container-max, min(94vw, 1800px)) !important;
+  }
 }
 
 .section {

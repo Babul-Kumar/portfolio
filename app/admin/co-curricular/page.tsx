@@ -195,6 +195,15 @@ export default function AdminCoCurricularPage() {
     if (!deleteTarget) return
     setDeleting(true)
 
+    // Handle local fallback items immediately without triggering database errors
+    if (deleteTarget.id.startsWith('00000000-0000-4000-')) {
+      setActivities((prev) => prev.filter((a) => a.id !== deleteTarget.id))
+      toast.success('Activity removed from view')
+      setDeleting(false)
+      setDeleteTarget(null)
+      return
+    }
+
     try {
       const supabase = createClient()
       const { data: { session } } = await supabase.auth.getSession()
@@ -213,7 +222,7 @@ export default function AdminCoCurricularPage() {
         })
 
         if (res.ok) {
-          const result = await res.json()
+          const result = await res.json().catch(() => ({}))
           if (result.success) {
             endpointSucceeded = true
           }
@@ -226,19 +235,29 @@ export default function AdminCoCurricularPage() {
         // 2. Fallback to direct client delete
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(deleteTarget.id)
 
-        if (isUuid) {
-          const { error } = await supabase.from('co_curricular_activities').delete().eq('id', deleteTarget.id)
-          if (error) {
-            if (deleteTarget.slug) {
-              const { error: slugErr } = await supabase.from('co_curricular_activities').delete().eq('slug', deleteTarget.slug)
-              if (slugErr) throw slugErr
-            } else {
-              throw error
+        try {
+          if (isUuid) {
+            const { error } = await supabase.from('co_curricular_activities').delete().eq('id', deleteTarget.id)
+            if (error) {
+              if (error.code === 'PGRST205' || error.message?.includes('schema cache')) {
+                // Table doesn't exist yet in Supabase
+                endpointSucceeded = true
+              } else if (deleteTarget.slug) {
+                const { error: slugErr } = await supabase.from('co_curricular_activities').delete().eq('slug', deleteTarget.slug)
+                if (slugErr && slugErr.code !== 'PGRST205') throw slugErr
+              } else {
+                throw error
+              }
             }
+          } else if (deleteTarget.slug) {
+            const { error } = await supabase.from('co_curricular_activities').delete().eq('slug', deleteTarget.slug)
+            if (error && error.code !== 'PGRST205') throw error
           }
-        } else if (deleteTarget.slug) {
-          const { error } = await supabase.from('co_curricular_activities').delete().eq('slug', deleteTarget.slug)
-          if (error) throw error
+        } catch (dbErr: unknown) {
+          const dbMsg = dbErr instanceof Error ? dbErr.message : String(dbErr)
+          if (!dbMsg.toLowerCase().includes('schema cache') && !dbMsg.toLowerCase().includes('could not find the table')) {
+            throw dbErr
+          }
         }
       }
 
@@ -252,7 +271,6 @@ export default function AdminCoCurricularPage() {
         body: JSON.stringify({ type: 'co-curricular', slug: deleteTarget.slug }),
       }).catch(() => {})
     } catch (err: unknown) {
-      console.error('Co-curricular deletion error:', err)
       let msg = 'Deletion failed'
       if (typeof err === 'object' && err !== null && 'message' in err) {
         msg = String((err as { message: unknown }).message)
@@ -262,8 +280,9 @@ export default function AdminCoCurricularPage() {
 
       if (msg.toLowerCase().includes('schema cache') || msg.toLowerCase().includes('could not find the table')) {
         setActivities((prev) => prev.filter((a) => a.id !== deleteTarget.id))
-        toast.info('Removed from view. Note: Run the SQL migration in Supabase to create the co_curricular_activities table.')
+        toast.info('Removed from view. (Table not yet created in Supabase)')
       } else {
+        console.warn('Co-curricular deletion warning:', msg)
         toast.error(msg)
       }
     } finally {

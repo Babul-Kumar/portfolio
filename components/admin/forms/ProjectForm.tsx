@@ -8,7 +8,7 @@ import {
   type ProjectFormValues,
 } from '@/lib/validations'
 import { createClient } from '@/lib/supabase/client'
-import { slugify, joinCSV, parseCSV } from '@/lib/utils'
+import { slugify, joinCSV, parseCSV, sanitizeDateForDb } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 import { useState, useCallback } from 'react'
 import FileUpload from '@/components/admin/FileUpload'
@@ -142,7 +142,7 @@ export default function AdminProjectForm({ project }: { project?: Project }) {
   async function handleHeroUpload(file: File) {
     setUploading(true)
     try {
-      const result = await uploadFileFromBrowser('projects', file, 'heroes')
+      const result = await uploadFileFromBrowser('certificate', file, 'projects')
       if (result.url) {
         setHeroUrl(result.url)
         toast.success('Hero image uploaded')
@@ -176,7 +176,7 @@ export default function AdminProjectForm({ project }: { project?: Project }) {
         technologies: values.technologies ? parseCSV(values.technologies) : [],
         github_url: values.github_url || null,
         live_url: values.live_url || null,
-        project_date: values.project_date || null,
+        project_date: sanitizeDateForDb(values.project_date),
         featured: values.featured,
         published: values.published,
         hero_image_url: heroUrl,

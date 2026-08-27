@@ -115,7 +115,7 @@ export async function DELETE(
         await safeDeleteStorageFile('certificate', record.certificate_url)
       }
       if (record.image_url) {
-        await safeDeleteStorageFile('projects', record.image_url)
+        await safeDeleteStorageFile('certificate', record.image_url)
       }
     }
 

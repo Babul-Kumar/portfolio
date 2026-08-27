@@ -72,7 +72,7 @@ export default function CoCurricularSection({
           }}
           className="co-curr-home-grid"
         >
-          {activities.slice(0, 3).map((a) => {
+          {activities.map((a) => {
             const orgName = a.organization || 'Independent Initiative'
             const modeColor =
               a.mode === 'Online'
@@ -98,6 +98,62 @@ export default function CoCurricularSection({
                 }}
                 className="co-curr-card"
               >
+                {/* Activity Image or Fallback Placeholder */}
+                {a.image_url ? (
+                  <div
+                    style={{
+                      width: '100%',
+                      aspectRatio: '16/9',
+                      borderRadius: 'var(--radius-sm)',
+                      overflow: 'hidden',
+                      marginBottom: '18px',
+                      background: 'var(--color-surface)',
+                    }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={a.image_url}
+                      alt={a.title}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'contain',
+                        display: 'block',
+                      }}
+                      loading="lazy"
+                    />
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      width: '100%',
+                      aspectRatio: '16/9',
+                      borderRadius: 'var(--radius-sm)',
+                      background: 'var(--color-surface-2)',
+                      border: '1px solid var(--color-border-subtle)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginBottom: '18px',
+                      gap: '8px',
+                    }}
+                  >
+                    <Award size={18} style={{ color: 'var(--color-text-muted)', opacity: 0.4 }} />
+                    <span
+                      style={{
+                        fontSize: '10px',
+                        fontFamily: 'var(--font-mono)',
+                        color: 'var(--color-text-muted)',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.08em',
+                        opacity: 0.5,
+                      }}
+                    >
+                      {a.category}
+                    </span>
+                  </div>
+                )}
+
                 <div>
                   {/* Category & Mode Strip */}
                   <div

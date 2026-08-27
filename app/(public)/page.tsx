@@ -29,9 +29,9 @@ export default async function HomePage() {
     await Promise.all([
       getProfile(),
       getProjects({ featured: true, limit: 6 }),
-      getTrainings({ limit: 3 }),
+      getTrainings(),
       getCertificates(),
-      getCoCurricularActivities({ featured: true, limit: 3 }),
+      getCoCurricularActivities(), // All published activities — no featured/limit filter
       getEducation(),
       getExperience(),
     ])

@@ -9,7 +9,7 @@ import {
   type CoCurricularFormValues,
 } from '@/lib/validations'
 import { createClient } from '@/lib/supabase/client'
-import { slugify, joinCSV, parseCSV } from '@/lib/utils'
+import { slugify, joinCSV, parseCSV, sanitizeDateForDb } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import FileUpload from '@/components/admin/FileUpload'
@@ -161,11 +161,17 @@ export default function CoCurricularForm({ activity }: { activity?: CoCurricular
     }
 
     if (coData.date) {
-      setValue('date', coData.date, { shouldValidate: true })
+      const cleanDate = sanitizeDateForDb(coData.date)
+      if (cleanDate) {
+        setValue('date', cleanDate, { shouldValidate: true })
+      }
     }
 
     if (coData.end_date) {
-      setValue('end_date', coData.end_date, { shouldValidate: true })
+      const cleanEndDate = sanitizeDateForDb(coData.end_date)
+      if (cleanEndDate) {
+        setValue('end_date', cleanEndDate, { shouldValidate: true })
+      }
     }
 
     if (coData.location) {
@@ -222,7 +228,7 @@ export default function CoCurricularForm({ activity }: { activity?: CoCurricular
   async function handleImageUpload(file: File) {
     setUploadingImage(true)
     try {
-      const { url, error } = await uploadFileFromBrowser('projects', file, 'co-curricular/images')
+      const { url, error } = await uploadFileFromBrowser('certificate', file, 'co-curricular/images')
       if (error) {
         toast.error(`Image upload failed: ${error}`)
       } else if (url) {
@@ -268,8 +274,8 @@ export default function CoCurricularForm({ activity }: { activity?: CoCurricular
         organization: data.organization?.trim() || null,
         category: data.category,
         description: data.description?.trim() || null,
-        date: data.date || null,
-        end_date: data.end_date || null,
+        date: sanitizeDateForDb(data.date),
+        end_date: sanitizeDateForDb(data.end_date),
         location: data.location?.trim() || null,
         mode: data.mode || 'Offline',
         role: data.role?.trim() || null,
@@ -346,7 +352,6 @@ export default function CoCurricularForm({ activity }: { activity?: CoCurricular
   }
 
   function handleSaveError(err: unknown, context: string) {
-    console.error(`${context} error:`, err)
     let msg = 'Database error occurred'
 
     if (typeof err === 'object' && err !== null) {
@@ -356,6 +361,8 @@ export default function CoCurricularForm({ activity }: { activity?: CoCurricular
     } else if (err instanceof Error) {
       msg = err.message
     }
+
+    console.warn(`${context} notice:`, msg)
 
     if (msg.toLowerCase().includes('schema cache') || msg.toLowerCase().includes('could not find the table')) {
       toast.error('Supabase Table Missing: The "co_curricular_activities" table has not been created yet in Supabase. Please run the SQL migration in Supabase SQL Editor.', {

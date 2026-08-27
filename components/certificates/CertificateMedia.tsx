@@ -167,6 +167,10 @@ export default function CertificateMedia({
           borderRadius: 'var(--radius-sm)',
           position: 'relative',
           overflow: 'hidden',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '6px',
         }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -176,29 +180,24 @@ export default function CertificateMedia({
           loading="lazy"
           onError={() => setImageError(true)}
           style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            objectPosition: 'center top',
+            maxWidth: '100%',
+            maxHeight: '100%',
+            width: 'auto',
+            height: 'auto',
+            objectFit: 'contain',
+            objectPosition: 'center center',
             display: 'block',
-            transition: 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+            borderRadius: '2px',
+            transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
           }}
           className="cert-img-hover"
         />
         <div
           style={{
             position: 'absolute',
-            inset: 0,
-            background: 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 50%)',
-            pointerEvents: 'none',
-          }}
-        />
-        <div
-          style={{
-            position: 'absolute',
-            bottom: '12px',
-            left: '12px',
-            right: '12px',
+            bottom: '8px',
+            left: '8px',
+            right: '8px',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
@@ -210,12 +209,13 @@ export default function CertificateMedia({
               fontSize: '9px',
               fontFamily: 'var(--font-mono, monospace)',
               letterSpacing: '0.06em',
-              color: '#DDD',
-              background: 'rgba(0,0,0,0.6)',
-              backdropFilter: 'blur(4px)',
-              padding: '2px 6px',
+              color: 'var(--color-text)',
+              background: 'var(--color-surface)',
+              backdropFilter: 'blur(8px)',
+              padding: '2px 7px',
               borderRadius: '3px',
-              border: '1px solid rgba(255,255,255,0.1)',
+              border: '1px solid var(--color-border)',
+              boxShadow: 'var(--shadow-sm)',
             }}
           >
             {issuer}
@@ -224,15 +224,16 @@ export default function CertificateMedia({
             style={{
               fontSize: '9px',
               fontFamily: 'var(--font-mono, monospace)',
-              color: '#4A7C59',
-              background: 'rgba(0,0,0,0.6)',
-              backdropFilter: 'blur(4px)',
-              padding: '2px 6px',
+              color: 'var(--color-success)',
+              background: 'var(--color-surface)',
+              backdropFilter: 'blur(8px)',
+              padding: '2px 7px',
               borderRadius: '3px',
               display: 'inline-flex',
               alignItems: 'center',
               gap: '3px',
-              border: '1px solid rgba(74, 124, 89, 0.3)',
+              border: '1px solid var(--color-border)',
+              boxShadow: 'var(--shadow-sm)',
             }}
           >
             <ShieldCheck size={9} /> VERIFIED

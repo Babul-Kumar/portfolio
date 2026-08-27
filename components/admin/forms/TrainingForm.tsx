@@ -9,7 +9,7 @@ import {
   type TrainingFormValues,
 } from '@/lib/validations'
 import { createClient } from '@/lib/supabase/client'
-import { slugify, joinCSV, parseCSV } from '@/lib/utils'
+import { slugify, joinCSV, parseCSV, sanitizeDateForDb } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import FileUpload from '@/components/admin/FileUpload'
@@ -159,11 +159,13 @@ export default function TrainingForm({ training }: { training?: Training }) {
     }
 
     if (trainData.start_date) {
-      setValue('start_date', trainData.start_date, { shouldValidate: true })
+      const clean = sanitizeDateForDb(trainData.start_date)
+      if (clean) setValue('start_date', clean, { shouldValidate: true })
     }
 
     if (trainData.end_date) {
-      setValue('end_date', trainData.end_date, { shouldValidate: true })
+      const clean = sanitizeDateForDb(trainData.end_date)
+      if (clean) setValue('end_date', clean, { shouldValidate: true })
     }
 
     if (trainData.duration) {
@@ -216,7 +218,7 @@ export default function TrainingForm({ training }: { training?: Training }) {
   async function handleImageUpload(file: File) {
     setUploadingImage(true)
     try {
-      const { url, error } = await uploadFileFromBrowser('projects', file, 'training/images')
+      const { url, error } = await uploadFileFromBrowser('certificate', file, 'training/images')
       if (error) {
         toast.error(`Image upload failed: ${error}`)
       } else if (url) {
@@ -263,8 +265,8 @@ export default function TrainingForm({ training }: { training?: Training }) {
         organization: data.organization?.trim() || null,
         category: data.category,
         description: data.description?.trim() || null,
-        start_date: data.start_date || null,
-        end_date: data.end_date || null,
+        start_date: sanitizeDateForDb(data.start_date),
+        end_date: sanitizeDateForDb(data.end_date),
         duration: data.duration?.trim() || null,
         location: data.location?.trim() || null,
         mode: data.mode || 'Online',
@@ -337,7 +339,6 @@ export default function TrainingForm({ training }: { training?: Training }) {
   }
 
   function handleSaveError(err: unknown, context: string) {
-    console.error(`${context} error:`, err)
     let msg = 'Database error occurred'
 
     if (typeof err === 'object' && err !== null) {
@@ -347,6 +348,8 @@ export default function TrainingForm({ training }: { training?: Training }) {
     } else if (err instanceof Error) {
       msg = err.message
     }
+
+    console.warn(`${context} notice:`, msg)
 
     if (msg.toLowerCase().includes('schema cache') || msg.toLowerCase().includes('could not find the table')) {
       toast.error('Supabase Table Missing: The "training" table has not been created yet in Supabase. Please run the SQL migration in Supabase SQL Editor.', {

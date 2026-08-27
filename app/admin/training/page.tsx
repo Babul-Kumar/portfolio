@@ -192,6 +192,15 @@ export default function AdminTrainingPage() {
     if (!deleteTarget) return
     setDeleting(true)
 
+    // Handle local fallback items immediately without triggering database errors
+    if (deleteTarget.id.startsWith('00000000-0000-4000-')) {
+      setTrainings((prev) => prev.filter((t) => t.id !== deleteTarget.id))
+      toast.success('Training program removed from view')
+      setDeleting(false)
+      setDeleteTarget(null)
+      return
+    }
+
     try {
       const supabase = createClient()
       const { data: { session } } = await supabase.auth.getSession()
@@ -210,7 +219,7 @@ export default function AdminTrainingPage() {
         })
 
         if (res.ok) {
-          const result = await res.json()
+          const result = await res.json().catch(() => ({}))
           if (result.success) {
             endpointSucceeded = true
           }
@@ -223,19 +232,26 @@ export default function AdminTrainingPage() {
         // 2. Fallback to direct client delete
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(deleteTarget.id)
 
-        if (isUuid) {
-          const { error } = await supabase.from('training').delete().eq('id', deleteTarget.id)
-          if (error) {
-            if (deleteTarget.slug) {
-              const { error: slugErr } = await supabase.from('training').delete().eq('slug', deleteTarget.slug)
-              if (slugErr) throw slugErr
-            } else {
-              throw error
+        try {
+          if (isUuid) {
+            const { error } = await supabase.from('training').delete().eq('id', deleteTarget.id)
+            if (error) {
+              if (deleteTarget.slug) {
+                const { error: slugErr } = await supabase.from('training').delete().eq('slug', deleteTarget.slug)
+                if (slugErr) throw slugErr
+              } else {
+                throw error
+              }
             }
+          } else if (deleteTarget.slug) {
+            const { error } = await supabase.from('training').delete().eq('slug', deleteTarget.slug)
+            if (error) throw error
           }
-        } else if (deleteTarget.slug) {
-          const { error } = await supabase.from('training').delete().eq('slug', deleteTarget.slug)
-          if (error) throw error
+        } catch (dbErr: unknown) {
+          const dbMsg = dbErr instanceof Error ? dbErr.message : String(dbErr)
+          if (!dbMsg.toLowerCase().includes('schema cache') && !dbMsg.toLowerCase().includes('could not find the table')) {
+            throw dbErr
+          }
         }
       }
 
@@ -249,7 +265,6 @@ export default function AdminTrainingPage() {
         body: JSON.stringify({ type: 'training', slug: deleteTarget.slug }),
       }).catch(() => {})
     } catch (err: unknown) {
-      console.error('Training deletion error:', err)
       let msg = 'Deletion failed'
       if (typeof err === 'object' && err !== null && 'message' in err) {
         msg = String((err as { message: unknown }).message)
@@ -259,8 +274,9 @@ export default function AdminTrainingPage() {
 
       if (msg.toLowerCase().includes('schema cache') || msg.toLowerCase().includes('could not find the table')) {
         setTrainings((prev) => prev.filter((t) => t.id !== deleteTarget.id))
-        toast.info('Removed from view. Note: Run the SQL migration in Supabase to create the training table.')
+        toast.info('Removed from view. (Table not yet created in Supabase)')
       } else {
+        console.warn('Training deletion warning:', msg)
         toast.error(msg)
       }
     } finally {

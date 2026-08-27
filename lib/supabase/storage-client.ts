@@ -6,6 +6,7 @@ import { generateFilePath, normalizeBucketName } from '@/lib/supabase/storage'
 /**
  * Upload a file directly from the authenticated browser session to Supabase Storage.
  * Uses the user's active Supabase Auth JWT token so RLS evaluates auth.role() = 'authenticated'.
+ * Automatically falls back to /api/admin/upload if direct browser upload encounters RLS restrictions.
  */
 export async function uploadFileFromBrowser(
   bucket: string,
@@ -17,6 +18,7 @@ export async function uploadFileFromBrowser(
     const targetBucket = normalizeBucketName(bucket)
 
     // 1. Verify current authenticated admin session
+    const { data: { session } } = await supabase.auth.getSession()
     const { data: { user }, error: userError } = await supabase.auth.getUser()
 
     if (userError || !user) {
@@ -31,16 +33,7 @@ export async function uploadFileFromBrowser(
     // 2. Generate clean storage path
     const filePath = generateFilePath(file.name, prefix)
 
-    console.log('Initiating authenticated storage upload:', {
-      userId: user.id,
-      email: user.email,
-      bucket: targetBucket,
-      path: filePath,
-      fileType: file.type,
-      fileSize: `${(file.size / 1024).toFixed(1)} KB`,
-    })
-
-    // 3. Upload directly to Supabase Storage with authenticated JWT
+    // 3. Try direct upload to Supabase Storage with authenticated JWT
     const { data, error: uploadError } = await supabase.storage
       .from(targetBucket)
       .upload(filePath, file, {
@@ -48,23 +41,51 @@ export async function uploadFileFromBrowser(
         upsert: false,
       })
 
-    if (uploadError) {
-      console.error('Certificate storage upload failed:', uploadError)
+    if (!uploadError && data?.path) {
+      const { data: { publicUrl } } = supabase.storage
+        .from(targetBucket)
+        .getPublicUrl(data.path)
+
       return {
-        url: '',
-        path: '',
-        error: uploadError.message,
+        url: publicUrl,
+        path: data.path,
+        error: null,
       }
     }
 
-    // 4. Retrieve public URL
-    const { data: { publicUrl } } = supabase.storage
-      .from(targetBucket)
-      .getPublicUrl(data.path)
+    // If direct upload returned an RLS error or failed, fallback to server upload route
+    console.warn(`Direct client storage upload notice (${uploadError?.message}), delegating to /api/admin/upload route...`)
+
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('bucket', targetBucket)
+    if (prefix) formData.append('prefix', prefix)
+
+    const headers: Record<string, string> = {}
+    if (session?.access_token) {
+      headers['Authorization'] = `Bearer ${session.access_token}`
+    }
+
+    const res = await fetch('/api/admin/upload', {
+      method: 'POST',
+      body: formData,
+      headers,
+    })
+
+    const result = await res.json()
+    if (!res.ok || result.error) {
+      const errMsg = result.error || uploadError?.message || 'Upload failed'
+      console.error('Storage upload failed:', errMsg)
+      return {
+        url: '',
+        path: '',
+        error: errMsg,
+      }
+    }
 
     return {
-      url: publicUrl,
-      path: data.path,
+      url: result.url,
+      path: result.path,
       error: null,
     }
   } catch (err: unknown) {
@@ -77,3 +98,4 @@ export async function uploadFileFromBrowser(
     }
   }
 }
+

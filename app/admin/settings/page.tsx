@@ -61,7 +61,7 @@ export default function AdminSettingsPage() {
   async function handleResumeUpload(file: File) {
     setUploading(true)
     try {
-      const result = await uploadFileFromBrowser('resume', file, 'cv')
+      const result = await uploadFileFromBrowser('certificate', file, 'resume')
       if (result.url) {
         setResumeUrl(result.url)
         const supabase = createClient()

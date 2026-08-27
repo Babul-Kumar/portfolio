@@ -102,7 +102,7 @@ export const FALLBACK_PROFILE: Profile = {
   bio: 'B.Tech Computer Science & Engineering student at Lovely Professional University, exploring Artificial Intelligence, Machine Learning and Full-Stack Development.',
   bio_extended:
     'I am deeply interested in building intelligent systems that solve real-world problems — from training ML models to architecting full-stack applications. I thrive at the intersection of research and engineering.',
-  avatar_url: null,
+  avatar_url: '/images/babul_3d_avatar.jpg',
   resume_url: null,
   location: 'Punjab, India',
   university: 'Lovely Professional University',
@@ -260,6 +260,28 @@ export const FALLBACK_PROJECTS: Project[] = [
 ]
 
 export const FALLBACK_CERTIFICATES: Certificate[] = [
+  {
+    id: '8c96a9c9-c96c-4b76-8741-474b3ef02ffe',
+    title: 'Responsible AI: Principles, Practices, and Applications',
+    slug: 'responsible-ai-principles-practices-and-applications',
+    issuer: 'Udemy',
+    category: 'AI / ML',
+    issue_date: '2026-08-20',
+    expiry_date: null,
+    credential_id: 'UC-73aafc97-057f-42ca-9edf-7b539dfda2cb',
+    verification_url: null,
+    description:
+      'This course covers the fundamental principles, practical applications, and best practices for developing and deploying responsible artificial intelligence systems. It focuses on ethical considerations and guidelines in AI.',
+    file_url:
+      'https://gmlgzuiuyhinxhjsbfkk.supabase.co/storage/v1/object/public/certificate/documents/1787775248709-fcrpjy.png',
+    thumbnail_url:
+      'https://gmlgzuiuyhinxhjsbfkk.supabase.co/storage/v1/object/public/certificate/thumbnails/1787775277651-dgyd56.png',
+    skills: ['Responsible AI', 'AI Ethics', 'AI Principles', 'AI Practices'],
+    featured: true,
+    published: true,
+    created_at: nowIso,
+    updated_at: nowIso,
+  },
   {
     id: '94341db2-b91e-4a4b-8486-4545c3350444',
     title: "Intro to AI: A Beginner's Guide to Artificial Intelligence",

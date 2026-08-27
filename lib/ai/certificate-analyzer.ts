@@ -11,6 +11,7 @@ import {
   geminiCoCurricularExtractionSchema,
   geminiCertificateExtractionSchema,
 } from '@/lib/validations'
+import { sanitizeDateForDb } from '@/lib/utils'
 
 const PRIMARY_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash'
 const FALLBACK_MODEL = 'gemini-1.5-flash'
@@ -42,8 +43,8 @@ CRITICAL ZERO-HALLUCINATION RULES:
    - "Other"
    (If uncertain, choose "Other").
 7. DATES:
-   - start_date: Starting date in ISO format (YYYY-MM-DD or YYYY-MM or YYYY) if visible, or null.
-   - end_date: Completion / issue date in ISO format (YYYY-MM-DD or YYYY-MM or YYYY) if visible, or null.
+   - start_date: Starting date in strict YYYY-MM-DD format (e.g. "2025-01-01" if only year is visible, or "2025-04-25"). Do NOT return just a year like "2025". Return null if not visible.
+   - end_date: Completion / issue date in strict YYYY-MM-DD format (e.g. "2025-04-26"). Return null if not visible.
    If only one completion/issue date is present on the certificate, set start_date or end_date to that date.
 8. DURATION: Explicitly stated duration (e.g. "8 Weeks", "40 Hours", "6 Months", "15+ Hours"). If not mentioned, return null. Do NOT calculate or guess.
 9. LOCATION: Venue, city, or campus if explicitly mentioned (null otherwise).
@@ -121,8 +122,8 @@ CRITICAL ZERO-HALLUCINATION RULES:
    - "Other"
    (If uncertain, choose "Other").
 6. DATES:
-   - date: Event start date or single date in ISO format (YYYY-MM-DD or YYYY-MM or YYYY).
-   - end_date: Event conclusion date in ISO format if multi-day, or null.
+   - date: Event start date or single date in strict YYYY-MM-DD format (e.g. "2025-01-01" if only year is visible, or "2025-04-25"). Do NOT return just a 4-digit year like "2025". Return null if absent.
+   - end_date: Event conclusion date in strict YYYY-MM-DD format if multi-day, or null.
 7. LOCATION: Event venue, campus, or nodal center (null if not specified).
 8. MODE: "Offline", "Online", or "Hybrid" based on evidence.
 9. ROLE: Participant role if stated (e.g. "Team Lead", "Participant", "Keynote Speaker", "Volunteer", "Core Contributor", "Organizer"). If not specified, return null.
@@ -358,6 +359,8 @@ export async function analyzeDocumentWithGemini(
 
     return {
       ...validated,
+      start_date: sanitizeDateForDb(validated.start_date),
+      end_date: sanitizeDateForDb(validated.end_date),
       recipient_match: match,
       recipient_warning: warning,
       warnings: allWarnings,
@@ -374,6 +377,8 @@ export async function analyzeDocumentWithGemini(
 
     return {
       ...validated,
+      date: sanitizeDateForDb(validated.date),
+      end_date: sanitizeDateForDb(validated.end_date),
       recipient_match: match,
       recipient_warning: warning,
       warnings: allWarnings,
@@ -390,6 +395,8 @@ export async function analyzeDocumentWithGemini(
 
   return {
     ...validated,
+    issue_date: sanitizeDateForDb(validated.issue_date),
+    expiry_date: sanitizeDateForDb(validated.expiry_date),
     recipient_match: match,
     recipient_warning: warning,
     warnings: allWarnings,

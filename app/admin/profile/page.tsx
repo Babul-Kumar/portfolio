@@ -103,7 +103,7 @@ export default function AdminProfilePage() {
   async function handleAvatarUpload(file: File) {
     setUploading(true)
     try {
-      const result = await uploadFileFromBrowser('profile picture', file, 'avatar')
+      const result = await uploadFileFromBrowser('certificate', file, 'avatar')
       if (result.url) {
         setAvatarUrl(result.url)
         toast.success('Avatar uploaded to Supabase Storage')

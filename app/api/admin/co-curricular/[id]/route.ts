@@ -74,6 +74,15 @@ export async function DELETE(
 
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
 
+    // Check if it is a fallback ID
+    if (id.startsWith('00000000-0000-4000-')) {
+      invalidateCoCurricularCache()
+      return NextResponse.json({
+        success: true,
+        message: 'Activity removed from view',
+      })
+    }
+
     // 2. Locate existing record to extract storage file references
     let record: {
       id: string
@@ -90,7 +99,7 @@ export async function DELETE(
         .eq('id', id)
         .maybeSingle()
 
-      if (selectErr) {
+      if (selectErr && !selectErr.message?.includes('schema cache')) {
         console.warn('CoCurricular select by UUID warning:', selectErr.message)
       }
       record = data
@@ -103,7 +112,7 @@ export async function DELETE(
         .eq('slug', id)
         .maybeSingle()
 
-      if (selectSlugErr) {
+      if (selectSlugErr && !selectSlugErr.message?.includes('schema cache')) {
         console.warn('CoCurricular select by slug warning:', selectSlugErr.message)
       }
       record = data
@@ -115,7 +124,7 @@ export async function DELETE(
         await safeDeleteStorageFile('certificate', record.document_url)
       }
       if (record.image_url) {
-        await safeDeleteStorageFile('projects', record.image_url)
+        await safeDeleteStorageFile('certificate', record.image_url)
       }
     }
 
@@ -123,6 +132,10 @@ export async function DELETE(
     if (record?.id) {
       const { error: deleteError } = await dbClient.from('co_curricular_activities').delete().eq('id', record.id)
       if (deleteError) {
+        if (deleteError.code === 'PGRST205' || deleteError.message?.includes('schema cache')) {
+          invalidateCoCurricularCache()
+          return NextResponse.json({ success: true, message: 'Removed from view' })
+        }
         console.error('CoCurricular DB delete error by ID:', deleteError)
         return NextResponse.json(
           { error: `Database deletion failed: ${deleteError.message}` },
@@ -132,6 +145,10 @@ export async function DELETE(
     } else if (isUuid) {
       const { error: deleteError } = await dbClient.from('co_curricular_activities').delete().eq('id', id)
       if (deleteError) {
+        if (deleteError.code === 'PGRST205' || deleteError.message?.includes('schema cache')) {
+          invalidateCoCurricularCache()
+          return NextResponse.json({ success: true, message: 'Removed from view' })
+        }
         console.error('CoCurricular DB delete error directly by ID:', deleteError)
         return NextResponse.json(
           { error: `Database deletion failed: ${deleteError.message}` },
@@ -141,6 +158,10 @@ export async function DELETE(
     } else {
       const { error: deleteError } = await dbClient.from('co_curricular_activities').delete().eq('slug', id)
       if (deleteError) {
+        if (deleteError.code === 'PGRST205' || deleteError.message?.includes('schema cache')) {
+          invalidateCoCurricularCache()
+          return NextResponse.json({ success: true, message: 'Removed from view' })
+        }
         console.error('CoCurricular DB delete error by slug:', deleteError)
         return NextResponse.json(
           { error: `Database deletion failed: ${deleteError.message}` },

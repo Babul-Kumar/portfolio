@@ -8,7 +8,7 @@ import { educationSchema, type EducationFormValues } from '@/lib/validations'
 import { Plus, Trash2, Pencil, GraduationCap, Eye, EyeOff, ExternalLink } from 'lucide-react'
 import type { Education } from '@/types'
 import { FALLBACK_EDUCATION } from '@/lib/data'
-import { formatDate } from '@/lib/utils'
+import { formatDate, sanitizeDateForDb } from '@/lib/utils'
 import { toast, Toaster } from 'sonner'
 import StatusBadge from '@/components/admin/StatusBadge'
 import ConfirmDialog from '@/components/admin/ConfirmDialog'
@@ -71,8 +71,8 @@ function EducationForm({
         institution: values.institution,
         degree: values.degree,
         field: values.field || null,
-        start_date: values.start_date || null,
-        end_date: values.is_current ? null : values.end_date || null,
+        start_date: sanitizeDateForDb(values.start_date),
+        end_date: values.is_current ? null : sanitizeDateForDb(values.end_date),
         is_current: values.is_current,
         grade: values.grade || null,
         description: values.description || null,

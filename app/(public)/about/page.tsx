@@ -54,27 +54,61 @@ export default async function AboutPage() {
               padding: '32px',
             }}
           >
-            {profile?.avatar_url && (
+            {/* 3D Avatar Portrait */}
+            <div
+              style={{
+                width: '100%',
+                aspectRatio: '3/4',
+                borderRadius: 'var(--radius-sm)',
+                overflow: 'hidden',
+                marginBottom: '24px',
+                border: '1px solid var(--color-border)',
+                position: 'relative',
+                background: 'var(--color-surface-subtle)',
+              }}
+            >
+              <Image
+                src={profile?.avatar_url || '/images/profilepicture.jpg'}
+                alt={name}
+                width={480}
+                height={640}
+                priority
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
               <div
                 style={{
-                  width: '100%',
-                  aspectRatio: '1',
-                  borderRadius: 'var(--radius-sm)',
-                  overflow: 'hidden',
-                  marginBottom: '24px',
-                  border: '1px solid var(--color-border)',
-                  position: 'relative',
+                  position: 'absolute',
+                  bottom: '12px',
+                  left: '12px',
+                  right: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '6px 12px',
+                  borderRadius: 'var(--radius-xs)',
+                  background: 'rgba(10, 10, 12, 0.8)',
+                  backdropFilter: 'blur(8px)',
+                  WebkitBackdropFilter: 'blur(8px)',
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  fontSize: '11px',
+                  fontFamily: 'var(--font-mono)',
+                  color: 'var(--color-text-secondary)',
+                  letterSpacing: '0.04em',
                 }}
               >
-                <Image
-                  src={profile.avatar_url}
-                  alt={name}
-                  width={340}
-                  height={340}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                <span
+                  style={{
+                    width: '6px',
+                    height: '6px',
+                    borderRadius: '50%',
+                    background: 'var(--color-accent)',
+                    boxShadow: '0 0 8px var(--color-accent)',
+                    display: 'inline-block',
+                  }}
                 />
+                <span>3D AI Engineer Avatar</span>
               </div>
-            )}
+            </div>
             <h3 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--color-text)', marginBottom: '4px' }}>
               {name}
             </h3>

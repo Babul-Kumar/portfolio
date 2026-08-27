@@ -44,6 +44,81 @@ export function formatFullDate(dateStr: string | null | undefined): string {
 }
 
 /**
+ * Normalizes any date string (e.g. "2025", "2025-04", "April 2025", "2025/04/25", ISO string)
+ * into a valid PostgreSQL DATE format 'YYYY-MM-DD', or null if invalid/empty.
+ * Prevents PostgreSQL error: "invalid input syntax for type date".
+ */
+export function sanitizeDateForDb(dateStr: string | null | undefined): string | null {
+  if (!dateStr || typeof dateStr !== 'string') return null
+  const trimmed = dateStr.trim()
+  if (!trimmed || ['null', 'undefined', 'present', 'ongoing', 'n/a', 'none'].includes(trimmed.toLowerCase())) {
+    return null
+  }
+
+  // 1. If strictly valid YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    const [, m, d] = trimmed.split('-').map(Number)
+    if (m >= 1 && m <= 12 && d >= 1 && d <= 31) {
+      return trimmed
+    }
+  }
+
+  // 2. If just a 4-digit year "YYYY" (e.g. "2025")
+  if (/^\d{4}$/.test(trimmed)) {
+    return `${trimmed}-01-01`
+  }
+
+  // 3. If year-month "YYYY-MM" (e.g. "2025-04")
+  if (/^\d{4}-\d{1,2}$/.test(trimmed)) {
+    const [y, m] = trimmed.split('-')
+    const paddedMonth = m.padStart(2, '0')
+    return `${y}-${paddedMonth}-01`
+  }
+
+  // 4. If year/month/day with slashes (e.g. "2025/04/25")
+  if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(trimmed)) {
+    const [y, m, d] = trimmed.split('/')
+    return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`
+  }
+
+  // 5. If day-month-year or month-day-year with slashes/hyphens (e.g. "25/04/2025" or "04/25/2025")
+  const partsMatch = trimmed.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/)
+  if (partsMatch) {
+    const p1 = Number(partsMatch[1])
+    const p2 = Number(partsMatch[2])
+    const year = partsMatch[3]
+    if (p1 > 12 && p2 <= 12) {
+      return `${year}-${String(p2).padStart(2, '0')}-${String(p1).padStart(2, '0')}`
+    }
+    const month = String(p1).padStart(2, '0')
+    const day = String(p2).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
+
+  // 6. If ISO string with time (e.g. "2025-04-25T14:30:00.000Z")
+  if (/^\d{4}-\d{2}-\d{2}T/.test(trimmed)) {
+    return trimmed.slice(0, 10)
+  }
+
+  // 7. General date parser (e.g. "April 2025", "15 April 2025", "Apr 2025")
+  try {
+    const parsed = new Date(trimmed)
+    if (!isNaN(parsed.getTime())) {
+      const y = parsed.getFullYear()
+      if (y >= 1970 && y <= 2100) {
+        const m = String(parsed.getMonth() + 1).padStart(2, '0')
+        const d = String(parsed.getDate()).padStart(2, '0')
+        return `${y}-${m}-${d}`
+      }
+    }
+  } catch {
+    // ignore
+  }
+
+  return null
+}
+
+/**
  * Truncate text to a max length with ellipsis
  */
 export function truncate(text: string, maxLength: number): string {

@@ -8,7 +8,7 @@ import {
   type CertificateFormValues,
 } from '@/lib/validations'
 import { createClient } from '@/lib/supabase/client'
-import { slugify, joinCSV, parseCSV } from '@/lib/utils'
+import { slugify, joinCSV, parseCSV, sanitizeDateForDb } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import FileUpload from '@/components/admin/FileUpload'
@@ -116,11 +116,13 @@ export default function AdminCertificateForm({ certificate }: { certificate?: Ce
     }
 
     if (certData.issue_date) {
-      setValue('issue_date', certData.issue_date, { shouldValidate: true })
+      const clean = sanitizeDateForDb(certData.issue_date)
+      if (clean) setValue('issue_date', clean, { shouldValidate: true })
     }
 
     if (certData.expiry_date) {
-      setValue('expiry_date', certData.expiry_date, { shouldValidate: true })
+      const clean = sanitizeDateForDb(certData.expiry_date)
+      if (clean) setValue('expiry_date', clean, { shouldValidate: true })
     }
 
     if (certData.credential_id) {
@@ -204,8 +206,8 @@ export default function AdminCertificateForm({ certificate }: { certificate?: Ce
         slug: values.slug.trim(),
         issuer: values.issuer.trim(),
         category: values.category,
-        issue_date: values.issue_date || null,
-        expiry_date: values.expiry_date || null,
+        issue_date: sanitizeDateForDb(values.issue_date),
+        expiry_date: sanitizeDateForDb(values.expiry_date),
         credential_id: values.credential_id?.trim() || null,
         verification_url: values.verification_url?.trim() || null,
         description: values.description?.trim() || null,

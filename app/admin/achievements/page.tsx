@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { achievementSchema, type AchievementFormValues } from '@/lib/validations'
-import { slugify, formatDate } from '@/lib/utils'
+import { slugify, formatDate, sanitizeDateForDb } from '@/lib/utils'
 import { Plus, Pencil, Trash2, Eye, EyeOff, Award, ExternalLink } from 'lucide-react'
 import type { Achievement } from '@/types'
 import { FALLBACK_ACHIEVEMENTS } from '@/lib/data'
@@ -78,7 +78,7 @@ function AchievementForm({
         slug: values.slug || slugify(values.title),
         organization: values.organization || null,
         category: values.category,
-        date: values.date || null,
+        date: sanitizeDateForDb(values.date),
         rank: values.rank || null,
         description: values.description || null,
         verification_url: values.verification_url || null,

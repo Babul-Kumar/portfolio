@@ -1,10 +1,10 @@
 // Storage bucket names aligned with Supabase Storage
 export const BUCKETS = {
   CERTIFICATES: 'certificate',
-  PROFILE: 'profile picture',
-  PROJECTS: 'projects',
-  ACHIEVEMENTS: 'achievements',
-  RESUME: 'resume',
+  PROFILE: 'certificate',
+  PROJECTS: 'certificate',
+  ACHIEVEMENTS: 'certificate',
+  RESUME: 'certificate',
 } as const
 
 export type BucketName =
@@ -13,21 +13,32 @@ export type BucketName =
   | 'profile'
   | 'certificate'
   | 'profile picture'
+  | 'profile_picture'
+  | 'projects'
+  | 'achievements'
+  | 'resume'
+  | 'training'
+  | 'co-curricular'
 
 /**
- * Normalizes bucket name aliases (e.g. 'certificates' -> 'certificate', 'profile' -> 'profile picture')
+ * Normalizes bucket name aliases to the actual valid Supabase Storage bucket:
+ * - 'certificate' (for certificates, profile avatar, projects, training, co-curricular, achievements, resume)
  */
 export function normalizeBucketName(bucket: string): string {
   const map: Record<string, string> = {
     certificates: 'certificate',
     certificate: 'certificate',
-    profile: 'profile picture',
-    'profile picture': 'profile picture',
-    projects: 'projects',
-    achievements: 'achievements',
-    resume: 'resume',
+    profile: 'certificate',
+    'profile picture': 'certificate',
+    profile_picture: 'certificate',
+    projects: 'certificate',
+    achievements: 'certificate',
+    resume: 'certificate',
+    training: 'certificate',
+    'co-curricular': 'certificate',
   }
-  return map[bucket.toLowerCase().trim()] || bucket
+  const key = (bucket || '').toLowerCase().trim()
+  return map[key] || 'certificate'
 }
 
 // Max file sizes
@@ -63,6 +74,28 @@ export function getCertificatePublicUrl(pathOrUrl?: string | null): string | nul
 
   // If already a full HTTP(S) URL
   if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    // If URL points to legacy bucket names, normalize to 'certificate'
+    if (trimmed.includes('/storage/v1/object/public/certificates/')) {
+      return trimmed.replace('/storage/v1/object/public/certificates/', '/storage/v1/object/public/certificate/')
+    }
+    if (trimmed.includes('/storage/v1/object/public/profile%20picture/')) {
+      return trimmed.replace('/storage/v1/object/public/profile%20picture/', '/storage/v1/object/public/certificate/')
+    }
+    if (trimmed.includes('/storage/v1/object/public/profile picture/')) {
+      return trimmed.replace('/storage/v1/object/public/profile picture/', '/storage/v1/object/public/certificate/')
+    }
+    if (trimmed.includes('/storage/v1/object/public/profile/')) {
+      return trimmed.replace('/storage/v1/object/public/profile/', '/storage/v1/object/public/certificate/')
+    }
+    if (trimmed.includes('/storage/v1/object/public/projects/')) {
+      return trimmed.replace('/storage/v1/object/public/projects/', '/storage/v1/object/public/certificate/')
+    }
+    if (trimmed.includes('/storage/v1/object/public/achievements/')) {
+      return trimmed.replace('/storage/v1/object/public/achievements/', '/storage/v1/object/public/certificate/')
+    }
+    if (trimmed.includes('/storage/v1/object/public/resume/')) {
+      return trimmed.replace('/storage/v1/object/public/resume/', '/storage/v1/object/public/certificate/')
+    }
     return trimmed
   }
 
@@ -71,8 +104,8 @@ export function getCertificatePublicUrl(pathOrUrl?: string | null): string | nul
     return trimmed
   }
 
-  // Strip leading slashes and duplicate bucket prefixes (e.g., 'certificate/documents/x.jpg')
-  let cleanPath = trimmed.replace(/^\/?(certificates|certificate)\//i, '')
+  // Strip leading slashes and duplicate bucket prefixes
+  let cleanPath = trimmed.replace(/^\/?(certificates|certificate|profile|profile picture|profile_picture|projects|achievements|resume|training|co-curricular)\//i, '')
   cleanPath = cleanPath.replace(/^\/+/, '')
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
@@ -84,33 +117,7 @@ export function getCertificatePublicUrl(pathOrUrl?: string | null): string | nul
  * Handles full Supabase URLs, external URLs, client preview blob URLs, and relative storage paths.
  */
 export function getTrainingPublicAssetUrl(pathOrUrl?: string | null): string | null {
-  if (!pathOrUrl || typeof pathOrUrl !== 'string') return null
-  const trimmed = pathOrUrl.trim()
-  if (!trimmed) return null
-
-  // If already a full HTTP(S) URL (e.g. Supabase public URL, Cloudinary, etc.)
-  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
-    return trimmed
-  }
-
-  // If local blob/data URL (e.g. during client upload preview)
-  if (trimmed.startsWith('blob:') || trimmed.startsWith('data:')) {
-    return trimmed
-  }
-
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
-
-  // If it specifies a projects bucket prefix or training/images path
-  if (/^projects\//i.test(trimmed) || /^training\/images\//i.test(trimmed)) {
-    const cleanPath = trimmed.replace(/^projects\//i, '').replace(/^\/+/, '')
-    return `${supabaseUrl}/storage/v1/object/public/projects/${cleanPath}`
-  }
-
-  // Default certificate/document bucket routing
-  let cleanPath = trimmed.replace(/^\/?(certificates|certificate)\//i, '')
-  cleanPath = cleanPath.replace(/^\/+/, '')
-
-  return `${supabaseUrl}/storage/v1/object/public/certificate/${cleanPath}`
+  return getCertificatePublicUrl(pathOrUrl)
 }
 
 /**
@@ -119,7 +126,7 @@ export function getTrainingPublicAssetUrl(pathOrUrl?: string | null): string | n
  * local blob/data URLs, and legacy paths.
  */
 export function resolveCertificateUrl(pathOrUrl?: string | null): string | null {
-  return getTrainingPublicAssetUrl(pathOrUrl)
+  return getCertificatePublicUrl(pathOrUrl)
 }
 
 /**

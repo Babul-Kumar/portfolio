@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { experienceSchema, type ExperienceFormValues } from '@/lib/validations'
-import { parseCSV, joinCSV, formatDate } from '@/lib/utils'
+import { parseCSV, joinCSV, formatDate, sanitizeDateForDb } from '@/lib/utils'
 import { Plus, Trash2, Pencil, Briefcase, Eye, EyeOff, ExternalLink } from 'lucide-react'
 import type { Experience } from '@/types'
 import { FALLBACK_EXPERIENCE } from '@/lib/data'
@@ -70,8 +70,8 @@ function ExperienceForm({
       const payload = {
         company: values.company,
         role: values.role,
-        start_date: values.start_date || null,
-        end_date: values.is_current ? null : values.end_date || null,
+        start_date: sanitizeDateForDb(values.start_date),
+        end_date: values.is_current ? null : sanitizeDateForDb(values.end_date),
         is_current: values.is_current,
         description: values.description || null,
         technologies: values.technologies ? parseCSV(values.technologies) : [],
