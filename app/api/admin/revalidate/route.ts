@@ -6,16 +6,21 @@ import {
   invalidateProjectCache,
   invalidateTrainingCache,
   invalidateCoCurricularCache,
+  invalidateProfileCache,
 } from '@/lib/data'
 
 export async function POST(request: NextRequest) {
-  // Check admin authorization
+  // Check admin authorization via session or service role key
   const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (process.env.NEXT_PUBLIC_SUPABASE_URL && !user) {
+  const authHeader = request.headers.get('authorization')
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  const isServiceAuth = Boolean(serviceKey && authHeader === `Bearer ${serviceKey}`)
+
+  if (process.env.NEXT_PUBLIC_SUPABASE_URL && !user && !isServiceAuth) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -58,6 +63,14 @@ export async function POST(request: NextRequest) {
       if (slug) {
         revalidatePath(`/co-curricular/${slug}`)
       }
+    }
+
+    if (type === 'profile' || !type) {
+      invalidateProfileCache()
+      revalidatePath('/', 'layout')
+      revalidatePath('/')
+      revalidatePath('/about')
+      revalidatePath('/contact')
     }
 
     return NextResponse.json({

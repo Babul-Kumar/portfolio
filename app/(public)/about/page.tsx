@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     'Learn about Babul Kumar, background in Computer Science, AI/ML research interests, and full-stack engineering principles.',
 }
 
-export const revalidate = 3600
+export const revalidate = 60
 
 export default async function AboutPage() {
   const profile = await getProfile()

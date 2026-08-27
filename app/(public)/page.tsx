@@ -57,7 +57,7 @@ export default async function HomePage() {
       <SelectedWorkSection projects={projects} />
 
       {/* 07: Contact Section (#contact) */}
-      <ContactSection />
+      <ContactSection profile={profile} />
     </>
   )
 }

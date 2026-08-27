@@ -59,6 +59,14 @@ export function invalidateCoCurricularCache(): void {
   }
 }
 
+export function invalidateProfileCache(): void {
+  for (const key of memoryCache.keys()) {
+    if (key.startsWith('profile')) {
+      memoryCache.delete(key)
+    }
+  }
+}
+
 function getCached<T>(key: string): T | null {
   const entry = memoryCache.get(key)
   if (!entry) return null
@@ -774,7 +782,15 @@ export async function getProfile(): Promise<Profile | null> {
 
   const fetchPromise = (async () => {
     const supabase = getPublicSupabase()
-    const { data } = await supabase.from('profiles').select('*').limit(1).single()
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .order('updated_at', { ascending: false, nullsFirst: false })
+      .limit(1)
+      .maybeSingle()
+    if (error) {
+      console.warn('getProfile supabase error:', error.message)
+    }
     return data || FALLBACK_PROFILE
   })()
 

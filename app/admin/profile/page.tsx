@@ -146,6 +146,13 @@ export default function AdminProfilePage() {
         }
       }
 
+      // Invalidate profile cache and trigger Next.js path revalidation
+      await fetch('/api/admin/revalidate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'profile' }),
+      }).catch((e) => console.warn('Profile revalidation error:', e))
+
       toast.success('Profile saved successfully')
       setSaving(false)
     } catch (err: unknown) {

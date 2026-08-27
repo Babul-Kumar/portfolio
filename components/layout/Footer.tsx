@@ -1,15 +1,27 @@
 'use client'
 
 import Link from 'next/link'
+import type { Profile } from '@/types'
+import { FALLBACK_PROFILE } from '@/lib/data'
 
-export default function Footer() {
+interface FooterProps {
+  profile?: Profile | null
+}
+
+export default function Footer({ profile }: FooterProps = {}) {
   const year = new Date().getFullYear()
 
+  const githubUrl = profile?.github_url || FALLBACK_PROFILE.github_url || 'https://github.com/babul-kumar'
+  const linkedinUrl = profile?.linkedin_url || FALLBACK_PROFILE.linkedin_url || 'https://linkedin.com/in/babul-kumar'
+  const kaggleUrl = profile?.kaggle_url || FALLBACK_PROFILE.kaggle_url || 'https://kaggle.com/babul-kumar'
+  const rawEmail = profile?.email || FALLBACK_PROFILE.email || 'bk7321634@gmail.com'
+  const emailHref = rawEmail.startsWith('mailto:') ? rawEmail : `mailto:${rawEmail}`
+
   const externalLinks = [
-    { href: 'https://github.com/babul-kumar', label: 'GitHub' },
-    { href: 'https://linkedin.com/in/babul-kumar', label: 'LinkedIn' },
-    { href: 'https://kaggle.com/babul-kumar', label: 'Kaggle' },
-    { href: 'mailto:bk7321634@gmail.com', label: 'Email' },
+    { href: githubUrl, label: 'GitHub' },
+    { href: linkedinUrl, label: 'LinkedIn' },
+    { href: kaggleUrl, label: 'Kaggle' },
+    { href: emailHref, label: 'Email' },
   ]
 
   const scrollToTop = () => {
@@ -20,7 +32,7 @@ export default function Footer() {
     <footer
       style={{
         borderTop: '1px solid var(--color-border)',
-        padding: '56px 0 36px',
+        padding: '36px 0 28px',
         background: 'var(--color-surface)',
         position: 'relative',
         zIndex: 1,
@@ -31,7 +43,7 @@ export default function Footer() {
         style={{
           display: 'flex',
           flexDirection: 'column',
-          gap: '32px',
+          gap: '24px',
         }}
       >
         {/* Top row: Brand & Back to Top */}

@@ -1,8 +1,10 @@
 import Link from 'next/link'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
+import { getProfile } from '@/lib/data'
 
-export default function NotFound() {
+export default async function NotFound() {
+  const profile = await getProfile()
   return (
     <>
       <Navbar />
@@ -62,7 +64,7 @@ export default function NotFound() {
           </div>
         </div>
       </main>
-      <Footer />
+      <Footer profile={profile} />
     </>
   )
 }

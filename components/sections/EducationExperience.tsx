@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import type { Education, Experience } from '@/types'
 import { formatDate } from '@/lib/utils'
 import Link from 'next/link'
@@ -12,58 +13,89 @@ export default function EducationExperienceSection({
   education: Education[]
   experience: Experience[]
 }) {
+  // Sort education records: current degree first, then descending chronological
+  const sortedEducation = useMemo(() => {
+    return [...education].sort((a, b) => {
+      if (a.is_current && !b.is_current) return -1
+      if (!a.is_current && b.is_current) return 1
+      const dateA = a.start_date ? new Date(a.start_date).getTime() : 0
+      const dateB = b.start_date ? new Date(b.start_date).getTime() : 0
+      return dateB - dateA
+    })
+  }, [education])
+
   return (
-    <section id="about" className="section">
+    <section id="about" className="section" style={{ position: 'relative' }}>
       <div className="container">
-        {/* Section Header */}
+        {/* =========================================================================
+            1. SECTION EYEBROW & BALANCED HEADING
+            ========================================================================= */}
         <div
           style={{
             marginBottom: '40px',
             borderBottom: '1px solid var(--color-border)',
-            paddingBottom: '20px',
+            paddingBottom: '24px',
           }}
         >
-          <div className="text-label" style={{ marginBottom: '8px' }}>
+          <div className="text-label" style={{ marginBottom: '10px' }}>
             01 / Narrative & Engineering Focus
           </div>
-          <h2 className="text-display-sm">
-            I BUILD SYSTEMS THAT TURN<br />
+
+          <h2
+            style={{
+              fontSize: 'clamp(24px, 3.2vw, 36px)',
+              fontWeight: 700,
+              letterSpacing: '-0.025em',
+              lineHeight: 1.22,
+              color: 'var(--color-text)',
+              maxWidth: '760px',
+              margin: 0,
+            }}
+          >
+            I BUILD SYSTEMS THAT TURN{' '}
             <span style={{ color: 'var(--color-accent)' }}>MATHEMATICAL IDEAS</span> INTO RESILIENT PRODUCTS.
           </h2>
         </div>
 
-        {/* Narrative & 3-Domain Engineering Matrix */}
+        {/* =========================================================================
+            2. TWO-COLUMN EDITORIAL COMPOSITION (Desktop ~45% / ~55%)
+            ========================================================================= */}
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: '1.1fr 1.3fr',
-            gap: 'clamp(28px, 4vw, 48px)',
-            marginBottom: '44px',
+            gridTemplateColumns: 'minmax(0, 45fr) minmax(0, 55fr)',
+            gap: 'clamp(32px, 4vw, 56px)',
             alignItems: 'start',
           }}
-          className="about-narrative-grid"
+          className="about-upper-grid"
         >
-          {/* Left: Bio Narrative */}
-          <div>
+          {/* ----------------- LEFT COLUMN ----------------- */}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {/* Primary Bio Paragraph */}
             <p
               style={{
-                fontSize: '17px',
+                fontSize: 'clamp(16px, 1.25vw, 17.5px)',
                 color: 'var(--color-text)',
-                lineHeight: 1.65,
+                lineHeight: 1.7,
                 marginBottom: '16px',
                 fontWeight: 500,
+                maxWidth: '620px',
               }}
             >
-              I am a Computer Science & Engineering undergraduate at <strong>Lovely Professional University</strong>,
+              I am a Computer Science & Engineering undergraduate at{' '}
+              <strong style={{ color: 'var(--color-text)', fontWeight: 600 }}>Lovely Professional University</strong>,
               focused on engineering intelligent systems where artificial intelligence, machine learning algorithms,
               and high-performance full-stack architectures converge.
             </p>
+
+            {/* Secondary Supporting Paragraph */}
             <p
               style={{
-                fontSize: '14px',
+                fontSize: 'clamp(13.5px, 1.05vw, 14.5px)',
                 color: 'var(--color-text-secondary)',
                 lineHeight: 1.7,
                 marginBottom: '24px',
+                maxWidth: '620px',
               }}
             >
               From designing AST-aware AI developer tooling (like <em>BotBro</em>) and predictive gradient-boosted models
@@ -71,25 +103,27 @@ export default function EducationExperienceSection({
               architecturally clean, and intuitively usable.
             </p>
 
-            {/* Currently Exploring Callout Badge */}
+            {/* Current Research Focus Card */}
             <div
+              className="research-focus-card"
               style={{
                 background: 'var(--color-surface)',
                 border: '1px solid var(--color-border)',
                 borderRadius: 'var(--radius-sm)',
-                boxShadow: 'var(--shadow-sm)',
                 padding: '14px 18px',
-                marginBottom: '24px',
+                marginBottom: '20px',
+                maxWidth: '620px',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '12px',
+                gap: '14px',
+                transition: 'all 0.25s ease',
               }}
             >
               <div
                 style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '6px',
+                  width: '34px',
+                  height: '34px',
+                  borderRadius: 'var(--radius-sm)',
                   background: 'var(--color-accent-bg)',
                   border: '1px solid var(--color-accent-border)',
                   color: 'var(--color-accent)',
@@ -101,112 +135,287 @@ export default function EducationExperienceSection({
               >
                 <Sparkles size={16} />
               </div>
+
               <div>
-                <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--color-accent)', fontWeight: 600, textTransform: 'uppercase' }}>
+                <div
+                  style={{
+                    fontSize: '10px',
+                    fontFamily: 'var(--font-mono)',
+                    color: 'var(--color-accent)',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.1em',
+                    marginBottom: '3px',
+                  }}
+                >
                   Current Research Focus
                 </div>
-                <div style={{ fontSize: '13px', color: 'var(--color-text)', fontWeight: 500 }}>
+                <div
+                  style={{
+                    fontSize: '13px',
+                    color: 'var(--color-text)',
+                    fontWeight: 600,
+                    lineHeight: 1.35,
+                  }}
+                >
                   Multi-Agent Model Context Protocol (MCP) & AST Code Generation
                 </div>
               </div>
             </div>
 
-            <Link
-              href="/about"
-              style={{
-                fontSize: '12px',
-                fontFamily: 'var(--font-mono)',
-                color: 'var(--color-accent)',
-                textDecoration: 'none',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '8px 16px',
-                borderRadius: 'var(--radius-sm)',
-                background: 'var(--color-accent-bg)',
-                border: '1px solid var(--color-accent-border)',
-                fontWeight: 600,
-                transition: 'all 0.2s ease',
-              }}
-            >
-              <span>Read Comprehensive Story</span>
-              <ArrowRight size={13} />
-            </Link>
+            {/* CTA: Read Comprehensive Story */}
+            <div>
+              <Link
+                href="/about"
+                style={{
+                  fontSize: '12px',
+                  fontFamily: 'var(--font-mono)',
+                  color: 'var(--color-accent)',
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '7px 14px',
+                  borderRadius: 'var(--radius-sm)',
+                  background: 'var(--color-accent-bg)',
+                  border: '1px solid var(--color-accent-border)',
+                  fontWeight: 600,
+                  transition: 'all 0.2s ease',
+                }}
+                className="hover-accent-btn"
+              >
+                <span>Read Comprehensive Story</span>
+                <ArrowRight size={13} />
+              </Link>
+            </div>
           </div>
 
-          {/* Right: 3-Domain Technical Capabilities Cards */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            <div className="glass-card card-3d-tilt" style={{ padding: '20px' }}>
+          {/* ----------------- RIGHT COLUMN: 3 ENGINEERING CAPABILITY CARDS ----------------- */}
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '14px',
+            }}
+          >
+            {/* Card 01: Intelligence */}
+            <div
+              className="glass-card capability-card"
+              style={{
+                padding: '18px 22px',
+                border: '1px solid var(--color-border)',
+                borderRadius: 'var(--radius-md)',
+                transition: 'all 0.25s ease',
+              }}
+            >
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                <div style={{ color: 'var(--color-accent)' }}>
-                  <Brain size={18} />
+                <div
+                  style={{
+                    color: 'var(--color-accent)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: 'var(--radius-sm)',
+                    background: 'var(--color-accent-bg)',
+                    border: '1px solid var(--color-accent-border)',
+                  }}
+                >
+                  <Brain size={16} />
                 </div>
                 <div>
-                  <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--color-accent)', textTransform: 'uppercase', fontWeight: 600 }}>
+                  <div
+                    style={{
+                      fontSize: '10px',
+                      fontFamily: 'var(--font-mono)',
+                      color: 'var(--color-accent)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.1em',
+                      fontWeight: 700,
+                    }}
+                  >
                     01 / Intelligence
                   </div>
-                  <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-text)' }}>
+                  <h4
+                    style={{
+                      fontSize: '15px',
+                      fontWeight: 600,
+                      color: 'var(--color-text)',
+                      margin: '1px 0 0',
+                    }}
+                  >
                     AI & Machine Learning Engineering
                   </h4>
                 </div>
               </div>
-              <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', lineHeight: 1.6, margin: 0 }}>
+              <p
+                style={{
+                  fontSize: '13px',
+                  color: 'var(--color-text-secondary)',
+                  lineHeight: 1.6,
+                  margin: 0,
+                  paddingLeft: '38px',
+                }}
+              >
                 Predictive tabular modeling (XGBoost, Random Forests), NLP tokenization, frequency-domain computer vision forensics, and neural network fine-tuning with PyTorch.
               </p>
             </div>
 
-            <div className="glass-card card-3d-tilt" style={{ padding: '20px' }}>
+            {/* Card 02: Architecture */}
+            <div
+              className="glass-card capability-card"
+              style={{
+                padding: '18px 22px',
+                border: '1px solid var(--color-border)',
+                borderRadius: 'var(--radius-md)',
+                transition: 'all 0.25s ease',
+              }}
+            >
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                <div style={{ color: 'var(--color-accent-teal)' }}>
-                  <Server size={18} />
+                <div
+                  style={{
+                    color: 'var(--color-accent-teal)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: 'var(--radius-sm)',
+                    background: 'rgba(20, 184, 166, 0.1)',
+                    border: '1px solid rgba(20, 184, 166, 0.3)',
+                  }}
+                >
+                  <Server size={16} />
                 </div>
                 <div>
-                  <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--color-accent-teal)', textTransform: 'uppercase', fontWeight: 600 }}>
+                  <div
+                    style={{
+                      fontSize: '10px',
+                      fontFamily: 'var(--font-mono)',
+                      color: 'var(--color-accent-teal)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.1em',
+                      fontWeight: 700,
+                    }}
+                  >
                     02 / Architecture
                   </div>
-                  <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-text)' }}>
+                  <h4
+                    style={{
+                      fontSize: '15px',
+                      fontWeight: 600,
+                      color: 'var(--color-text)',
+                      margin: '1px 0 0',
+                    }}
+                  >
                     Full-Stack & Distributed Systems
                   </h4>
                 </div>
               </div>
-              <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', lineHeight: 1.6, margin: 0 }}>
+              <p
+                style={{
+                  fontSize: '13px',
+                  color: 'var(--color-text-secondary)',
+                  lineHeight: 1.6,
+                  margin: 0,
+                  paddingLeft: '38px',
+                }}
+              >
                 Next.js App Router, TypeScript microservices, FastAPI REST APIs, relational PostgreSQL schemas with Supabase, and WebGL interactive interfaces.
               </p>
             </div>
 
-            <div className="glass-card card-3d-tilt" style={{ padding: '20px' }}>
+            {/* Card 03: Tooling & Agents */}
+            <div
+              className="glass-card capability-card"
+              style={{
+                padding: '18px 22px',
+                border: '1px solid var(--color-border)',
+                borderRadius: 'var(--radius-md)',
+                transition: 'all 0.25s ease',
+              }}
+            >
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                <div style={{ color: 'var(--color-accent)' }}>
-                  <Terminal size={18} />
+                <div
+                  style={{
+                    color: 'var(--color-accent)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: 'var(--radius-sm)',
+                    background: 'var(--color-accent-bg)',
+                    border: '1px solid var(--color-accent-border)',
+                  }}
+                >
+                  <Terminal size={16} />
                 </div>
                 <div>
-                  <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--color-accent)', textTransform: 'uppercase', fontWeight: 600 }}>
+                  <div
+                    style={{
+                      fontSize: '10px',
+                      fontFamily: 'var(--font-mono)',
+                      color: 'var(--color-accent)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.1em',
+                      fontWeight: 700,
+                    }}
+                  >
                     03 / Tooling & Agents
                   </div>
-                  <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-text)' }}>
+                  <h4
+                    style={{
+                      fontSize: '15px',
+                      fontWeight: 600,
+                      color: 'var(--color-text)',
+                      margin: '1px 0 0',
+                    }}
+                  >
                     AST-Aware Developer Tooling & MCP
                   </h4>
                 </div>
               </div>
-              <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', lineHeight: 1.6, margin: 0 }}>
+              <p
+                style={{
+                  fontSize: '13px',
+                  color: 'var(--color-text-secondary)',
+                  lineHeight: 1.6,
+                  margin: 0,
+                  paddingLeft: '38px',
+                }}
+              >
                 Autonomous coding agents, AST semantic code mutation, Model Context Protocol (MCP) server implementations, and intelligent developer workflows.
               </p>
             </div>
           </div>
         </div>
 
-        {/* Dual-Rail Academic & Engineering Timeline */}
+        {/* =========================================================================
+            3. COMPACT ACADEMIC FOUNDATION & EXPERIENCE TIMELINE
+            ========================================================================= */}
         <div
           style={{
+            marginTop: '56px',
             display: 'grid',
             gridTemplateColumns: experience.length > 0 ? '1fr 1fr' : '1fr',
             gap: '28px',
           }}
-          className="timeline-columns"
+          className="timeline-grid"
         >
-          {/* Academic Foundation */}
-          {education.length > 0 && (
-            <div className="glass-card card-3d-tilt" style={{ padding: '28px' }}>
+          {/* Academic Foundation Compact Container */}
+          {sortedEducation.length > 0 && (
+            <div
+              className="glass-card"
+              style={{
+                padding: 'clamp(24px, 3vw, 32px)',
+                border: '1px solid var(--color-border)',
+                borderRadius: 'var(--radius-lg)',
+                boxShadow: 'var(--shadow-card)',
+              }}
+            >
+              {/* Header */}
               <div
                 style={{
                   display: 'flex',
@@ -219,49 +428,122 @@ export default function EducationExperienceSection({
                   color: 'var(--color-accent)',
                   marginBottom: '18px',
                   borderBottom: '1px solid var(--color-border)',
-                  paddingBottom: '10px',
-                  fontWeight: 600,
+                  paddingBottom: '12px',
+                  fontWeight: 700,
                 }}
               >
-                <GraduationCap size={15} /> Academic Foundation
+                <GraduationCap size={16} />
+                <span>Academic Foundation</span>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                {education.map((edu) => (
-                  <div key={edu.id} style={{ borderBottom: '1px solid var(--color-border-subtle)', paddingBottom: '14px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px', flexWrap: 'wrap', gap: '4px' }}>
-                      <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-text)' }}>
-                        {edu.degree}
-                      </h4>
-                      <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
-                        {formatDate(edu.start_date, 'yyyy')} — {edu.is_current ? 'Present' : formatDate(edu.end_date, 'yyyy')}
-                      </span>
-                    </div>
+              {/* Compact Timeline Rows */}
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                {sortedEducation.map((edu, idx) => {
+                  const isLast = idx === sortedEducation.length - 1
+                  const startYr = edu.start_date ? formatDate(edu.start_date, 'yyyy') : ''
+                  const endYr = edu.is_current ? 'Present' : (edu.end_date ? formatDate(edu.end_date, 'yyyy') : '')
+                  const yearDisplay = startYr ? `${startYr} — ${endYr}` : endYr
 
-                    <div style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginBottom: '4px', fontWeight: 500 }}>
-                      {edu.institution}
-                    </div>
+                  return (
+                    <div
+                      key={edu.id}
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr auto',
+                        gap: '16px',
+                        alignItems: 'start',
+                        padding: '16px 0',
+                        borderBottom: isLast ? 'none' : '1px solid var(--color-border-subtle)',
+                      }}
+                      className="education-row"
+                    >
+                      {/* Left: Degree, Institution, Specialization & Grade */}
+                      <div>
+                        <h4
+                          style={{
+                            fontSize: '15px',
+                            fontWeight: 600,
+                            color: 'var(--color-text)',
+                            margin: '0 0 3px',
+                            lineHeight: 1.3,
+                          }}
+                        >
+                          {edu.degree}
+                        </h4>
 
-                    {edu.field && (
-                      <div style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
-                        Specialization: {edu.field}
+                        <div
+                          style={{
+                            fontSize: '13px',
+                            color: 'var(--color-text-secondary)',
+                            fontWeight: 500,
+                            marginBottom: '4px',
+                          }}
+                        >
+                          {edu.institution}
+                        </div>
+
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '14px',
+                            flexWrap: 'wrap',
+                            fontSize: '12px',
+                          }}
+                        >
+                          {edu.field && (
+                            <span style={{ color: 'var(--color-text-muted)' }}>
+                              Specialization:{' '}
+                              <span style={{ color: 'var(--color-text-secondary)' }}>{edu.field}</span>
+                            </span>
+                          )}
+
+                          {edu.grade && (
+                            <span
+                              style={{
+                                color: 'var(--color-accent)',
+                                fontFamily: 'var(--font-mono)',
+                                fontWeight: 600,
+                              }}
+                            >
+                              Honors / Grade: {edu.grade}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    )}
 
-                    {edu.grade && (
-                      <div style={{ fontSize: '11px', color: 'var(--color-accent)', fontFamily: 'var(--font-mono)', marginTop: '4px' }}>
-                        Honors / Grade: {edu.grade}
-                      </div>
-                    )}
-                  </div>
-                ))}
+                      {/* Right: Year Range */}
+                      {yearDisplay && (
+                        <div
+                          style={{
+                            fontSize: '12px',
+                            fontFamily: 'var(--font-mono)',
+                            color: 'var(--color-text-muted)',
+                            whiteSpace: 'nowrap',
+                            paddingTop: '2px',
+                          }}
+                        >
+                          {yearDisplay}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             </div>
           )}
 
-          {/* Engineering Experience */}
+          {/* Engineering Experience (when present) */}
           {experience.length > 0 && (
-            <div className="glass-card card-3d-tilt" style={{ padding: '28px' }}>
+            <div
+              className="glass-card"
+              style={{
+                padding: 'clamp(24px, 3vw, 32px)',
+                border: '1px solid var(--color-border)',
+                borderRadius: 'var(--radius-lg)',
+                boxShadow: 'var(--shadow-card)',
+              }}
+            >
               <div
                 style={{
                   display: 'flex',
@@ -274,57 +556,82 @@ export default function EducationExperienceSection({
                   color: 'var(--color-accent-teal)',
                   marginBottom: '18px',
                   borderBottom: '1px solid var(--color-border)',
-                  paddingBottom: '10px',
-                  fontWeight: 600,
+                  paddingBottom: '12px',
+                  fontWeight: 700,
                 }}
               >
-                <Briefcase size={15} /> Engineering & Research Experience
+                <Briefcase size={16} />
+                <span>Engineering & Research Experience</span>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                {experience.map((exp) => (
-                  <div key={exp.id} style={{ borderBottom: '1px solid var(--color-border-subtle)', paddingBottom: '14px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px', flexWrap: 'wrap', gap: '4px' }}>
-                      <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-text)' }}>
-                        {exp.role}
-                      </h4>
-                      <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
-                        {formatDate(exp.start_date, 'MMM yyyy')} — {exp.is_current ? 'Present' : formatDate(exp.end_date, 'MMM yyyy')}
-                      </span>
-                    </div>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                {experience.map((exp, idx) => {
+                  const isLast = idx === experience.length - 1
+                  const startYr = exp.start_date ? formatDate(exp.start_date, 'MMM yyyy') : ''
+                  const endYr = exp.is_current ? 'Present' : (exp.end_date ? formatDate(exp.end_date, 'MMM yyyy') : '')
+                  const yearDisplay = startYr ? `${startYr} — ${endYr}` : endYr
 
-                    <div style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginBottom: '6px', fontWeight: 500 }}>
-                      {exp.company} {exp.location ? `· ${exp.location}` : ''}
-                    </div>
-
-                    {exp.description && (
-                      <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', lineHeight: 1.6, marginBottom: '8px' }}>
-                        {exp.description}
-                      </p>
-                    )}
-
-                    {exp.technologies && exp.technologies.length > 0 && (
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
-                        {exp.technologies.map((t) => (
-                          <span
-                            key={t}
-                            style={{
-                              fontSize: '10px',
-                              fontFamily: 'var(--font-mono)',
-                              padding: '2px 7px',
-                              borderRadius: 'var(--radius-sm)',
-                              background: 'var(--color-surface-2)',
-                              border: '1px solid var(--color-border)',
-                              color: 'var(--color-text-secondary)',
-                            }}
-                          >
-                            {t}
+                  return (
+                    <div
+                      key={exp.id}
+                      style={{
+                        padding: '16px 0',
+                        borderBottom: isLast ? 'none' : '1px solid var(--color-border-subtle)',
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'baseline',
+                          marginBottom: '3px',
+                          flexWrap: 'wrap',
+                          gap: '6px',
+                        }}
+                      >
+                        <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-text)', margin: 0 }}>
+                          {exp.role}
+                        </h4>
+                        {yearDisplay && (
+                          <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
+                            {yearDisplay}
                           </span>
-                        ))}
+                        )}
                       </div>
-                    )}
-                  </div>
-                ))}
+
+                      <div style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginBottom: '6px', fontWeight: 500 }}>
+                        {exp.company} {exp.location ? `· ${exp.location}` : ''}
+                      </div>
+
+                      {exp.description && (
+                        <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', lineHeight: 1.6, margin: '0 0 8px' }}>
+                          {exp.description}
+                        </p>
+                      )}
+
+                      {exp.technologies && exp.technologies.length > 0 && (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
+                          {exp.technologies.map((t) => (
+                            <span
+                              key={t}
+                              style={{
+                                fontSize: '10px',
+                                fontFamily: 'var(--font-mono)',
+                                padding: '2px 7px',
+                                borderRadius: 'var(--radius-sm)',
+                                background: 'var(--color-surface-2)',
+                                border: '1px solid var(--color-border)',
+                                color: 'var(--color-text-secondary)',
+                              }}
+                            >
+                              {t}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             </div>
           )}
@@ -332,14 +639,34 @@ export default function EducationExperienceSection({
       </div>
 
       <style>{`
-        @media (max-width: 860px) {
-          .about-narrative-grid {
+        .capability-card:hover {
+          transform: translateY(-2px);
+          border-color: var(--color-accent-border) !important;
+          box-shadow: 0 6px 20px rgba(255, 138, 61, 0.08);
+        }
+        .research-focus-card:hover {
+          transform: translateY(-2px);
+          border-color: var(--color-accent-border) !important;
+          box-shadow: 0 4px 16px rgba(255, 138, 61, 0.07);
+        }
+        .hover-accent-btn:hover {
+          background: rgba(255, 138, 61, 0.15) !important;
+          border-color: var(--color-accent) !important;
+        }
+        @media (max-width: 900px) {
+          .about-upper-grid {
+            grid-template-columns: 1fr !important;
+            gap: 36px !important;
+          }
+          .timeline-grid {
             grid-template-columns: 1fr !important;
             gap: 24px !important;
           }
-          .timeline-columns {
+        }
+        @media (max-width: 560px) {
+          .education-row {
             grid-template-columns: 1fr !important;
-            gap: 20px !important;
+            gap: 6px !important;
           }
         }
       `}</style>
