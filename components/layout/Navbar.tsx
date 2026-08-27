@@ -95,19 +95,19 @@ export default function Navbar() {
           left: 0,
           right: 0,
           zIndex: 100,
-          height: '72px',
+          height: '68px',
           display: 'flex',
           alignItems: 'center',
           background: scrolled
             ? 'var(--color-card-bg)'
             : theme === 'light'
-              ? 'rgba(250, 248, 245, 0.72)'
-              : 'transparent',
+              ? 'rgba(247, 245, 240, 0.85)'
+              : 'rgba(6, 7, 9, 0.75)',
           borderBottom: scrolled
             ? '1px solid var(--color-border)'
             : theme === 'light'
-              ? '1px solid rgba(28, 25, 23, 0.06)'
-              : '1px solid transparent',
+              ? '1px solid rgba(20, 19, 18, 0.06)'
+              : '1px solid rgba(255, 255, 255, 0.04)',
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
           transition: 'all 0.35s var(--ease-out)',
@@ -329,46 +329,65 @@ export default function Navbar() {
           position: 'fixed',
           inset: 0,
           zIndex: 99,
-          background: 'var(--color-bg)',
+          background: theme === 'light' ? 'rgba(247, 245, 240, 0.96)' : 'rgba(6, 7, 9, 0.96)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: '32px',
+          gap: '24px',
           opacity: menuOpen ? 1 : 0,
           pointerEvents: menuOpen ? 'all' : 'none',
-          transition: 'opacity 0.3s ease',
+          transition: 'opacity 0.25s ease, transform 0.25s ease',
+          transform: menuOpen ? 'none' : 'translateY(-8px)',
         }}
       >
-        {NAV_ITEMS.map((item) => (
-          <Link
-            key={item.label}
-            href={item.href}
-            onClick={(e) => handleNavClick(item.href, e)}
-            style={{
-              fontSize: '22px',
-              fontWeight: 500,
-              letterSpacing: '0.04em',
-              color: 'var(--color-text)',
-              textDecoration: 'none',
-              fontFamily: 'var(--font-mono)',
-            }}
-          >
-            {item.label}
-          </Link>
-        ))}
+        {NAV_ITEMS.map((item) => {
+          const sectionKey = item.href.replace('/#', '')
+          const isActive = isHome
+            ? activeSection === sectionKey
+            : pathname.startsWith(item.path)
+
+          return (
+            <Link
+              key={item.label}
+              href={item.href}
+              onClick={(e) => handleNavClick(item.href, e)}
+              style={{
+                fontSize: '18px',
+                fontWeight: 600,
+                letterSpacing: '0.08em',
+                color: isActive ? 'var(--color-accent)' : 'var(--color-text)',
+                textDecoration: 'none',
+                fontFamily: 'var(--font-mono)',
+                padding: '8px 24px',
+                borderRadius: 'var(--radius-sm)',
+                background: isActive ? 'var(--color-accent-bg)' : 'transparent',
+                border: isActive ? '1px solid var(--color-accent-border)' : '1px solid transparent',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              {item.label}
+            </Link>
+          )
+        })}
         <Link
           href="/resume"
           onClick={() => setMenuOpen(false)}
           style={{
-            marginTop: '16px',
-            fontSize: '13px',
+            marginTop: '12px',
+            fontSize: '12px',
             color: 'var(--color-accent)',
             textDecoration: 'none',
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
             fontWeight: 600,
             fontFamily: 'var(--font-mono)',
+            padding: '10px 20px',
+            borderRadius: 'var(--radius-sm)',
+            border: '1px solid var(--color-accent)',
+            background: 'var(--color-accent-bg)',
           }}
         >
           VIEW RÉSUMÉ ↗

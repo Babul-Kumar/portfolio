@@ -14,10 +14,23 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key'
 
 export async function POST(request: NextRequest) {
-  // 1. Verify authenticated admin session
+  // 1. Verify authenticated admin session (via cookies or Authorization header)
   const supabase = await createClient()
-  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  let { data: { user }, error: userError } = await supabase.auth.getUser()
   const { data: { session } } = await supabase.auth.getSession()
+
+  const authHeader = request.headers.get('authorization')
+  const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
+  let activeToken = session?.access_token || bearerToken
+
+  if ((userError || !user) && bearerToken) {
+    const { data: tokenUser, error: tokenError } = await supabase.auth.getUser(bearerToken)
+    if (!tokenError && tokenUser.user) {
+      user = tokenUser.user
+      userError = null
+      activeToken = bearerToken
+    }
+  }
 
   if (userError || !user) {
     return NextResponse.json(
@@ -78,12 +91,12 @@ export async function POST(request: NextRequest) {
       } catch {
         storageClient = supabase
       }
-    } else if (session?.access_token) {
+    } else if (activeToken) {
       // Forward the active user's JWT access token to Supabase Storage
       storageClient = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
         global: {
           headers: {
-            Authorization: `Bearer ${session.access_token}`,
+            Authorization: `Bearer ${activeToken}`,
           },
         },
         auth: { persistSession: false },

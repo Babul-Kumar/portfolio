@@ -56,7 +56,7 @@ export default function CertificatePreviewSection({
       <style>{`
         .certificates-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+          grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
           gap: 24px;
         }
 

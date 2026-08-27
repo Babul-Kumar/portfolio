@@ -44,7 +44,7 @@ export default function TrainingSection({
       <style>{`
         .training-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(320px, 420px));
+          grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
           gap: 24px;
         }
 

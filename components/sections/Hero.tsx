@@ -64,11 +64,11 @@ export default function HeroSection({ profile }: HeroProps) {
       ref={sectionRef}
       id="hero"
       style={{
-        minHeight: 'calc(100vh - 72px)',
+        minHeight: 'calc(100vh - 68px)',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'flex-start',
-        paddingTop: 'clamp(84px, 8.5vh, 92px)',
+        paddingTop: 'clamp(80px, 9vh, 96px)',
         paddingBottom: '32px',
         position: 'relative',
         overflow: 'hidden',

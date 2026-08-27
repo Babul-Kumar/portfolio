@@ -18,7 +18,7 @@ import type { Certificate } from '@/types'
 import { FALLBACK_CERTIFICATES } from '@/lib/data'
 import { formatDate } from '@/lib/utils'
 import { toast, Toaster } from 'sonner'
-import { getCertificatePublicUrl, isPdfDocument } from '@/lib/supabase/storage'
+import { getCertificatePublicUrl, isPdfDocument, extractStoragePath } from '@/lib/supabase/storage'
 import StatusBadge from '@/components/admin/StatusBadge'
 import SearchBar from '@/components/admin/SearchBar'
 import ConfirmDialog from '@/components/admin/ConfirmDialog'
@@ -161,6 +161,15 @@ export default function AdminCertificatesPage() {
     const supabase = createClient()
 
     try {
+      if (deleteTarget.file_url) {
+        const filePath = extractStoragePath(deleteTarget.file_url, 'certificate')
+        if (filePath) await supabase.storage.from('certificate').remove([filePath]).catch(() => {})
+      }
+      if (deleteTarget.thumbnail_url) {
+        const thumbPath = extractStoragePath(deleteTarget.thumbnail_url, 'certificate')
+        if (thumbPath) await supabase.storage.from('certificate').remove([thumbPath]).catch(() => {})
+      }
+
       if (isUuid) {
         const { error } = await supabase.from('certificates').delete().eq('id', deleteTarget.id)
         if (error) {

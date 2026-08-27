@@ -15,6 +15,7 @@ import {
   ArrowRight,
   Award,
 } from 'lucide-react'
+import CertificateMedia from '@/components/certificates/CertificateMedia'
 
 interface CoCurricularClientViewProps {
   initialActivities: CoCurricularActivity[]
@@ -72,17 +73,16 @@ export default function CoCurricularClientView({
     })
   }, [initialActivities, category, mode, search])
 
-  // Find premier featured activity for top hero card if available
-  const featuredHero = useMemo(() => {
-    if (category !== 'All' || mode !== 'All' || search) return null
-    return filteredActivities.find((a) => a.featured) ?? null
-  }, [filteredActivities, category, mode, search])
-
-  // Regular activities list (excluding the hero card when shown)
-  const regularActivities = useMemo(() => {
-    if (!featuredHero) return filteredActivities
-    return filteredActivities.filter((a) => a.id !== featuredHero.id)
-  }, [filteredActivities, featuredHero])
+  // All filtered activities in order: featured first, then chronological
+  const displayActivities = useMemo(() => {
+    return [...filteredActivities].sort((a, b) => {
+      if (a.featured && !b.featured) return -1
+      if (!a.featured && b.featured) return 1
+      const dateA = a.date ? new Date(a.date).getTime() : 0
+      const dateB = b.date ? new Date(b.date).getTime() : 0
+      return dateB - dateA
+    })
+  }, [filteredActivities])
 
   return (
     <div>
@@ -240,236 +240,6 @@ export default function CoCurricularClientView({
       </div>
 
       {/* =========================================================================
-          FEATURED HERO SHOWCASE (When present)
-          ========================================================================= */}
-      {featuredHero && (
-        <div style={{ marginBottom: '40px' }}>
-          <div
-            style={{
-              fontSize: '11px',
-              fontFamily: 'var(--font-mono)',
-              letterSpacing: '0.12em',
-              textTransform: 'uppercase',
-              color: 'var(--color-accent)',
-              marginBottom: '12px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              fontWeight: 700,
-            }}
-          >
-            <Sparkles size={13} />
-            SPOTLIGHT INITIATIVE
-          </div>
-
-          <article
-            style={{
-              background: 'linear-gradient(135deg, var(--color-card-bg) 0%, var(--color-surface-2) 100%)',
-              border: '1px solid var(--color-accent-border)',
-              borderRadius: 'var(--radius-lg)',
-              padding: 'clamp(24px, 4vw, 40px)',
-              boxShadow: 'var(--shadow-card)',
-              position: 'relative',
-              overflow: 'hidden',
-              display: 'grid',
-              gridTemplateColumns: '1fr',
-              gap: '20px',
-            }}
-            className="featured-hero-card"
-          >
-            {/* Header Meta */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                <span
-                  style={{
-                    fontSize: '11px',
-                    fontFamily: 'var(--font-mono)',
-                    padding: '3px 10px',
-                    borderRadius: 'var(--radius-sm)',
-                    background: 'var(--color-accent-bg)',
-                    border: '1px solid var(--color-accent-border)',
-                    color: 'var(--color-accent)',
-                    fontWeight: 700,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.08em',
-                  }}
-                >
-                  {featuredHero.category}
-                </span>
-
-                <span
-                  style={{
-                    fontSize: '11px',
-                    fontFamily: 'var(--font-mono)',
-                    padding: '3px 8px',
-                    borderRadius: 'var(--radius-sm)',
-                    background: 'var(--color-surface)',
-                    border: '1px solid var(--color-border)',
-                    color: 'var(--color-accent-teal)',
-                    fontWeight: 600,
-                  }}
-                >
-                  {featuredHero.mode}
-                </span>
-              </div>
-
-              {featuredHero.date && (
-                <span
-                  style={{
-                    fontSize: '12px',
-                    fontFamily: 'var(--font-mono)',
-                    color: 'var(--color-text-muted)',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                  }}
-                >
-                  <Calendar size={12} /> {formatDate(featuredHero.date)}
-                </span>
-              )}
-            </div>
-
-            {/* Title & Role */}
-            <div>
-              <h2
-                style={{
-                  fontSize: 'clamp(22px, 3.2vw, 32px)',
-                  fontWeight: 800,
-                  color: 'var(--color-text-primary)',
-                  margin: '0 0 10px',
-                  letterSpacing: '-0.02em',
-                  lineHeight: 1.25,
-                }}
-              >
-                <Link
-                  href={`/co-curricular/${featuredHero.slug}`}
-                  style={{ color: 'inherit', textDecoration: 'none' }}
-                  className="activity-title-link"
-                >
-                  {featuredHero.title}
-                </Link>
-              </h2>
-
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  flexWrap: 'wrap',
-                  fontSize: '13px',
-                  fontFamily: 'var(--font-mono)',
-                  color: 'var(--color-text-secondary)',
-                  marginBottom: '16px',
-                }}
-              >
-                <span style={{ color: 'var(--color-text-primary)', fontWeight: 600 }}>
-                  {featuredHero.organization || 'Independent Event'}
-                </span>
-                {featuredHero.role && (
-                  <>
-                    <span>·</span>
-                    <span style={{ color: 'var(--color-accent)', fontWeight: 700 }}>
-                      {featuredHero.role}
-                    </span>
-                  </>
-                )}
-                {featuredHero.location && (
-                  <>
-                    <span>·</span>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
-                      <MapPin size={11} /> {featuredHero.location}
-                    </span>
-                  </>
-                )}
-              </div>
-
-              {/* Prominent Achievement Badge */}
-              {featuredHero.achievement && (
-                <div
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    padding: '6px 14px',
-                    borderRadius: 'var(--radius-sm)',
-                    background: 'rgba(245, 158, 11, 0.15)',
-                    border: '1px solid rgba(245, 158, 11, 0.35)',
-                    color: '#F59E0B',
-                    fontSize: '13px',
-                    fontFamily: 'var(--font-mono)',
-                    fontWeight: 700,
-                    marginBottom: '16px',
-                  }}
-                >
-                  <Award size={15} />
-                  <span>{featuredHero.achievement}</span>
-                </div>
-              )}
-
-              {featuredHero.description && (
-                <p
-                  style={{
-                    fontSize: '15px',
-                    color: 'var(--color-text-secondary)',
-                    lineHeight: 1.7,
-                    margin: '0 0 20px',
-                    maxWidth: '850px',
-                  }}
-                >
-                  {featuredHero.description}
-                </p>
-              )}
-
-              {/* Skills Tags */}
-              {featuredHero.skills?.length > 0 && (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '20px' }}>
-                  {featuredHero.skills.map((s, sIdx) => (
-                    <span
-                      key={sIdx}
-                      style={{
-                        fontSize: '11px',
-                        fontFamily: 'var(--font-mono)',
-                        padding: '3px 9px',
-                        borderRadius: 'var(--radius-sm)',
-                        background: 'var(--color-surface)',
-                        border: '1px solid var(--color-border)',
-                        color: 'var(--color-text-primary)',
-                      }}
-                    >
-                      {s}
-                    </span>
-                  ))}
-                </div>
-              )}
-
-              {/* Action Button */}
-              <Link
-                href={`/co-curricular/${featuredHero.slug}`}
-                style={{
-                  fontSize: '13px',
-                  fontFamily: 'var(--font-mono)',
-                  fontWeight: 600,
-                  color: '#FFFFFF',
-                  textDecoration: 'none',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '9px 18px',
-                  borderRadius: 'var(--radius-sm)',
-                  background: 'var(--color-accent)',
-                  boxShadow: 'var(--shadow-accent)',
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                <span>View Full Activity Overview</span>
-                <ArrowRight size={14} />
-              </Link>
-            </div>
-          </article>
-        </div>
-      )}
-
-      {/* =========================================================================
           Editorial Activity Archive Cards
           ========================================================================= */}
       {filteredActivities.length === 0 ? (
@@ -514,8 +284,15 @@ export default function CoCurricularClientView({
           )}
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-          {regularActivities.map((a) => {
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 360px), 1fr))',
+            gap: '24px',
+          }}
+          className="co-curricular-grid"
+        >
+          {displayActivities.map((a) => {
             const orgName = a.organization || 'Independent Event'
             const modeColor =
               a.mode === 'Online'
@@ -629,6 +406,27 @@ export default function CoCurricularClientView({
                 {/* Main Content Body */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '14px' }}>
                   <div>
+                    {/* Activity Image / Certificate Preview */}
+                    {(a.image_url || a.document_url) && (
+                      <div style={{ marginBottom: '16px', borderRadius: 'var(--radius-sm)', overflow: 'hidden' }}>
+                        <Link
+                          href={`/co-curricular/${a.slug}`}
+                          style={{ display: 'block', textDecoration: 'none' }}
+                          aria-label={`View ${a.title}`}
+                        >
+                          <CertificateMedia
+                            fileUrl={a.document_url || a.image_url}
+                            thumbnailUrl={a.image_url}
+                            title={a.title}
+                            issuer={orgName}
+                            category={a.category}
+                            aspectRatio="16/10"
+                            interactive={false}
+                          />
+                        </Link>
+                      </div>
+                    )}
+
                     <h2
                       style={{
                         fontSize: 'clamp(18px, 2.2vw, 22px)',

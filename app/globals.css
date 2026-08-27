@@ -42,14 +42,14 @@
   --font-mono:     'Geist Mono', 'SFMono-Regular', Consolas, monospace;
 
   /* Global Layout Container & Intentional Density */
-  --section-gap:   clamp(56px, 6.5vw, 96px);
-  --container-max: min(94vw, 1800px);
-  --container-pad: clamp(16px, 2.5vw, 40px);
+  --section-gap:   clamp(64px, 7vw, 100px);
+  --container-max: min(92vw, 1380px);
+  --container-pad: clamp(16px, 3.5vw, 36px);
 
   /* Precise Architectural Radii */
-  --radius-sm:  4px;
-  --radius-md:  8px;
-  --radius-lg:  14px;
+  --radius-sm:  5px;
+  --radius-md:  10px;
+  --radius-lg:  16px;
   --radius-full: 9999px;
 
   /* Multi-Tier Cinematic Shadows */
@@ -157,34 +157,34 @@ body::before {
 .container,
 div.container {
   width: 100% !important;
-  max-width: var(--container-max, min(94vw, 1800px)) !important;
+  max-width: var(--container-max, min(92vw, 1380px)) !important;
   margin-inline: auto !important;
-  padding-inline: var(--container-pad, clamp(16px, 2.5vw, 40px)) !important;
+  padding-inline: var(--container-pad, clamp(16px, 3.5vw, 36px)) !important;
 }
 
 @media (min-width: 40rem) {
   .container, div.container {
-    max-width: var(--container-max, min(94vw, 1800px)) !important;
+    max-width: var(--container-max, min(92vw, 1380px)) !important;
   }
 }
 @media (min-width: 48rem) {
   .container, div.container {
-    max-width: var(--container-max, min(94vw, 1800px)) !important;
+    max-width: var(--container-max, min(92vw, 1380px)) !important;
   }
 }
 @media (min-width: 64rem) {
   .container, div.container {
-    max-width: var(--container-max, min(94vw, 1800px)) !important;
+    max-width: var(--container-max, min(92vw, 1380px)) !important;
   }
 }
 @media (min-width: 80rem) {
   .container, div.container {
-    max-width: var(--container-max, min(94vw, 1800px)) !important;
+    max-width: var(--container-max, min(92vw, 1380px)) !important;
   }
 }
 @media (min-width: 96rem) {
   .container, div.container {
-    max-width: var(--container-max, min(94vw, 1800px)) !important;
+    max-width: var(--container-max, min(92vw, 1380px)) !important;
   }
 }
 
