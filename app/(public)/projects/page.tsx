@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { getProjects } from '@/lib/data'
 import InteractiveProjectList from '@/components/projects/InteractiveProjectList'
+import AmbientSectionEnvironment from '@/components/ambient/AmbientSectionEnvironment'
 
 export const metadata: Metadata = {
   title: 'Projects',
@@ -14,8 +15,9 @@ export default async function ProjectsPage() {
   const projects = await getProjects()
 
   return (
-    <div style={{ padding: 'var(--section-gap) var(--container-pad)', minHeight: '85vh' }}>
-      <div style={{ maxWidth: 'var(--container-max)', margin: '0 auto' }}>
+    <div style={{ position: 'relative', overflow: 'hidden', padding: 'var(--section-gap) var(--container-pad)', minHeight: '85vh' }}>
+      <AmbientSectionEnvironment variant="engineering" intensity={0.55} accentMode="dual" />
+      <div style={{ position: 'relative', zIndex: 1, maxWidth: 'var(--container-max)', margin: '0 auto' }}>
         {/* Header */}
         <div style={{ marginBottom: '56px', borderBottom: '1px solid var(--color-border)', paddingBottom: '32px' }}>
           <div className="text-label" style={{ marginBottom: '12px' }}>

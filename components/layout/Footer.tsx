@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import type { Profile } from '@/types'
 import { FALLBACK_PROFILE } from '@/lib/data'
+import AmbientSectionEnvironment from '@/components/ambient/AmbientSectionEnvironment'
 
 interface FooterProps {
   profile?: Profile | null
@@ -36,14 +37,18 @@ export default function Footer({ profile }: FooterProps = {}) {
         background: 'var(--color-surface)',
         position: 'relative',
         zIndex: 1,
+        overflow: 'hidden',
       }}
     >
+      <AmbientSectionEnvironment variant="minimal" intensity={0.15} accentMode="cyan" />
       <div
         className="container"
         style={{
           display: 'flex',
           flexDirection: 'column',
           gap: '24px',
+          position: 'relative',
+          zIndex: 1,
         }}
       >
         {/* Top row: Brand & Back to Top */}

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import type { CoCurricularActivity } from '@/types'
 import { formatDate } from '@/lib/utils'
 import { Calendar, ArrowRight, Award } from 'lucide-react'
+import AmbientSectionEnvironment from '@/components/ambient/AmbientSectionEnvironment'
 
 export default function CoCurricularSection({
   activities,
@@ -14,7 +15,8 @@ export default function CoCurricularSection({
 
   return (
     <section id="co-curricular" className="section" style={{ position: 'relative' }}>
-      <div className="container">
+      <AmbientSectionEnvironment variant="network" intensity={0.5} accentMode="dual" />
+      <div className="container" style={{ position: 'relative', zIndex: 1 }}>
         {/* Section Header */}
         <div
           style={{
@@ -101,6 +103,7 @@ export default function CoCurricularSection({
                 {/* Activity Image or Fallback Placeholder */}
                 {a.image_url ? (
                   <div
+                    className="card-light-sweep"
                     style={{
                       width: '100%',
                       aspectRatio: '16/9',
@@ -351,9 +354,9 @@ export default function CoCurricularSection({
 
       <style>{`
         .co-curr-card:hover {
-          border-color: var(--color-border-hover) !important;
+          border-color: var(--color-accent-border) !important;
           transform: translateY(-2px);
-          box-shadow: var(--shadow-md) !important;
+          box-shadow: 0 10px 30px rgba(249, 115, 22, 0.08), var(--shadow-md) !important;
         }
         .co-curr-link:hover {
           color: var(--color-accent) !important;

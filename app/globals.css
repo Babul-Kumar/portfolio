@@ -418,3 +418,144 @@ div.container {
     --container-pad: 18px;
   }
 }
+
+/* ============================================================
+   Living AI System — Ambient Environment & Micro-Interactions
+   ============================================================ */
+
+/* Section Continuous Background Transition */
+.section {
+  position: relative;
+  overflow: hidden;
+}
+
+.section::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--color-border-subtle) 20%, var(--color-border) 50%, var(--color-border-subtle) 80%, transparent 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Card Light Sweep Shimmer on Hover */
+.card-light-sweep {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-light-sweep::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    65deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.04) 45%,
+    rgba(249, 115, 22, 0.08) 50%,
+    rgba(6, 182, 212, 0.08) 55%,
+    transparent 65%
+  );
+  transform: translateX(-100%) translateY(-100%);
+  transition: transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+.card-light-sweep:hover::after,
+.training-card-wrapper:hover .card-light-sweep::after,
+.certificate-card:hover .card-light-sweep::after,
+.glass-card:hover .card-light-sweep::after {
+  transform: translateX(100%) translateY(100%);
+}
+
+/* Capability Stack Architecture Connector */
+.capability-stack {
+  position: relative;
+}
+
+.capability-card {
+  position: relative;
+  z-index: 2;
+  transition: transform 0.25s var(--ease-out), border-color 0.25s var(--ease-out), box-shadow 0.25s var(--ease-out);
+}
+
+.capability-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-accent-border) !important;
+  box-shadow: 0 8px 24px rgba(249, 115, 22, 0.08) !important;
+}
+
+/* Project System Activation Line */
+.project-activation-track {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  padding: 6px 12px;
+  background: var(--color-surface-2);
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.project-card:hover .project-activation-track {
+  border-color: var(--color-accent-border);
+  color: var(--color-accent);
+}
+
+/* Knowledge Progression Spine in Education */
+.education-timeline-spine {
+  position: relative;
+}
+
+.education-timeline-spine::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 2px;
+  background: linear-gradient(180deg, var(--color-accent) 0%, rgba(249, 115, 22, 0.3) 60%, rgba(6, 182, 212, 0.2) 100%);
+  border-radius: 1px;
+}
+
+/* Pulse animation for system architecture */
+@keyframes systemDataPulse {
+  0% {
+    top: 0%;
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  15% {
+    opacity: 1;
+    transform: scale(1.3);
+  }
+  85% {
+    opacity: 1;
+    transform: scale(1.3);
+  }
+  100% {
+    top: 100%;
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-light-sweep::after {
+    display: none !important;
+  }
+  .capability-pulse-dot {
+    animation: none !important;
+  }
+}
+

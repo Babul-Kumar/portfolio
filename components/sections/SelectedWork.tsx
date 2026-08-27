@@ -4,6 +4,7 @@ import Link from 'next/link'
 import type { Project } from '@/types'
 import { formatDate } from '@/lib/utils'
 import { ArrowRight, ExternalLink, Code2, Activity, Binary, BrainCircuit, Layers, MessageSquare } from 'lucide-react'
+import AmbientSectionEnvironment from '@/components/ambient/AmbientSectionEnvironment'
 
 export default function SelectedWorkSection({ projects }: { projects: Project[] }) {
   if (projects.length === 0) return null
@@ -11,8 +12,9 @@ export default function SelectedWorkSection({ projects }: { projects: Project[] 
   const [featuredProject, ...remainingProjects] = projects
 
   return (
-    <section id="work" className="section">
-      <div className="container">
+    <section id="work" className="section" style={{ position: 'relative' }}>
+      <AmbientSectionEnvironment variant="engineering" intensity={0.65} accentMode="dual" />
+      <div className="container" style={{ position: 'relative', zIndex: 1 }}>
         {/* Section Header */}
         <div
           style={{
@@ -384,6 +386,17 @@ function BespokeProjectCard({ project, index }: { project: Project; index: numbe
           <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
             {formatDate(project.project_date, 'yyyy')}
           </span>
+        </div>
+
+        {/* System Activation Telemetry */}
+        <div className="project-activation-track" style={{ marginBottom: '12px', width: 'fit-content' }}>
+          <span style={{ color: 'var(--color-accent)' }}>● PROJ</span>
+          <span style={{ color: 'var(--color-border)' }}>→</span>
+          <span>MODEL</span>
+          <span style={{ color: 'var(--color-border)' }}>→</span>
+          <span>API</span>
+          <span style={{ color: 'var(--color-border)' }}>→</span>
+          <span style={{ color: 'var(--color-accent-teal, #06b6d4)' }}>DEPLOYED</span>
         </div>
 
         <h3

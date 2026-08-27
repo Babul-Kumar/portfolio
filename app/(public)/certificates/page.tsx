@@ -1,6 +1,7 @@
 import { getCertificates } from '@/lib/data'
 import type { Metadata } from 'next'
 import CertificatesClientView from '@/components/certificates/CertificatesClientView'
+import AmbientSectionEnvironment from '@/components/ambient/AmbientSectionEnvironment'
 
 export const revalidate = 60 // 1-minute ISR / on-demand revalidation
 
@@ -14,8 +15,9 @@ export default async function CertificatesPage() {
   const certificates = await getCertificates()
 
   return (
-    <div style={{ padding: 'var(--section-gap) var(--container-pad)', minHeight: '85vh' }}>
-      <div style={{ maxWidth: 'var(--container-max)', margin: '0 auto' }}>
+    <div style={{ position: 'relative', overflow: 'hidden', padding: 'var(--section-gap) var(--container-pad)', minHeight: '85vh' }}>
+      <AmbientSectionEnvironment variant="verification" intensity={0.45} accentMode="cyan" />
+      <div style={{ position: 'relative', zIndex: 1, maxWidth: 'var(--container-max)', margin: '0 auto' }}>
         {/* Page Header */}
         <div
           style={{

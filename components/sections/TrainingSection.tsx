@@ -5,6 +5,7 @@ import type { Training } from '@/types'
 import { formatDate } from '@/lib/utils'
 import { ShieldCheck, ExternalLink, Clock } from 'lucide-react'
 import CertificateMedia from '@/components/certificates/CertificateMedia'
+import AmbientSectionEnvironment from '@/components/ambient/AmbientSectionEnvironment'
 
 export default function TrainingSection({
   trainings,
@@ -14,8 +15,9 @@ export default function TrainingSection({
   if (trainings.length === 0) return null
 
   return (
-    <section id="training" className="section" aria-labelledby="training-heading">
-      <div className="container">
+    <section id="training" className="section" aria-labelledby="training-heading" style={{ position: 'relative' }}>
+      <AmbientSectionEnvironment variant="learning" intensity={0.5} accentMode="dual" />
+      <div className="container" style={{ position: 'relative', zIndex: 1 }}>
         {/* Section Header */}
         <div
           style={{
@@ -62,8 +64,8 @@ export default function TrainingSection({
         }
 
         .training-card-wrapper:hover {
-          border-color: var(--color-border-hover);
-          box-shadow: var(--shadow-md);
+          border-color: var(--color-accent-border);
+          box-shadow: 0 10px 30px rgba(249, 115, 22, 0.08), var(--shadow-md);
           transform: translateY(-2px);
         }
 
@@ -100,7 +102,8 @@ function TrainingCard({ training }: { training: Training }) {
         {/* Certificate Media Preview - Same 16/10 uncropped contained preview */}
         <Link
           href={`/training/${training.slug}`}
-          style={{ display: 'block', textDecoration: 'none', marginBottom: '18px' }}
+          className="card-light-sweep"
+          style={{ display: 'block', textDecoration: 'none', marginBottom: '18px', borderRadius: 'var(--radius-sm)' }}
           aria-label={`View training program ${training.title}`}
         >
           <CertificateMedia

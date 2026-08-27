@@ -6,6 +6,7 @@ import type { Certificate } from '@/types'
 import { formatDate } from '@/lib/utils'
 import { ShieldCheck, ExternalLink } from 'lucide-react'
 import CertificateMedia from '@/components/certificates/CertificateMedia'
+import AmbientSectionEnvironment from '@/components/ambient/AmbientSectionEnvironment'
 
 export default function CertificatePreviewSection({
   certificates,
@@ -26,8 +27,9 @@ export default function CertificatePreviewSection({
   if (certificates.length === 0) return null
 
   return (
-    <section id="certificates" className="section" aria-labelledby="certificates-heading">
-      <div className="container">
+    <section id="certificates" className="section" aria-labelledby="certificates-heading" style={{ position: 'relative' }}>
+      <AmbientSectionEnvironment variant="verification" intensity={0.45} accentMode="cyan" />
+      <div className="container" style={{ position: 'relative', zIndex: 1 }}>
         {/* Section Header */}
         <div
           style={{
@@ -74,8 +76,8 @@ export default function CertificatePreviewSection({
         }
 
         .cert-card-wrapper:hover {
-          border-color: var(--color-border-hover);
-          box-shadow: var(--shadow-md);
+          border-color: rgba(6, 182, 212, 0.45);
+          box-shadow: 0 10px 30px rgba(6, 182, 212, 0.08), var(--shadow-md);
           transform: translateY(-2px);
         }
 
@@ -104,7 +106,8 @@ function CertificateCard({ cert }: { cert: Certificate }) {
         {/* Certificate Media Preview - uncropped 16/10 contained preview */}
         <Link
           href={`/certificates/${cert.slug}`}
-          style={{ display: 'block', textDecoration: 'none', marginBottom: '18px' }}
+          className="card-light-sweep"
+          style={{ display: 'block', textDecoration: 'none', marginBottom: '18px', borderRadius: 'var(--radius-sm)' }}
           aria-label={`View certificate ${cert.title}`}
         >
           <CertificateMedia

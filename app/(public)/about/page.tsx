@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { getProfile } from '@/lib/data'
 import Link from 'next/link'
 import Image from 'next/image'
+import AmbientSectionEnvironment from '@/components/ambient/AmbientSectionEnvironment'
 
 export const metadata: Metadata = {
   title: 'About',
@@ -24,8 +25,9 @@ export default async function AboutPage() {
     'I am deeply interested in building intelligent systems that solve real-world problems — from training ML models to architecting full-stack applications. I thrive at the intersection of research and engineering.'
 
   return (
-    <div style={{ padding: 'var(--section-gap) var(--container-pad)', minHeight: '85vh' }}>
-      <div style={{ maxWidth: 'var(--container-max)', margin: '0 auto' }}>
+    <div style={{ position: 'relative', overflow: 'hidden', padding: 'var(--section-gap) var(--container-pad)', minHeight: '85vh' }}>
+      <AmbientSectionEnvironment variant="architecture" intensity={0.5} accentMode="dual" />
+      <div style={{ position: 'relative', zIndex: 1, maxWidth: 'var(--container-max)', margin: '0 auto' }}>
         {/* Section Header */}
         <div style={{ marginBottom: '64px', borderBottom: '1px solid var(--color-border)', paddingBottom: '32px' }}>
           <div className="text-label" style={{ marginBottom: '12px' }}>

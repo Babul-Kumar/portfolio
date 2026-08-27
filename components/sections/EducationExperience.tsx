@@ -5,6 +5,7 @@ import type { Education, Experience } from '@/types'
 import { formatDate } from '@/lib/utils'
 import Link from 'next/link'
 import { Brain, Server, Terminal, Sparkles, GraduationCap, Briefcase, ArrowRight } from 'lucide-react'
+import AmbientSectionEnvironment from '@/components/ambient/AmbientSectionEnvironment'
 
 export default function EducationExperienceSection({
   education,
@@ -26,7 +27,8 @@ export default function EducationExperienceSection({
 
   return (
     <section id="about" className="section" style={{ position: 'relative' }}>
-      <div className="container">
+      <AmbientSectionEnvironment variant="architecture" intensity={0.55} accentMode="dual" />
+      <div className="container" style={{ position: 'relative', zIndex: 1 }}>
         {/* =========================================================================
             1. SECTION EYEBROW & BALANCED HEADING
             ========================================================================= */}
@@ -192,12 +194,43 @@ export default function EducationExperienceSection({
 
           {/* ----------------- RIGHT COLUMN: 3 ENGINEERING CAPABILITY CARDS ----------------- */}
           <div
+            className="capability-stack"
             style={{
               display: 'flex',
               flexDirection: 'column',
               gap: '14px',
+              position: 'relative',
             }}
           >
+            {/* Subtle architectural system connector between cards 01 -> 02 -> 03 */}
+            <div
+              style={{
+                position: 'absolute',
+                left: '35px',
+                top: '36px',
+                bottom: '36px',
+                width: '1px',
+                background: 'linear-gradient(180deg, rgba(249, 115, 22, 0.5) 0%, rgba(6, 182, 212, 0.6) 50%, rgba(249, 115, 22, 0.5) 100%)',
+                pointerEvents: 'none',
+                zIndex: 1,
+                opacity: 0.45,
+              }}
+            >
+              <div
+                className="capability-pulse-dot"
+                style={{
+                  position: 'absolute',
+                  left: '-2px',
+                  width: '5px',
+                  height: '5px',
+                  borderRadius: '50%',
+                  background: 'var(--color-accent)',
+                  boxShadow: '0 0 8px var(--color-accent)',
+                  animation: 'systemDataPulse 4s cubic-bezier(0.4, 0, 0.2, 1) infinite',
+                }}
+              />
+            </div>
+
             {/* Card 01: Intelligence */}
             <div
               className="glass-card capability-card"
@@ -413,9 +446,13 @@ export default function EducationExperienceSection({
                 border: '1px solid var(--color-border)',
                 borderRadius: 'var(--radius-lg)',
                 boxShadow: 'var(--shadow-card)',
+                position: 'relative',
+                overflow: 'hidden',
               }}
             >
-              {/* Header */}
+              <AmbientSectionEnvironment variant="education" intensity={0.35} accentMode="orange" />
+              <div style={{ position: 'relative', zIndex: 1 }}>
+                {/* Header */}
               <div
                 style={{
                   display: 'flex',
@@ -529,6 +566,7 @@ export default function EducationExperienceSection({
                     </div>
                   )
                 })}
+              </div>
               </div>
             </div>
           )}

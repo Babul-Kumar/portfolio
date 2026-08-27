@@ -47,6 +47,7 @@ function LinkedInIcon({ size = 18 }: { size?: number }) {
 
 import type { Profile } from '@/types'
 import { FALLBACK_PROFILE } from '@/lib/data'
+import AmbientSectionEnvironment from '@/components/ambient/AmbientSectionEnvironment'
 
 interface ContactSectionProps {
   profile?: Profile | null
@@ -113,8 +114,9 @@ export default function ContactSection({ profile }: ContactSectionProps = {}) {
   }
 
   return (
-    <section id="contact" className="section" style={{ paddingBottom: 'clamp(48px, 6vw, 80px)' }}>
-      <div className="container">
+    <section id="contact" className="section" style={{ position: 'relative', paddingBottom: 'clamp(48px, 6vw, 80px)' }}>
+      <AmbientSectionEnvironment variant="communication" intensity={0.35} accentMode="orange" />
+      <div className="container" style={{ position: 'relative', zIndex: 1 }}>
         {/* =========================================================================
             Two-Column Shared Grid (Left ~44%, Right ~56%)
             ========================================================================= */}
@@ -528,6 +530,24 @@ export default function ContactSection({ profile }: ContactSectionProps = {}) {
         .contact-form-input:focus {
           border-color: var(--color-accent) !important;
           box-shadow: 0 0 12px var(--color-accent-glow) !important;
+        }
+        .contact-submit-btn {
+          position: relative;
+          overflow: hidden;
+        }
+        .contact-submit-btn::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 60%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+          transition: left 0.6s ease;
+          pointer-events: none;
+        }
+        .contact-submit-btn:hover::after {
+          left: 140%;
         }
         .contact-submit-btn:hover:not(:disabled) {
           background: #EA580C !important;
