@@ -1214,7 +1214,7 @@ export async function getAchievements(options?: {
     }
 
     const { data, error } = await query
-    if (!error && Array.isArray(data)) return data
+    if (!error && Array.isArray(data) && data.length > 0) return data
     return FALLBACK_ACHIEVEMENTS
   })()
 
@@ -1259,7 +1259,7 @@ export async function getExperience(): Promise<Experience[]> {
       .select('*')
       .eq('published', true)
       .order('sort_order', { ascending: true })
-    if (!error && Array.isArray(data)) return data
+    if (!error && Array.isArray(data) && data.length > 0) return data
     return FALLBACK_EXPERIENCE
   })()
 
@@ -1384,13 +1384,13 @@ export async function getAdminProjects(): Promise<Project[]> {
       const supabase = getPublicSupabase()
       const { data, error } = await supabase.from('projects').select('*').order('sort_order', { ascending: true })
       if (!error && Array.isArray(data)) return data
-      return FALLBACK_PROJECTS
+      return []
     } catch {
-      return FALLBACK_PROJECTS
+      return []
     }
   })()
 
-  const data = await withTimeout(fetchPromise, FALLBACK_PROJECTS, 1000)
+  const data = await withTimeout(fetchPromise, [], QUERY_TIMEOUT_MS)
   setCache('admin_projects', data)
   return data
 }
@@ -1404,13 +1404,13 @@ export async function getAdminCertificates(): Promise<Certificate[]> {
       const supabase = getPublicSupabase()
       const { data, error } = await supabase.from('certificates').select('*').order('issue_date', { ascending: false })
       if (!error && Array.isArray(data)) return data
-      return FALLBACK_CERTIFICATES
+      return []
     } catch {
-      return FALLBACK_CERTIFICATES
+      return []
     }
   })()
 
-  const data = await withTimeout(fetchPromise, FALLBACK_CERTIFICATES, 1000)
+  const data = await withTimeout(fetchPromise, [], QUERY_TIMEOUT_MS)
   setCache('admin_certificates', data)
   return data
 }
@@ -1424,13 +1424,13 @@ export async function getAdminAchievements(): Promise<Achievement[]> {
       const supabase = getPublicSupabase()
       const { data, error } = await supabase.from('achievements').select('*').order('date', { ascending: false })
       if (!error && Array.isArray(data)) return data
-      return FALLBACK_ACHIEVEMENTS
+      return []
     } catch {
-      return FALLBACK_ACHIEVEMENTS
+      return []
     }
   })()
 
-  const data = await withTimeout(fetchPromise, FALLBACK_ACHIEVEMENTS, 1000)
+  const data = await withTimeout(fetchPromise, [], QUERY_TIMEOUT_MS)
   setCache('admin_achievements', data)
   return data
 }
@@ -1444,13 +1444,13 @@ export async function getAdminEducation(): Promise<Education[]> {
       const supabase = getPublicSupabase()
       const { data, error } = await supabase.from('education').select('*').order('sort_order', { ascending: true })
       if (!error && Array.isArray(data)) return data
-      return FALLBACK_EDUCATION
+      return []
     } catch {
-      return FALLBACK_EDUCATION
+      return []
     }
   })()
 
-  const data = await withTimeout(fetchPromise, FALLBACK_EDUCATION, 1000)
+  const data = await withTimeout(fetchPromise, [], QUERY_TIMEOUT_MS)
   setCache('admin_education', data)
   return data
 }
@@ -1464,13 +1464,13 @@ export async function getAdminExperience(): Promise<Experience[]> {
       const supabase = getPublicSupabase()
       const { data, error } = await supabase.from('experience').select('*').order('sort_order', { ascending: true })
       if (!error && Array.isArray(data)) return data
-      return FALLBACK_EXPERIENCE
+      return []
     } catch {
-      return FALLBACK_EXPERIENCE
+      return []
     }
   })()
 
-  const data = await withTimeout(fetchPromise, FALLBACK_EXPERIENCE, 1000)
+  const data = await withTimeout(fetchPromise, [], QUERY_TIMEOUT_MS)
   setCache('admin_experience', data)
   return data
 }
@@ -1484,13 +1484,13 @@ export async function getAdminSkills(): Promise<Skill[]> {
       const supabase = getPublicSupabase()
       const { data, error } = await supabase.from('skills').select('*').order('category').order('sort_order')
       if (!error && Array.isArray(data)) return data
-      return FALLBACK_SKILLS
+      return []
     } catch {
-      return FALLBACK_SKILLS
+      return []
     }
   })()
 
-  const data = await withTimeout(fetchPromise, FALLBACK_SKILLS, 1000)
+  const data = await withTimeout(fetchPromise, [], QUERY_TIMEOUT_MS)
   setCache('admin_skills', data)
   return data
 }
@@ -1509,7 +1509,7 @@ export async function getAdminProfile(): Promise<Profile> {
     }
   })()
 
-  const data = await withTimeout(fetchPromise, FALLBACK_PROFILE, 1000)
+  const data = await withTimeout(fetchPromise, FALLBACK_PROFILE, QUERY_TIMEOUT_MS)
   setCache('admin_profile', data)
   return data
 }
@@ -1527,13 +1527,13 @@ export async function getAdminTrainings(): Promise<Training[]> {
         .order('display_order', { ascending: true })
         .order('start_date', { ascending: false })
       if (!error && Array.isArray(data)) return data
-      return FALLBACK_TRAININGS
+      return []
     } catch {
-      return FALLBACK_TRAININGS
+      return []
     }
   })()
 
-  const data = await withTimeout(fetchPromise, FALLBACK_TRAININGS, 1000)
+  const data = await withTimeout(fetchPromise, [], QUERY_TIMEOUT_MS)
   setCache('admin_trainings', data)
   return data
 }
@@ -1551,13 +1551,13 @@ export async function getAdminCoCurricularActivities(): Promise<CoCurricularActi
         .order('display_order', { ascending: true })
         .order('date', { ascending: false })
       if (!error && Array.isArray(data)) return data
-      return FALLBACK_CO_CURRICULAR
+      return []
     } catch {
-      return FALLBACK_CO_CURRICULAR
+      return []
     }
   })()
 
-  const data = await withTimeout(fetchPromise, FALLBACK_CO_CURRICULAR, 1000)
+  const data = await withTimeout(fetchPromise, [], QUERY_TIMEOUT_MS)
   setCache('admin_co_curr', data)
   return data
 }
@@ -1587,55 +1587,57 @@ export async function getAdminDashboardStats(): Promise<{
   if (cached !== null) return cached
 
   const fetchPromise = (async () => {
-    const [projects, certs, trainings, coCurr, achievements, education, experience, skills] = await Promise.all([
-      getAdminProjects(),
-      getAdminCertificates(),
-      getAdminTrainings(),
-      getAdminCoCurricularActivities(),
-      getAdminAchievements(),
-      getAdminEducation(),
-      getAdminExperience(),
-      getAdminSkills(),
+    const supabase = getPublicSupabase()
+    const [
+      { count: projectsCount },
+      { count: certsCount },
+      { count: trainingsCount },
+      { count: coCurrCount },
+      { count: skillsCount },
+      { count: expCount },
+      { count: eduCount },
+      { count: achCount },
+      { count: msgCount },
+    ] = await Promise.all([
+      supabase.from('projects').select('*', { count: 'exact', head: true }),
+      supabase.from('certificates').select('*', { count: 'exact', head: true }),
+      supabase.from('training').select('*', { count: 'exact', head: true }),
+      supabase.from('co_curricular_activities').select('*', { count: 'exact', head: true }),
+      supabase.from('skills').select('*', { count: 'exact', head: true }),
+      supabase.from('experience').select('*', { count: 'exact', head: true }),
+      supabase.from('education').select('*', { count: 'exact', head: true }),
+      supabase.from('achievements').select('*', { count: 'exact', head: true }),
+      supabase.from('contact_messages').select('*', { count: 'exact', head: true }).eq('read', false),
     ])
 
-    let unreadMessages = 0
-    try {
-      const supabase = getPublicSupabase()
-      const { count } = await supabase
-        .from('contact_messages')
-        .select('*', { count: 'exact', head: true })
-        .eq('read', false)
-      unreadMessages = count ?? 0
-    } catch {
-      unreadMessages = 0
-    }
-
     return {
-      projects: projects.length,
-      certificates: certs.length,
-      trainings: trainings.length,
-      coCurricular: coCurr.length,
-      achievements: achievements.length,
-      education: education.length,
-      experience: experience.length,
-      skills: skills.length,
-      messages: unreadMessages,
+      projects: projectsCount ?? 0,
+      certificates: certsCount ?? 0,
+      trainings: trainingsCount ?? 0,
+      coCurricular: coCurrCount ?? 0,
+      achievements: achCount ?? 0,
+      education: eduCount ?? 0,
+      experience: expCount ?? 0,
+      skills: skillsCount ?? 0,
+      messages: msgCount ?? 0,
     }
   })()
 
-  const fallbackStats = {
-    projects: FALLBACK_PROJECTS.length,
-    certificates: FALLBACK_CERTIFICATES.length,
-    trainings: FALLBACK_TRAININGS.length,
-    coCurricular: FALLBACK_CO_CURRICULAR.length,
-    achievements: FALLBACK_ACHIEVEMENTS.length,
-    education: FALLBACK_EDUCATION.length,
-    experience: FALLBACK_EXPERIENCE.length,
-    skills: FALLBACK_SKILLS.length,
-    messages: 0,
-  }
-
-  const data = await withTimeout(fetchPromise, fallbackStats, 1000)
+  const data = await withTimeout(
+    fetchPromise,
+    {
+      projects: 0,
+      certificates: 0,
+      trainings: 0,
+      coCurricular: 0,
+      achievements: 0,
+      education: 0,
+      experience: 0,
+      skills: 0,
+      messages: 0,
+    },
+    QUERY_TIMEOUT_MS
+  )
   setCache('admin_dashboard_stats', data)
   return data
 }

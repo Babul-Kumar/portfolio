@@ -66,7 +66,7 @@ export default async function AdminDashboardPage() {
   const statCards = [
     {
       label: 'Projects',
-      value: stats.projects,
+      value: projects.length,
       subValue: `${publishedProjects} Live · ${featuredProjects} Featured`,
       href: '/admin/projects',
       icon: FolderKanban,
@@ -75,7 +75,7 @@ export default async function AdminDashboardPage() {
     },
     {
       label: 'Certificates',
-      value: stats.certificates,
+      value: certs.length,
       subValue: `${publishedCerts} Published · ${featuredCerts} Featured`,
       href: '/admin/certificates',
       icon: ScrollText,
@@ -84,7 +84,7 @@ export default async function AdminDashboardPage() {
     },
     {
       label: 'Training',
-      value: stats.trainings ?? trainings.length,
+      value: trainings.length,
       subValue: `${publishedTrainings} Active · ${featuredTrainings} Featured`,
       href: '/admin/training',
       icon: BookOpen,
@@ -93,7 +93,7 @@ export default async function AdminDashboardPage() {
     },
     {
       label: 'Co-Curricular',
-      value: stats.coCurricular ?? coCurricular.length,
+      value: coCurricular.length,
       subValue: `${publishedCoCurr} Published · ${featuredCoCurr} Featured`,
       href: '/admin/co-curricular',
       icon: Trophy,
@@ -102,7 +102,7 @@ export default async function AdminDashboardPage() {
     },
     {
       label: 'Technical Skills',
-      value: stats.skills,
+      value: skills.length,
       subValue: 'Frontend, Backend, AI/ML',
       href: '/admin/skills',
       icon: Wrench,
@@ -111,7 +111,7 @@ export default async function AdminDashboardPage() {
     },
     {
       label: 'Experience',
-      value: stats.experience,
+      value: experience.length,
       subValue: 'Production roles & leadership',
       href: '/admin/experience',
       icon: Briefcase,
@@ -120,7 +120,7 @@ export default async function AdminDashboardPage() {
     },
     {
       label: 'Achievements',
-      value: stats.achievements,
+      value: achievements.length,
       subValue: 'Awards, Hackathons & Honors',
       href: '/admin/achievements',
       icon: Award,
