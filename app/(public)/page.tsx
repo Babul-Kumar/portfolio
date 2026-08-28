@@ -28,7 +28,7 @@ export default async function HomePage() {
   const [profile, projects, trainings, certificates, coCurricular, education, experience] =
     await Promise.all([
       getProfile(),
-      getProjects({ featured: true, limit: 6 }),
+      getProjects(), // All published projects — completely data-driven
       getTrainings(),
       getCertificates(),
       getCoCurricularActivities(), // All published activities — no featured/limit filter
