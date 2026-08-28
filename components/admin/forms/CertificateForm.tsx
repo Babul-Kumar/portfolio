@@ -269,22 +269,28 @@ export default function AdminCertificateForm({ certificate }: { certificate?: Ce
         }
       }
 
-      // Invalidate cache and revalidate public routes
+      // Invalidate cache and revalidate public routes (non-blocking with timeout)
       try {
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 2500)
         await fetch('/api/admin/revalidate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ type: 'certificates', slug: payload.slug }),
-        })
+          signal: controller.signal,
+        }).catch(() => {})
+        clearTimeout(timeoutId)
       } catch {
         // Non-blocking
       }
 
       toast.success(isEdit ? 'Certificate updated successfully' : 'Certificate created successfully')
+      setSaving(false)
+
       setTimeout(() => {
         router.push('/admin/certificates')
         router.refresh()
-      }, 500)
+      }, 300)
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to save certificate'
       toast.error(message)

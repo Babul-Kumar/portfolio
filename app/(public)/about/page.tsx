@@ -2,12 +2,13 @@ import type { Metadata } from 'next'
 import { getProfile } from '@/lib/data'
 import Link from 'next/link'
 import Image from 'next/image'
+import { ArrowRight } from 'lucide-react'
 import AmbientSectionEnvironment from '@/components/ambient/AmbientSectionEnvironment'
 
 export const metadata: Metadata = {
-  title: 'About',
+  title: 'About — Babul Kumar',
   description:
-    'Learn about Babul Kumar, background in Computer Science, AI/ML research interests, and full-stack engineering principles.',
+    'B.Tech CSE student at Lovely Professional University interested in AI/ML, Python, FastAPI, React, and building practical software projects.',
 }
 
 export const revalidate = 60
@@ -16,22 +17,53 @@ export default async function AboutPage() {
   const profile = await getProfile()
 
   const name = profile?.name ?? 'Babul Kumar'
-  const tagline = profile?.tagline ?? 'Computer Science · AI / ML · Full Stack'
-  const bio =
+  const tagline = profile?.tagline ?? 'Computer Science · AI / ML · Software Development'
+  const intro =
     profile?.bio ??
-    'B.Tech Computer Science & Engineering student at Lovely Professional University, exploring Artificial Intelligence, Machine Learning and Full-Stack Development.'
-  const bioExtended =
-    profile?.bio_extended ??
-    'I am deeply interested in building intelligent systems that solve real-world problems — from training ML models to architecting full-stack applications. I thrive at the intersection of research and engineering.'
+    'I’m a B.Tech CSE student at Lovely Professional University with an interest in AI/ML and software development.'
+
+  const defaultParagraphs = [
+    'I have knowledge of Python, Machine Learning, FastAPI, React, and Generative AI, and I enjoy learning new technologies by building projects.',
+    'I’ve worked on projects like a Flight Delay Prediction System and AI-powered applications, which have helped me gain practical experience in machine learning and full-stack development.',
+    'I’m looking for internships and real-world projects where I can apply what I know, learn from others, and improve my skills.',
+    'If you’re working on AI/ML, GenAI, or software development projects, feel free to connect with me and collaborate.',
+  ]
+
+  const paragraphs = profile?.bio_extended
+    ? profile.bio_extended
+        .split(/\n\s*\n/)
+        .map((p) => p.trim())
+        .filter(Boolean)
+    : defaultParagraphs
 
   return (
-    <div style={{ position: 'relative', overflow: 'hidden', padding: 'var(--section-gap) var(--container-pad)', minHeight: '85vh' }}>
-      <AmbientSectionEnvironment variant="architecture" intensity={0.5} accentMode="dual" />
-      <div style={{ position: 'relative', zIndex: 1, maxWidth: 'var(--container-max)', margin: '0 auto' }}>
+    <div
+      style={{
+        position: 'relative',
+        overflow: 'hidden',
+        padding: 'var(--section-gap) var(--container-pad)',
+        minHeight: '85vh',
+      }}
+    >
+      <AmbientSectionEnvironment variant="architecture" intensity={0.45} accentMode="dual" />
+      <div
+        style={{
+          position: 'relative',
+          zIndex: 1,
+          maxWidth: 'var(--container-max)',
+          margin: '0 auto',
+        }}
+      >
         {/* Section Header */}
-        <div style={{ marginBottom: '64px', borderBottom: '1px solid var(--color-border)', paddingBottom: '32px' }}>
-          <div className="text-label" style={{ marginBottom: '12px' }}>
-            Identity & Engineering Philosophy
+        <div
+          style={{
+            marginBottom: '48px',
+            borderBottom: '1px solid var(--color-border)',
+            paddingBottom: '24px',
+          }}
+        >
+          <div className="text-label" style={{ marginBottom: '10px' }}>
+            Background & Engineering Journey
           </div>
           <h1 className="text-display">
             ABOUT<br />BABUL KUMAR
@@ -42,10 +74,10 @@ export default async function AboutPage() {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'minmax(280px, 360px) 1fr',
-            gap: '64px',
+            gridTemplateColumns: 'minmax(280px, 340px) 1fr',
+            gap: 'clamp(32px, 4vw, 56px)',
             alignItems: 'start',
-            marginBottom: '80px',
+            marginBottom: '64px',
           }}
           className="about-grid"
         >
@@ -53,7 +85,9 @@ export default async function AboutPage() {
           <div
             className="glass-card"
             style={{
-              padding: '32px',
+              padding: '28px',
+              position: 'sticky',
+              top: '96px',
             }}
           >
             {/* 3D Avatar Portrait */}
@@ -63,7 +97,7 @@ export default async function AboutPage() {
                 aspectRatio: '3/4',
                 borderRadius: 'var(--radius-sm)',
                 overflow: 'hidden',
-                marginBottom: '24px',
+                marginBottom: '20px',
                 border: '1px solid var(--color-border)',
                 position: 'relative',
                 background: 'var(--color-surface-subtle)',
@@ -80,15 +114,15 @@ export default async function AboutPage() {
               <div
                 style={{
                   position: 'absolute',
-                  bottom: '12px',
-                  left: '12px',
-                  right: '12px',
+                  bottom: '10px',
+                  left: '10px',
+                  right: '10px',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '8px',
-                  padding: '6px 12px',
+                  padding: '6px 10px',
                   borderRadius: 'var(--radius-xs)',
-                  background: 'rgba(10, 10, 12, 0.8)',
+                  background: 'rgba(10, 10, 12, 0.82)',
                   backdropFilter: 'blur(8px)',
                   WebkitBackdropFilter: 'blur(8px)',
                   border: '1px solid rgba(255, 255, 255, 0.12)',
@@ -108,12 +142,21 @@ export default async function AboutPage() {
                     display: 'inline-block',
                   }}
                 />
-                <span>3D AI Engineer Avatar</span>
+                <span>3D Developer Avatar</span>
               </div>
             </div>
-            <h3 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--color-text)', marginBottom: '4px' }}>
+
+            <h3
+              style={{
+                fontSize: '19px',
+                fontWeight: 600,
+                color: 'var(--color-text)',
+                marginBottom: '4px',
+              }}
+            >
               {name}
             </h3>
+
             <div
               style={{
                 fontSize: '11px',
@@ -121,7 +164,7 @@ export default async function AboutPage() {
                 color: 'var(--color-accent)',
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase',
-                marginBottom: '24px',
+                marginBottom: '20px',
               }}
             >
               {tagline}
@@ -131,11 +174,11 @@ export default async function AboutPage() {
               style={{
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '16px',
+                gap: '14px',
                 fontSize: '13px',
                 color: 'var(--color-text-secondary)',
                 borderTop: '1px solid var(--color-border)',
-                paddingTop: '20px',
+                paddingTop: '18px',
               }}
             >
               <div>
@@ -147,7 +190,7 @@ export default async function AboutPage() {
                     fontFamily: 'var(--font-mono)',
                     textTransform: 'uppercase',
                     letterSpacing: '0.1em',
-                    marginBottom: '4px',
+                    marginBottom: '3px',
                   }}
                 >
                   Education
@@ -160,6 +203,7 @@ export default async function AboutPage() {
                   {profile?.university ?? 'Lovely Professional University'}
                 </span>
               </div>
+
               <div>
                 <span
                   style={{
@@ -169,95 +213,117 @@ export default async function AboutPage() {
                     fontFamily: 'var(--font-mono)',
                     textTransform: 'uppercase',
                     letterSpacing: '0.1em',
-                    marginBottom: '4px',
+                    marginBottom: '3px',
                   }}
                 >
                   Location
                 </span>
-                <span style={{ color: 'var(--color-text)' }}>{profile?.location ?? 'Punjab, India'}</span>
+                <span style={{ color: 'var(--color-text)' }}>
+                  {profile?.location ?? 'Punjab, India'}
+                </span>
               </div>
-              {profile?.available_for && (
-                <div>
-                  <span
-                    style={{
-                      color: 'var(--color-text-muted)',
-                      display: 'block',
-                      fontSize: '10px',
-                      fontFamily: 'var(--font-mono)',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.1em',
-                      marginBottom: '4px',
-                    }}
-                  >
-                    Open For
-                  </span>
-                  <span style={{ color: 'var(--color-accent)', fontWeight: 500 }}>
-                    {profile.available_for}
-                  </span>
-                </div>
-              )}
+
+              <div>
+                <span
+                  style={{
+                    color: 'var(--color-text-muted)',
+                    display: 'block',
+                    fontSize: '10px',
+                    fontFamily: 'var(--font-mono)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.1em',
+                    marginBottom: '3px',
+                  }}
+                >
+                  Open For
+                </span>
+                <span style={{ color: 'var(--color-accent)', fontWeight: 500 }}>
+                  {profile?.available_for ?? 'Internships & Software Projects'}
+                </span>
+              </div>
             </div>
 
-            <div style={{ marginTop: '32px' }}>
+            <div style={{ marginTop: '24px' }}>
               <Link
                 href="/contact"
                 className="btn-primary"
-                style={{ width: '100%' }}
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                }}
               >
-                Connect With Me
+                <span>Get In Touch</span>
+                <ArrowRight size={14} />
               </Link>
             </div>
           </div>
 
-          {/* Right Column: Narrative & Core Domains */}
-          <div>
-            <div style={{ marginBottom: '48px' }}>
+          {/* Right Column: Narrative & Technical Focus */}
+          <div style={{ maxWidth: '720px' }}>
+            {/* Introduction Heading */}
+            <div style={{ marginBottom: '32px' }}>
               <h2
                 style={{
-                  fontSize: 'clamp(24px, 3.5vw, 38px)',
+                  fontSize: 'clamp(20px, 2.4vw, 28px)',
                   fontWeight: 600,
                   letterSpacing: '-0.02em',
-                  lineHeight: 1.25,
+                  lineHeight: 1.35,
                   color: 'var(--color-text)',
                   marginBottom: '24px',
                 }}
               >
-                &ldquo;Building intelligent systems where research curiosity meets resilient production engineering.&rdquo;
+                {intro}
               </h2>
-              <p
-                style={{
-                  fontSize: '16px',
-                  color: 'var(--color-text-secondary)',
-                  lineHeight: 1.8,
-                  marginBottom: '20px',
-                }}
-              >
-                {bio}
-              </p>
-              <p
-                style={{
-                  fontSize: '15px',
-                  color: 'var(--color-text-secondary)',
-                  lineHeight: 1.8,
-                }}
-              >
-                {bioExtended}
-              </p>
+
+              {/* 3-4 Readable Paragraphs */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {paragraphs.map((para, index) => (
+                  <p
+                    key={index}
+                    style={{
+                      fontSize: '15px',
+                      color: 'var(--color-text-secondary)',
+                      lineHeight: 1.8,
+                      margin: 0,
+                    }}
+                  >
+                    {para}
+                  </p>
+                ))}
+              </div>
             </div>
 
-            {/* Pillars */}
-            <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: '40px' }}>
-              <div className="text-label" style={{ marginBottom: '24px' }}>
+            {/* Technical Focus Areas */}
+            <div
+              style={{
+                borderTop: '1px solid var(--color-border)',
+                paddingTop: '36px',
+                marginBottom: '36px',
+              }}
+            >
+              <div className="text-label" style={{ marginBottom: '20px' }}>
                 Technical Focus Areas
               </div>
+
               <div
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-                  gap: '20px',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
+                  gap: '16px',
                 }}
               >
-                <div className="glass-card" style={{ padding: '24px' }}>
+                {/* 01 / AI & Machine Learning */}
+                <div
+                  className="glass-card"
+                  style={{
+                    padding: '22px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                  }}
+                >
                   <div
                     style={{
                       fontSize: '10px',
@@ -266,19 +332,88 @@ export default async function AboutPage() {
                       textTransform: 'uppercase',
                       letterSpacing: '0.1em',
                       marginBottom: '8px',
+                      fontWeight: 700,
                     }}
                   >
-                    01 / Intelligence
+                    01 / AI & Machine Learning
                   </div>
-                  <h4 style={{ fontSize: '17px', fontWeight: 600, color: 'var(--color-text)', marginBottom: '8px' }}>
+                  <h3
+                    style={{
+                      fontSize: '16px',
+                      fontWeight: 600,
+                      color: 'var(--color-text)',
+                      marginBottom: '8px',
+                      lineHeight: 1.3,
+                    }}
+                  >
                     AI & Machine Learning
-                  </h4>
-                  <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
-                    Specializing in NLP, computer vision forensics, deep learning models, and agentic workflows via Model Context Protocol.
+                  </h3>
+                  <p
+                    style={{
+                      fontSize: '13px',
+                      color: 'var(--color-text-secondary)',
+                      lineHeight: 1.6,
+                      margin: 0,
+                    }}
+                  >
+                    AI / ML, Generative AI, predictive modeling, and practical machine learning projects.
                   </p>
                 </div>
 
-                <div className="glass-card" style={{ padding: '24px' }}>
+                {/* 02 / Full-Stack Development */}
+                <div
+                  className="glass-card"
+                  style={{
+                    padding: '22px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: '10px',
+                      fontFamily: 'var(--font-mono)',
+                      color: 'var(--color-accent-teal)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.1em',
+                      marginBottom: '8px',
+                      fontWeight: 700,
+                    }}
+                  >
+                    02 / Full-Stack Development
+                  </div>
+                  <h3
+                    style={{
+                      fontSize: '16px',
+                      fontWeight: 600,
+                      color: 'var(--color-text)',
+                      marginBottom: '8px',
+                      lineHeight: 1.3,
+                    }}
+                  >
+                    Full-Stack Development
+                  </h3>
+                  <p
+                    style={{
+                      fontSize: '13px',
+                      color: 'var(--color-text-secondary)',
+                      lineHeight: 1.6,
+                      margin: 0,
+                    }}
+                  >
+                    Python, FastAPI, React, Next.js, APIs, and building complete web applications.
+                  </p>
+                </div>
+
+                {/* 03 / Project-Based Learning */}
+                <div
+                  className="glass-card"
+                  style={{
+                    padding: '22px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                  }}
+                >
                   <div
                     style={{
                       fontSize: '10px',
@@ -287,49 +422,66 @@ export default async function AboutPage() {
                       textTransform: 'uppercase',
                       letterSpacing: '0.1em',
                       marginBottom: '8px',
+                      fontWeight: 700,
                     }}
                   >
-                    02 / Architecture
+                    03 / Project-Based Learning
                   </div>
-                  <h4 style={{ fontSize: '17px', fontWeight: 600, color: 'var(--color-text)', marginBottom: '8px' }}>
-                    Full-Stack Systems
-                  </h4>
-                  <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
-                    Architecting robust Next.js web applications, async FastAPI backends, and scalable PostgreSQL database schemas.
-                  </p>
-                </div>
-
-                <div className="glass-card" style={{ padding: '24px' }}>
-                  <div
+                  <h3
                     style={{
-                      fontSize: '10px',
-                      fontFamily: 'var(--font-mono)',
-                      color: 'var(--color-accent)',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.1em',
+                      fontSize: '16px',
+                      fontWeight: 600,
+                      color: 'var(--color-text)',
                       marginBottom: '8px',
+                      lineHeight: 1.3,
                     }}
                   >
-                    03 / Tooling
-                  </div>
-                  <h4 style={{ fontSize: '17px', fontWeight: 600, color: 'var(--color-text)', marginBottom: '8px' }}>
-                    Developer Tooling & OS
-                  </h4>
-                  <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
-                    Creating AST code analysis engines, real-time operating system telemetry daemons, and low-friction workflow utilities.
+                    Project-Based Learning
+                  </h3>
+                  <p
+                    style={{
+                      fontSize: '13px',
+                      color: 'var(--color-text-secondary)',
+                      lineHeight: 1.6,
+                      margin: 0,
+                    }}
+                  >
+                    Learning new technologies by building practical projects such as the Flight Delay Prediction System and AI-powered applications.
                   </p>
                 </div>
               </div>
+            </div>
+
+            {/* Clear Collaboration CTA */}
+            <div style={{ paddingTop: '8px' }}>
+              <Link
+                href="/contact"
+                className="btn-primary"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '12px 24px',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                }}
+              >
+                <span>Connect With Me</span>
+                <ArrowRight size={16} />
+              </Link>
             </div>
           </div>
         </div>
       </div>
 
       <style>{`
-        @media (max-width: 840px) {
+        @media (max-width: 880px) {
           .about-grid {
             grid-template-columns: 1fr !important;
-            gap: 40px !important;
+            gap: 36px !important;
+          }
+          .about-grid > div:first-child {
+            position: static !important;
           }
         }
       `}</style>

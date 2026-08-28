@@ -67,6 +67,38 @@ export function invalidateProfileCache(): void {
   }
 }
 
+export function invalidateExperienceCache(): void {
+  for (const key of memoryCache.keys()) {
+    if (key.startsWith('experience') || key.startsWith('admin_experience')) {
+      memoryCache.delete(key)
+    }
+  }
+}
+
+export function invalidateEducationCache(): void {
+  for (const key of memoryCache.keys()) {
+    if (key.startsWith('education') || key.startsWith('admin_education')) {
+      memoryCache.delete(key)
+    }
+  }
+}
+
+export function invalidateAchievementCache(): void {
+  for (const key of memoryCache.keys()) {
+    if (key.startsWith('achievements') || key.startsWith('admin_achievements')) {
+      memoryCache.delete(key)
+    }
+  }
+}
+
+export function invalidateSkillCache(): void {
+  for (const key of memoryCache.keys()) {
+    if (key.startsWith('skills') || key.startsWith('admin_skills')) {
+      memoryCache.delete(key)
+    }
+  }
+}
+
 function getCached<T>(key: string): T | null {
   const entry = memoryCache.get(key)
   if (!entry) return null
@@ -106,23 +138,23 @@ export const FALLBACK_PROFILE: Profile = {
   id: '00000000-0000-0000-0000-000000000001',
   name: 'Babul Kumar',
   display_name: 'BABUL KUMAR',
-  tagline: 'Computer Science · AI / ML · Full Stack',
-  bio: 'B.Tech Computer Science & Engineering student at Lovely Professional University, exploring Artificial Intelligence, Machine Learning and Full-Stack Development.',
+  tagline: 'Computer Science · AI / ML · Software Development',
+  bio: 'I’m a B.Tech CSE student at Lovely Professional University with an interest in AI/ML and software development.',
   bio_extended:
-    'I am deeply interested in building intelligent systems that solve real-world problems — from training ML models to architecting full-stack applications. I thrive at the intersection of research and engineering.',
+    'I have knowledge of Python, Machine Learning, FastAPI, React, and Generative AI, and I enjoy learning new technologies by building projects.\n\nI’ve worked on projects like a Flight Delay Prediction System and AI-powered applications, which have helped me gain practical experience in machine learning and full-stack development.\n\nI’m looking for internships and real-world projects where I can apply what I know, learn from others, and improve my skills.\n\nIf you’re working on AI/ML, GenAI, or software development projects, feel free to connect with me and collaborate.',
   avatar_url: '/images/babul_3d_avatar.jpg',
   resume_url: null,
   location: 'Punjab, India',
   university: 'Lovely Professional University',
   degree: 'B.Tech Computer Science & Engineering',
   graduation_year: 2026,
-  email: 'bk7321634@gmail.com',
+  email: 'babulkumar0220@gmail.com',
   phone: null,
   github_url: 'https://github.com/babul-kumar',
-  linkedin_url: 'https://linkedin.com/in/babul-kumar',
-  kaggle_url: 'https://kaggle.com/babul-kumar',
+  linkedin_url: 'https://www.linkedin.com/in/babul-kumar2007/',
+  kaggle_url: 'https://www.kaggle.com/babulkumar07',
   portfolio_url: null,
-  available_for: 'Internships, Research Collaborations, Open Source',
+  available_for: 'Internships & Software Projects',
   created_at: nowIso,
   updated_at: nowIso,
 }
@@ -809,40 +841,37 @@ export async function getProjects(options?: {
   if (cached) return cached
 
   const fetchPromise = (async () => {
-    const supabase = getPublicSupabase()
-    let query = supabase
-      .from('projects')
-      .select('*, project_images(*)')
-      .eq('published', true)
-      .order('sort_order', { ascending: true })
+    try {
+      const supabase = getPublicSupabase()
+      let query = supabase
+        .from('projects')
+        .select('*, project_images(*)')
+        .eq('published', true)
+        .order('sort_order', { ascending: true })
 
-    if (options?.category && options.category !== 'All') {
-      query = query.eq('category', options.category)
-    }
-    if (options?.featured !== undefined) {
-      query = query.eq('featured', options.featured)
-    }
-    if (options?.limit) {
-      query = query.limit(options.limit)
-    }
+      if (options?.category && options.category !== 'All') {
+        query = query.eq('category', options.category)
+      }
+      if (options?.featured !== undefined) {
+        query = query.eq('featured', options.featured)
+      }
+      if (options?.limit) {
+        query = query.limit(options.limit)
+      }
 
-    const { data, error } = await query
-    if (!error && Array.isArray(data)) return data
-
-    let filtered = FALLBACK_PROJECTS.filter((p) => p.published)
-    if (options?.category && options.category !== 'All') {
-      filtered = filtered.filter((p) => p.category === options.category)
+      const { data, error } = await query
+      if (error) {
+        console.error('getProjects database error:', error.message)
+        return []
+      }
+      return data || []
+    } catch (err: unknown) {
+      console.error('getProjects unexpected error:', err)
+      return []
     }
-    if (options?.featured !== undefined) {
-      filtered = filtered.filter((p) => p.featured === options.featured)
-    }
-    if (options?.limit) {
-      filtered = filtered.slice(0, options.limit)
-    }
-    return filtered
   })()
 
-  const data = await withTimeout(fetchPromise, FALLBACK_PROJECTS)
+  const data = await withTimeout(fetchPromise, [])
   setCache(cacheKey, data)
   return data
 }
@@ -852,17 +881,26 @@ export async function getProjectBySlug(slug: string): Promise<Project | null> {
   if (cached) return cached
 
   const fetchPromise = (async () => {
-    const supabase = getPublicSupabase()
-    const { data } = await supabase
-      .from('projects')
-      .select('*, project_images(*)')
-      .eq('slug', slug)
-      .eq('published', true)
-      .single()
-    return data || FALLBACK_PROJECTS.find((p) => p.slug === slug) || null
+    try {
+      const supabase = getPublicSupabase()
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*, project_images(*)')
+        .eq('slug', slug)
+        .eq('published', true)
+        .maybeSingle()
+      if (error) {
+        console.error(`getProjectBySlug database error for ${slug}:`, error.message)
+        return null
+      }
+      return data || null
+    } catch (err: unknown) {
+      console.error(`getProjectBySlug unexpected error for ${slug}:`, err)
+      return null
+    }
   })()
 
-  const data = await withTimeout(fetchPromise, FALLBACK_PROJECTS.find((p) => p.slug === slug) || null)
+  const data = await withTimeout(fetchPromise, null)
   if (data) setCache(`project_${slug}`, data)
   return data
 }
@@ -884,46 +922,43 @@ export async function getCertificates(options?: {
   if (cached) return cached
 
   const fetchPromise = (async () => {
-    const supabase = getPublicSupabase()
-    let query = supabase
-      .from('certificates')
-      .select('*')
-      .eq('published', true)
-      .order('issue_date', { ascending: false })
+    try {
+      const supabase = getPublicSupabase()
+      let query = supabase
+        .from('certificates')
+        .select('*')
+        .eq('published', true)
+        .order('issue_date', { ascending: false })
 
-    if (options?.category && options.category !== 'All') {
-      query = query.eq('category', options.category)
-    }
-    if (options?.issuer) {
-      query = query.ilike('issuer', `%${options.issuer}%`)
-    }
-    if (options?.search) {
-      query = query.or(`title.ilike.%${options.search}%,issuer.ilike.%${options.search}%`)
-    }
-    if (options?.featured !== undefined) {
-      query = query.eq('featured', options.featured)
-    }
-    if (options?.limit) {
-      query = query.limit(options.limit)
-    }
+      if (options?.category && options.category !== 'All') {
+        query = query.eq('category', options.category)
+      }
+      if (options?.issuer) {
+        query = query.ilike('issuer', `%${options.issuer}%`)
+      }
+      if (options?.search) {
+        query = query.or(`title.ilike.%${options.search}%,issuer.ilike.%${options.search}%`)
+      }
+      if (options?.featured !== undefined) {
+        query = query.eq('featured', options.featured)
+      }
+      if (options?.limit) {
+        query = query.limit(options.limit)
+      }
 
-    const { data, error } = await query
-    if (!error && Array.isArray(data)) return data
-
-    let filtered = FALLBACK_CERTIFICATES.filter((c) => c.published)
-    if (options?.category && options.category !== 'All') {
-      filtered = filtered.filter((c) => c.category === options.category)
+      const { data, error } = await query
+      if (error) {
+        console.error('getCertificates database error:', error.message)
+        return []
+      }
+      return data || []
+    } catch (err: unknown) {
+      console.error('getCertificates unexpected error:', err)
+      return []
     }
-    if (options?.featured !== undefined) {
-      filtered = filtered.filter((c) => c.featured === options.featured)
-    }
-    if (options?.limit) {
-      filtered = filtered.slice(0, options.limit)
-    }
-    return filtered
   })()
 
-  const data = await withTimeout(fetchPromise, FALLBACK_CERTIFICATES)
+  const data = await withTimeout(fetchPromise, [])
   setCache(cacheKey, data)
   return data
 }
@@ -933,17 +968,26 @@ export async function getCertificateBySlug(slug: string): Promise<Certificate | 
   if (cached) return cached
 
   const fetchPromise = (async () => {
-    const supabase = getPublicSupabase()
-    const { data } = await supabase
-      .from('certificates')
-      .select('*')
-      .eq('slug', slug)
-      .eq('published', true)
-      .maybeSingle()
-    return data || FALLBACK_CERTIFICATES.find((c) => c.slug === slug) || null
+    try {
+      const supabase = getPublicSupabase()
+      const { data, error } = await supabase
+        .from('certificates')
+        .select('*')
+        .eq('slug', slug)
+        .eq('published', true)
+        .maybeSingle()
+      if (error) {
+        console.error(`getCertificateBySlug database error for ${slug}:`, error.message)
+        return null
+      }
+      return data || null
+    } catch (err: unknown) {
+      console.error(`getCertificateBySlug unexpected error for ${slug}:`, err)
+      return null
+    }
   })()
 
-  const data = await withTimeout(fetchPromise, FALLBACK_CERTIFICATES.find((c) => c.slug === slug) || null)
+  const data = await withTimeout(fetchPromise, null)
   if (data) setCache(`cert_${slug}`, data)
   return data
 }
@@ -974,48 +1018,45 @@ export async function getTrainings(options?: {
   if (cached) return cached
 
   const fetchPromise = (async () => {
-    const supabase = getPublicSupabase()
-    let query = supabase
-      .from('training')
-      .select('*')
-      .eq('published', true)
-      .order('featured', { ascending: false })
-      .order('display_order', { ascending: true })
-      .order('start_date', { ascending: false })
+    try {
+      const supabase = getPublicSupabase()
+      let query = supabase
+        .from('training')
+        .select('*')
+        .eq('published', true)
+        .order('featured', { ascending: false })
+        .order('display_order', { ascending: true })
+        .order('start_date', { ascending: false })
 
-    if (options?.category && options.category !== 'All') {
-      query = query.eq('category', options.category)
-    }
-    if (options?.provider) {
-      query = query.or(`provider.ilike.%${options.provider}%,organization.ilike.%${options.provider}%`)
-    }
-    if (options?.search) {
-      query = query.or(`title.ilike.%${options.search}%,provider.ilike.%${options.search}%,organization.ilike.%${options.search}%`)
-    }
-    if (options?.featured !== undefined) {
-      query = query.eq('featured', options.featured)
-    }
-    if (options?.limit) {
-      query = query.limit(options.limit)
-    }
+      if (options?.category && options.category !== 'All') {
+        query = query.eq('category', options.category)
+      }
+      if (options?.provider) {
+        query = query.or(`provider.ilike.%${options.provider}%,organization.ilike.%${options.provider}%`)
+      }
+      if (options?.search) {
+        query = query.or(`title.ilike.%${options.search}%,provider.ilike.%${options.search}%,organization.ilike.%${options.search}%`)
+      }
+      if (options?.featured !== undefined) {
+        query = query.eq('featured', options.featured)
+      }
+      if (options?.limit) {
+        query = query.limit(options.limit)
+      }
 
-    const { data, error } = await query
-    if (!error && Array.isArray(data)) return data
-
-    let filtered = FALLBACK_TRAININGS.filter((t) => t.published)
-    if (options?.category && options.category !== 'All') {
-      filtered = filtered.filter((t) => t.category === options.category)
+      const { data, error } = await query
+      if (error) {
+        console.error('getTrainings database error:', error.message)
+        return []
+      }
+      return data || []
+    } catch (err: unknown) {
+      console.error('getTrainings unexpected error:', err)
+      return []
     }
-    if (options?.featured !== undefined) {
-      filtered = filtered.filter((t) => t.featured === options.featured)
-    }
-    if (options?.limit) {
-      filtered = filtered.slice(0, options.limit)
-    }
-    return filtered
   })()
 
-  const data = await withTimeout(fetchPromise, FALLBACK_TRAININGS)
+  const data = await withTimeout(fetchPromise, [])
   setCache(cacheKey, data)
   return data
 }
@@ -1029,18 +1070,26 @@ export async function getTrainingBySlug(slug: string): Promise<Training | null> 
   if (cached) return cached
 
   const fetchPromise = (async () => {
-    const supabase = getPublicSupabase()
-    const { data, error } = await supabase
-      .from('training')
-      .select('*')
-      .eq('slug', slug)
-      .eq('published', true)
-      .maybeSingle()
-    if (!error && data) return data
-    return data || FALLBACK_TRAININGS.find((t) => t.slug === slug) || null
+    try {
+      const supabase = getPublicSupabase()
+      const { data, error } = await supabase
+        .from('training')
+        .select('*')
+        .eq('slug', slug)
+        .eq('published', true)
+        .maybeSingle()
+      if (error) {
+        console.error(`getTrainingBySlug database error for ${slug}:`, error.message)
+        return null
+      }
+      return data || null
+    } catch (err: unknown) {
+      console.error(`getTrainingBySlug unexpected error for ${slug}:`, err)
+      return null
+    }
   })()
 
-  const data = await withTimeout(fetchPromise, FALLBACK_TRAININGS.find((t) => t.slug === slug) || null)
+  const data = await withTimeout(fetchPromise, null)
   if (data) setCache(`training_slug_${slug}`, data)
   return data
 }
@@ -1050,17 +1099,25 @@ export async function getTrainingById(id: string): Promise<Training | null> {
   if (cached) return cached
 
   const fetchPromise = (async () => {
-    const supabase = getPublicSupabase()
-    const { data, error } = await supabase
-      .from('training')
-      .select('*')
-      .eq('id', id)
-      .maybeSingle()
-    if (!error && data) return data
-    return data || FALLBACK_TRAININGS.find((t) => t.id === id) || null
+    try {
+      const supabase = getPublicSupabase()
+      const { data, error } = await supabase
+        .from('training')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle()
+      if (error) {
+        console.error(`getTrainingById database error for ${id}:`, error.message)
+        return null
+      }
+      return data || null
+    } catch (err: unknown) {
+      console.error(`getTrainingById unexpected error for ${id}:`, err)
+      return null
+    }
   })()
 
-  const data = await withTimeout(fetchPromise, FALLBACK_TRAININGS.find((t) => t.id === id) || null)
+  const data = await withTimeout(fetchPromise, null)
   if (data) setCache(`training_id_${id}`, data)
   return data
 }
@@ -1091,58 +1148,41 @@ export async function getCoCurricularActivities(options?: {
   if (cached) return cached
 
   const fetchPromise = (async () => {
-    const supabase = getPublicSupabase()
-    let query = supabase
-      .from('co_curricular_activities')
-      .select('*')
-      .eq('published', true)
-      .order('display_order', { ascending: true })
-      .order('date', { ascending: false })
+    try {
+      const supabase = getPublicSupabase()
+      let query = supabase
+        .from('co_curricular_activities')
+        .select('*')
+        .eq('published', true)
+        .order('display_order', { ascending: true })
+        .order('date', { ascending: false })
 
-    if (options?.category && options.category !== 'All') {
-      query = query.eq('category', options.category)
-    }
-    if (options?.mode && options.mode !== 'All') {
-      query = query.eq('mode', options.mode)
-    }
-    if (options?.featured !== undefined) {
-      query = query.eq('featured', options.featured)
-    }
-    if (options?.limit) {
-      query = query.limit(options.limit)
-    }
+      if (options?.category && options.category !== 'All') {
+        query = query.eq('category', options.category)
+      }
+      if (options?.mode && options.mode !== 'All') {
+        query = query.eq('mode', options.mode)
+      }
+      if (options?.featured !== undefined) {
+        query = query.eq('featured', options.featured)
+      }
+      if (options?.limit) {
+        query = query.limit(options.limit)
+      }
 
-    const { data, error } = await query
-    if (!error && Array.isArray(data)) return data
-
-    let filtered = FALLBACK_CO_CURRICULAR.filter((a) => a.published)
-    if (options?.category && options.category !== 'All') {
-      filtered = filtered.filter((a) => a.category?.toLowerCase() === options.category?.toLowerCase())
+      const { data, error } = await query
+      if (error) {
+        console.error('getCoCurricularActivities database error:', error.message)
+        return []
+      }
+      return data || []
+    } catch (err: unknown) {
+      console.error('getCoCurricularActivities unexpected error:', err)
+      return []
     }
-    if (options?.mode && options.mode !== 'All') {
-      filtered = filtered.filter((a) => a.mode?.toLowerCase() === options.mode?.toLowerCase())
-    }
-    if (options?.featured !== undefined) {
-      filtered = filtered.filter((a) => a.featured === options.featured)
-    }
-    if (options?.search) {
-      const q = options.search.toLowerCase().trim()
-      filtered = filtered.filter(
-        (a) =>
-          a.title.toLowerCase().includes(q) ||
-          (a.organization && a.organization.toLowerCase().includes(q)) ||
-          (a.role && a.role.toLowerCase().includes(q)) ||
-          (a.achievement && a.achievement.toLowerCase().includes(q)) ||
-          (a.skills && a.skills.some((s) => s.toLowerCase().includes(q)))
-      )
-    }
-    if (options?.limit) {
-      filtered = filtered.slice(0, options.limit)
-    }
-    return filtered
   })()
 
-  const data = await withTimeout(fetchPromise, FALLBACK_CO_CURRICULAR)
+  const data = await withTimeout(fetchPromise, [])
   setCache(cacheKey, data)
   return data
 }
@@ -1163,17 +1203,26 @@ export async function getCoCurricularActivityBySlug(slug: string): Promise<CoCur
   if (cached) return cached
 
   const fetchPromise = (async () => {
-    const supabase = getPublicSupabase()
-    const { data } = await supabase
-      .from('co_curricular_activities')
-      .select('*')
-      .eq('slug', slug)
-      .eq('published', true)
-      .maybeSingle()
-    return data || FALLBACK_CO_CURRICULAR.find((a) => a.slug === slug) || null
+    try {
+      const supabase = getPublicSupabase()
+      const { data, error } = await supabase
+        .from('co_curricular_activities')
+        .select('*')
+        .eq('slug', slug)
+        .eq('published', true)
+        .maybeSingle()
+      if (error) {
+        console.error(`getCoCurricularActivityBySlug database error for ${slug}:`, error.message)
+        return null
+      }
+      return data || null
+    } catch (err: unknown) {
+      console.error(`getCoCurricularActivityBySlug unexpected error for ${slug}:`, err)
+      return null
+    }
   })()
 
-  const data = await withTimeout(fetchPromise, FALLBACK_CO_CURRICULAR.find((a) => a.slug === slug) || null)
+  const data = await withTimeout(fetchPromise, null)
   if (data) setCache(`co_curr_slug_${slug}`, data)
   return data
 }
@@ -1183,16 +1232,25 @@ export async function getCoCurricularActivityById(id: string): Promise<CoCurricu
   if (cached) return cached
 
   const fetchPromise = (async () => {
-    const supabase = getPublicSupabase()
-    const { data } = await supabase
-      .from('co_curricular_activities')
-      .select('*')
-      .eq('id', id)
-      .maybeSingle()
-    return data || FALLBACK_CO_CURRICULAR.find((a) => a.id === id) || null
+    try {
+      const supabase = getPublicSupabase()
+      const { data, error } = await supabase
+        .from('co_curricular_activities')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle()
+      if (error) {
+        console.error(`getCoCurricularActivityById database error for ${id}:`, error.message)
+        return null
+      }
+      return data || null
+    } catch (err: unknown) {
+      console.error(`getCoCurricularActivityById unexpected error for ${id}:`, err)
+      return null
+    }
   })()
 
-  const data = await withTimeout(fetchPromise, FALLBACK_CO_CURRICULAR.find((a) => a.id === id) || null)
+  const data = await withTimeout(fetchPromise, null)
   if (data) setCache(`co_curr_id_${id}`, data)
   return data
 }
@@ -1212,29 +1270,37 @@ export async function getAchievements(options?: {
   if (cached) return cached
 
   const fetchPromise = (async () => {
-    const supabase = getPublicSupabase()
-    let query = supabase
-      .from('achievements')
-      .select('*')
-      .eq('published', true)
-      .order('date', { ascending: false })
+    try {
+      const supabase = getPublicSupabase()
+      let query = supabase
+        .from('achievements')
+        .select('*')
+        .eq('published', true)
+        .order('date', { ascending: false })
 
-    if (options?.category && options.category !== 'All') {
-      query = query.eq('category', options.category)
-    }
-    if (options?.featured !== undefined) {
-      query = query.eq('featured', options.featured)
-    }
-    if (options?.limit) {
-      query = query.limit(options.limit)
-    }
+      if (options?.category && options.category !== 'All') {
+        query = query.eq('category', options.category)
+      }
+      if (options?.featured !== undefined) {
+        query = query.eq('featured', options.featured)
+      }
+      if (options?.limit) {
+        query = query.limit(options.limit)
+      }
 
-    const { data, error } = await query
-    if (!error && Array.isArray(data) && data.length > 0) return data
-    return FALLBACK_ACHIEVEMENTS
+      const { data, error } = await query
+      if (error) {
+        console.error('getAchievements database error:', error.message)
+        return []
+      }
+      return data || []
+    } catch (err: unknown) {
+      console.error('getAchievements unexpected error:', err)
+      return []
+    }
   })()
 
-  const data = await withTimeout(fetchPromise, FALLBACK_ACHIEVEMENTS)
+  const data = await withTimeout(fetchPromise, [])
   setCache(cacheKey, data)
   return data
 }
@@ -1249,17 +1315,25 @@ export async function getEducation(): Promise<Education[]> {
   if (cached) return cached
 
   const fetchPromise = (async () => {
-    const supabase = getPublicSupabase()
-    const { data, error } = await supabase
-      .from('education')
-      .select('*')
-      .eq('published', true)
-      .order('sort_order', { ascending: true })
-    if (!error && Array.isArray(data)) return data
-    return FALLBACK_EDUCATION
+    try {
+      const supabase = getPublicSupabase()
+      const { data, error } = await supabase
+        .from('education')
+        .select('*')
+        .eq('published', true)
+        .order('sort_order', { ascending: true })
+      if (error) {
+        console.error('getEducation database error:', error.message)
+        return []
+      }
+      return data || []
+    } catch (err: unknown) {
+      console.error('getEducation unexpected error:', err)
+      return []
+    }
   })()
 
-  const data = await withTimeout(fetchPromise, FALLBACK_EDUCATION)
+  const data = await withTimeout(fetchPromise, [])
   setCache('education', data)
   return data
 }
@@ -1269,17 +1343,25 @@ export async function getExperience(): Promise<Experience[]> {
   if (cached) return cached
 
   const fetchPromise = (async () => {
-    const supabase = getPublicSupabase()
-    const { data, error } = await supabase
-      .from('experience')
-      .select('*')
-      .eq('published', true)
-      .order('sort_order', { ascending: true })
-    if (!error && Array.isArray(data) && data.length > 0) return data
-    return FALLBACK_EXPERIENCE
+    try {
+      const supabase = getPublicSupabase()
+      const { data, error } = await supabase
+        .from('experience')
+        .select('*')
+        .eq('published', true)
+        .order('sort_order', { ascending: true })
+      if (error) {
+        console.error('getExperience database error:', error.message)
+        return []
+      }
+      return data || []
+    } catch (err: unknown) {
+      console.error('getExperience unexpected error:', err)
+      return []
+    }
   })()
 
-  const data = await withTimeout(fetchPromise, FALLBACK_EXPERIENCE)
+  const data = await withTimeout(fetchPromise, [])
   setCache('experience', data)
   return data
 }
@@ -1290,24 +1372,32 @@ export async function getSkills(options?: { featured?: boolean }): Promise<Skill
   if (cached) return cached
 
   const fetchPromise = (async () => {
-    const supabase = getPublicSupabase()
-    let query = supabase
-      .from('skills')
-      .select('*')
-      .eq('published', true)
-      .order('category', { ascending: true })
-      .order('sort_order', { ascending: true })
+    try {
+      const supabase = getPublicSupabase()
+      let query = supabase
+        .from('skills')
+        .select('*')
+        .eq('published', true)
+        .order('category', { ascending: true })
+        .order('sort_order', { ascending: true })
 
-    if (options?.featured !== undefined) {
-      query = query.eq('featured', options.featured)
+      if (options?.featured !== undefined) {
+        query = query.eq('featured', options.featured)
+      }
+
+      const { data, error } = await query
+      if (error) {
+        console.error('getSkills database error:', error.message)
+        return []
+      }
+      return data || []
+    } catch (err: unknown) {
+      console.error('getSkills unexpected error:', err)
+      return []
     }
-
-    const { data, error } = await query
-    if (!error && Array.isArray(data)) return data
-    return FALLBACK_SKILLS
   })()
 
-  const data = await withTimeout(fetchPromise, FALLBACK_SKILLS)
+  const data = await withTimeout(fetchPromise, [])
   setCache(cacheKey, data)
   return data
 }
@@ -1321,48 +1411,53 @@ export async function getPortfolioStats(): Promise<PortfolioStats> {
   const cached = getCached<PortfolioStats>('portfolio_stats')
   if (cached) return cached
 
-  const fallbackStats: PortfolioStats = {
-    projects: FALLBACK_PROJECTS.length,
-    certificates: FALLBACK_CERTIFICATES.length,
-    achievements: FALLBACK_ACHIEVEMENTS.length,
-    hackathons: FALLBACK_ACHIEVEMENTS.filter((a) => a.category === 'Hackathon').length,
-    trainings: FALLBACK_TRAININGS.length,
-    coCurricular: FALLBACK_CO_CURRICULAR.length,
+  const emptyStats: PortfolioStats = {
+    projects: 0,
+    certificates: 0,
+    achievements: 0,
+    hackathons: 0,
+    trainings: 0,
+    coCurricular: 0,
   }
 
   const fetchPromise = (async () => {
-    const supabase = getPublicSupabase()
-    const [
-      { count: projects },
-      { count: certificates },
-      { count: achievements },
-      { count: hackathons },
-      { count: trainings },
-      { count: coCurricular },
-    ] = await Promise.all([
-      supabase.from('projects').select('*', { count: 'exact', head: true }).eq('published', true),
-      supabase.from('certificates').select('*', { count: 'exact', head: true }).eq('published', true),
-      supabase.from('achievements').select('*', { count: 'exact', head: true }).eq('published', true),
-      supabase
-        .from('achievements')
-        .select('*', { count: 'exact', head: true })
-        .eq('published', true)
-        .eq('category', 'Hackathon'),
-      supabase.from('training').select('*', { count: 'exact', head: true }).eq('published', true),
-      supabase.from('co_curricular_activities').select('*', { count: 'exact', head: true }).eq('published', true),
-    ])
+    try {
+      const supabase = getPublicSupabase()
+      const [
+        { count: projects },
+        { count: certificates },
+        { count: achievements },
+        { count: hackathons },
+        { count: trainings },
+        { count: coCurricular },
+      ] = await Promise.all([
+        supabase.from('projects').select('*', { count: 'exact', head: true }).eq('published', true),
+        supabase.from('certificates').select('*', { count: 'exact', head: true }).eq('published', true),
+        supabase.from('achievements').select('*', { count: 'exact', head: true }).eq('published', true),
+        supabase
+          .from('achievements')
+          .select('*', { count: 'exact', head: true })
+          .eq('published', true)
+          .eq('category', 'Hackathon'),
+        supabase.from('training').select('*', { count: 'exact', head: true }).eq('published', true),
+        supabase.from('co_curricular_activities').select('*', { count: 'exact', head: true }).eq('published', true),
+      ])
 
-    return {
-      projects: projects ?? fallbackStats.projects,
-      certificates: certificates ?? fallbackStats.certificates,
-      achievements: achievements ?? fallbackStats.achievements,
-      hackathons: hackathons ?? fallbackStats.hackathons,
-      trainings: trainings ?? fallbackStats.trainings,
-      coCurricular: coCurricular ?? fallbackStats.coCurricular,
+      return {
+        projects: projects ?? 0,
+        certificates: certificates ?? 0,
+        achievements: achievements ?? 0,
+        hackathons: hackathons ?? 0,
+        trainings: trainings ?? 0,
+        coCurricular: coCurricular ?? 0,
+      }
+    } catch (err: unknown) {
+      console.error('getPortfolioStats unexpected error:', err)
+      return emptyStats
     }
   })()
 
-  const data = await withTimeout(fetchPromise, fallbackStats)
+  const data = await withTimeout(fetchPromise, emptyStats)
   setCache('portfolio_stats', data)
   return data
 }

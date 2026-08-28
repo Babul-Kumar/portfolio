@@ -8,7 +8,6 @@ import { experienceSchema, type ExperienceFormValues } from '@/lib/validations'
 import { parseCSV, joinCSV, formatDate, sanitizeDateForDb } from '@/lib/utils'
 import { Plus, Trash2, Pencil, Briefcase, Eye, EyeOff, ExternalLink } from 'lucide-react'
 import type { Experience } from '@/types'
-import { FALLBACK_EXPERIENCE } from '@/lib/data'
 import { toast, Toaster } from 'sonner'
 import StatusBadge from '@/components/admin/StatusBadge'
 import ConfirmDialog from '@/components/admin/ConfirmDialog'
@@ -108,6 +107,11 @@ function ExperienceForm({
       }
 
       toast.success(isEdit ? 'Experience updated' : 'Experience added')
+      fetch('/api/admin/revalidate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'experience' }),
+      }).catch(() => {})
       setSaving(false)
       onSave()
     } catch (err: unknown) {
@@ -256,8 +260,8 @@ function ExperienceForm({
 }
 
 export default function AdminExperiencePage() {
-  const [items, setItems] = useState<Experience[]>(FALLBACK_EXPERIENCE)
-  const [loading, setLoading] = useState(false)
+  const [items, setItems] = useState<Experience[]>([])
+  const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<Experience | undefined>()
   const [deleteTarget, setDeleteTarget] = useState<Experience | null>(null)
@@ -269,11 +273,11 @@ export default function AdminExperiencePage() {
       if (!error && Array.isArray(data)) {
         setItems(data)
       } else {
-        setItems(FALLBACK_EXPERIENCE)
+        setItems([])
       }
       setLoading(false)
     } catch {
-      setItems(FALLBACK_EXPERIENCE)
+      setItems([])
       setLoading(false)
     }
   }
@@ -288,13 +292,13 @@ export default function AdminExperiencePage() {
           if (!error && Array.isArray(data)) {
             setItems(data)
           } else {
-            setItems(FALLBACK_EXPERIENCE)
+            setItems([])
           }
           setLoading(false)
         }
       } catch {
         if (active) {
-          setItems(FALLBACK_EXPERIENCE)
+          setItems([])
           setLoading(false)
         }
       }
@@ -320,8 +324,13 @@ export default function AdminExperiencePage() {
       } else {
         await supabase.from('experience').delete().eq('company', deleteTarget.company)
       }
+      fetch('/api/admin/revalidate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'experience' }),
+      }).catch(() => {})
     } catch {
-      // Ignored for non-uuid fallback item
+      // Ignore
     }
 
     toast.success('Experience entry deleted')
@@ -340,6 +349,11 @@ export default function AdminExperiencePage() {
           toast.error('Update failed')
         } else {
           toast.success(current ? 'Unpublished' : 'Published')
+          fetch('/api/admin/revalidate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'experience' }),
+          }).catch(() => {})
         }
       } else {
         toast.success(current ? 'Unpublished' : 'Published')

@@ -84,10 +84,9 @@ export default function EducationExperienceSection({
                 maxWidth: '620px',
               }}
             >
-              I am a Computer Science & Engineering undergraduate at{' '}
-              <strong style={{ color: 'var(--color-text)', fontWeight: 600 }}>Lovely Professional University</strong>,
-              focused on engineering intelligent systems where artificial intelligence, machine learning algorithms,
-              and high-performance full-stack architectures converge.
+              I’m a B.Tech CSE student at{' '}
+              <strong style={{ color: 'var(--color-text)', fontWeight: 600 }}>Lovely Professional University</strong> with
+              an interest in AI/ML and software development.
             </p>
 
             {/* Secondary Supporting Paragraph */}
@@ -100,9 +99,8 @@ export default function EducationExperienceSection({
                 maxWidth: '620px',
               }}
             >
-              From designing AST-aware AI developer tooling (like <em>BotBro</em>) and predictive gradient-boosted models
-              to building type-safe cloud systems, I care deeply about writing software that is mathematically sound,
-              architecturally clean, and intuitively usable.
+              I have knowledge of Python, Machine Learning, FastAPI, React, and Generative AI, and I enjoy learning new
+              technologies by building practical projects like a Flight Delay Prediction System and AI-powered applications.
             </p>
 
             {/* Current Research Focus Card */}
@@ -150,7 +148,7 @@ export default function EducationExperienceSection({
                     marginBottom: '3px',
                   }}
                 >
-                  Current Research Focus
+                  Current Learning & Project Focus
                 </div>
                 <div
                   style={{
@@ -160,7 +158,7 @@ export default function EducationExperienceSection({
                     lineHeight: 1.35,
                   }}
                 >
-                  Multi-Agent Model Context Protocol (MCP) & AST Code Generation
+                  Machine Learning, FastAPI Backends & AI-Powered Web Applications
                 </div>
               </div>
             </div>
@@ -268,7 +266,7 @@ export default function EducationExperienceSection({
                       fontWeight: 700,
                     }}
                   >
-                    01 / Intelligence
+                    01 / AI & Machine Learning
                   </div>
                   <h4
                     style={{
@@ -278,7 +276,7 @@ export default function EducationExperienceSection({
                       margin: '1px 0 0',
                     }}
                   >
-                    AI & Machine Learning Engineering
+                    AI & Machine Learning
                   </h4>
                 </div>
               </div>
@@ -291,11 +289,11 @@ export default function EducationExperienceSection({
                   paddingLeft: '38px',
                 }}
               >
-                Predictive tabular modeling (XGBoost, Random Forests), NLP tokenization, frequency-domain computer vision forensics, and neural network fine-tuning with PyTorch.
+                AI / ML, Generative AI, predictive modeling, and practical machine learning projects.
               </p>
             </div>
 
-            {/* Card 02: Architecture */}
+            {/* Card 02: Full-Stack Development */}
             <div
               className="glass-card capability-card"
               style={{
@@ -332,7 +330,7 @@ export default function EducationExperienceSection({
                       fontWeight: 700,
                     }}
                   >
-                    02 / Architecture
+                    02 / Full-Stack Development
                   </div>
                   <h4
                     style={{
@@ -342,7 +340,7 @@ export default function EducationExperienceSection({
                       margin: '1px 0 0',
                     }}
                   >
-                    Full-Stack & Distributed Systems
+                    Full-Stack Development
                   </h4>
                 </div>
               </div>
@@ -355,11 +353,11 @@ export default function EducationExperienceSection({
                   paddingLeft: '38px',
                 }}
               >
-                Next.js App Router, TypeScript microservices, FastAPI REST APIs, relational PostgreSQL schemas with Supabase, and WebGL interactive interfaces.
+                Python, FastAPI, React, Next.js, APIs, and building complete web applications.
               </p>
             </div>
 
-            {/* Card 03: Tooling & Agents */}
+            {/* Card 03: Project-Based Learning */}
             <div
               className="glass-card capability-card"
               style={{
@@ -396,7 +394,7 @@ export default function EducationExperienceSection({
                       fontWeight: 700,
                     }}
                   >
-                    03 / Tooling & Agents
+                    03 / Project-Based Learning
                   </div>
                   <h4
                     style={{
@@ -406,7 +404,7 @@ export default function EducationExperienceSection({
                       margin: '1px 0 0',
                     }}
                   >
-                    AST-Aware Developer Tooling & MCP
+                    Project-Based Learning
                   </h4>
                 </div>
               </div>
@@ -419,7 +417,7 @@ export default function EducationExperienceSection({
                   paddingLeft: '38px',
                 }}
               >
-                Autonomous coding agents, AST semantic code mutation, Model Context Protocol (MCP) server implementations, and intelligent developer workflows.
+                Learning new technologies by building practical projects such as the Flight Delay Prediction System and AI-powered applications.
               </p>
             </div>
           </div>
@@ -432,27 +430,28 @@ export default function EducationExperienceSection({
           style={{
             marginTop: '56px',
             display: 'grid',
-            gridTemplateColumns: experience.length > 0 ? '1fr 1fr' : '1fr',
+            gridTemplateColumns: '1fr 1fr',
             gap: '28px',
           }}
           className="timeline-grid"
         >
           {/* Academic Foundation Compact Container */}
-          {sortedEducation.length > 0 && (
-            <div
-              className="glass-card"
-              style={{
-                padding: 'clamp(24px, 3vw, 32px)',
-                border: '1px solid var(--color-border)',
-                borderRadius: 'var(--radius-lg)',
-                boxShadow: 'var(--shadow-card)',
-                position: 'relative',
-                overflow: 'hidden',
-              }}
-            >
-              <AmbientSectionEnvironment variant="education" intensity={0.35} accentMode="orange" />
-              <div style={{ position: 'relative', zIndex: 1 }}>
-                {/* Header */}
+          <div
+            className="glass-card"
+            style={{
+              padding: 'clamp(24px, 3vw, 32px)',
+              border: '1px solid var(--color-border)',
+              borderRadius: 'var(--radius-lg)',
+              boxShadow: 'var(--shadow-card)',
+              position: 'relative',
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
+            <AmbientSectionEnvironment variant="education" intensity={0.35} accentMode="orange" />
+            <div style={{ position: 'relative', zIndex: 1, flex: 1, display: 'flex', flexDirection: 'column' }}>
+              {/* Header */}
               <div
                 style={{
                   display: 'flex',
@@ -474,134 +473,153 @@ export default function EducationExperienceSection({
               </div>
 
               {/* Compact Timeline Rows */}
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                {sortedEducation.map((edu, idx) => {
-                  const isLast = idx === sortedEducation.length - 1
-                  const startYr = edu.start_date ? formatDate(edu.start_date, 'yyyy') : ''
-                  const endYr = edu.is_current ? 'Present' : (edu.end_date ? formatDate(edu.end_date, 'yyyy') : '')
-                  const yearDisplay = startYr ? `${startYr} — ${endYr}` : endYr
+              {sortedEducation.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  {sortedEducation.map((edu, idx) => {
+                    const isLast = idx === sortedEducation.length - 1
+                    const startYr = edu.start_date ? formatDate(edu.start_date, 'yyyy') : ''
+                    const endYr = edu.is_current ? 'Present' : (edu.end_date ? formatDate(edu.end_date, 'yyyy') : '')
+                    const yearDisplay = startYr ? `${startYr} — ${endYr}` : endYr
 
-                  return (
-                    <div
-                      key={edu.id}
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns: '1fr auto',
-                        gap: '16px',
-                        alignItems: 'start',
-                        padding: '16px 0',
-                        borderBottom: isLast ? 'none' : '1px solid var(--color-border-subtle)',
-                      }}
-                      className="education-row"
-                    >
-                      {/* Left: Degree, Institution, Specialization & Grade */}
-                      <div>
-                        <h4
-                          style={{
-                            fontSize: '15px',
-                            fontWeight: 600,
-                            color: 'var(--color-text)',
-                            margin: '0 0 3px',
-                            lineHeight: 1.3,
-                          }}
-                        >
-                          {edu.degree}
-                        </h4>
+                    return (
+                      <div
+                        key={edu.id}
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: '1fr auto',
+                          gap: '16px',
+                          alignItems: 'start',
+                          padding: '16px 0',
+                          borderBottom: isLast ? 'none' : '1px solid var(--color-border-subtle)',
+                        }}
+                        className="education-row"
+                      >
+                        {/* Left: Degree, Institution, Specialization & Grade */}
+                        <div>
+                          <h4
+                            style={{
+                              fontSize: '15px',
+                              fontWeight: 600,
+                              color: 'var(--color-text)',
+                              margin: '0 0 3px',
+                              lineHeight: 1.3,
+                            }}
+                          >
+                            {edu.degree}
+                          </h4>
 
-                        <div
-                          style={{
-                            fontSize: '13px',
-                            color: 'var(--color-text-secondary)',
-                            fontWeight: 500,
-                            marginBottom: '4px',
-                          }}
-                        >
-                          {edu.institution}
+                          <div
+                            style={{
+                              fontSize: '13px',
+                              color: 'var(--color-text-secondary)',
+                              fontWeight: 500,
+                              marginBottom: '4px',
+                            }}
+                          >
+                            {edu.institution}
+                          </div>
+
+                          <div
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '14px',
+                              flexWrap: 'wrap',
+                              fontSize: '12px',
+                            }}
+                          >
+                            {edu.field && (
+                              <span style={{ color: 'var(--color-text-muted)' }}>
+                                Specialization:{' '}
+                                <span style={{ color: 'var(--color-text-secondary)' }}>{edu.field}</span>
+                              </span>
+                            )}
+
+                            {edu.grade && (
+                              <span
+                                style={{
+                                  color: 'var(--color-accent)',
+                                  fontFamily: 'var(--font-mono)',
+                                  fontWeight: 600,
+                                }}
+                              >
+                                Honors / Grade: {edu.grade}
+                              </span>
+                            )}
+                          </div>
                         </div>
 
-                        <div
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '14px',
-                            flexWrap: 'wrap',
-                            fontSize: '12px',
-                          }}
-                        >
-                          {edu.field && (
-                            <span style={{ color: 'var(--color-text-muted)' }}>
-                              Specialization:{' '}
-                              <span style={{ color: 'var(--color-text-secondary)' }}>{edu.field}</span>
-                            </span>
-                          )}
-
-                          {edu.grade && (
-                            <span
-                              style={{
-                                color: 'var(--color-accent)',
-                                fontFamily: 'var(--font-mono)',
-                                fontWeight: 600,
-                              }}
-                            >
-                              Honors / Grade: {edu.grade}
-                            </span>
-                          )}
-                        </div>
+                        {/* Right: Year Range */}
+                        {yearDisplay && (
+                          <div
+                            style={{
+                              fontSize: '12px',
+                              fontFamily: 'var(--font-mono)',
+                              color: 'var(--color-text-muted)',
+                              whiteSpace: 'nowrap',
+                              paddingTop: '2px',
+                            }}
+                          >
+                            {yearDisplay}
+                          </div>
+                        )}
                       </div>
-
-                      {/* Right: Year Range */}
-                      {yearDisplay && (
-                        <div
-                          style={{
-                            fontSize: '12px',
-                            fontFamily: 'var(--font-mono)',
-                            color: 'var(--color-text-muted)',
-                            whiteSpace: 'nowrap',
-                            paddingTop: '2px',
-                          }}
-                        >
-                          {yearDisplay}
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-              </div>
+                    )
+                  })}
+                </div>
+              ) : (
+                <div
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '48px 16px',
+                    textAlign: 'center',
+                    color: 'var(--color-text-muted)',
+                    fontSize: '13px',
+                    fontFamily: 'var(--font-mono)',
+                  }}
+                >
+                  No education records added yet.
+                </div>
+              )}
             </div>
-          )}
+          </div>
 
-          {/* Engineering Experience (when present) */}
-          {experience.length > 0 && (
+          {/* Engineering Experience Container */}
+          <div
+            className="glass-card"
+            style={{
+              padding: 'clamp(24px, 3vw, 32px)',
+              border: '1px solid var(--color-border)',
+              borderRadius: 'var(--radius-lg)',
+              boxShadow: 'var(--shadow-card)',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
             <div
-              className="glass-card"
               style={{
-                padding: 'clamp(24px, 3vw, 32px)',
-                border: '1px solid var(--color-border)',
-                borderRadius: 'var(--radius-lg)',
-                boxShadow: 'var(--shadow-card)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '11px',
+                fontFamily: 'var(--font-mono)',
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                color: 'var(--color-accent-teal)',
+                marginBottom: '18px',
+                borderBottom: '1px solid var(--color-border)',
+                paddingBottom: '12px',
+                fontWeight: 700,
               }}
             >
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  fontSize: '11px',
-                  fontFamily: 'var(--font-mono)',
-                  letterSpacing: '0.12em',
-                  textTransform: 'uppercase',
-                  color: 'var(--color-accent-teal)',
-                  marginBottom: '18px',
-                  borderBottom: '1px solid var(--color-border)',
-                  paddingBottom: '12px',
-                  fontWeight: 700,
-                }}
-              >
-                <Briefcase size={16} />
-                <span>Engineering & Research Experience</span>
-              </div>
+              <Briefcase size={16} />
+              <span>Work Experience</span>
+            </div>
 
+            {experience.length > 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 {experience.map((exp, idx) => {
                   const isLast = idx === experience.length - 1
@@ -671,8 +689,42 @@ export default function EducationExperienceSection({
                   )
                 })}
               </div>
-            </div>
-          )}
+            ) : (
+              <div
+                style={{
+                  flex: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '48px 16px',
+                  textAlign: 'center',
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: '13px',
+                    color: 'var(--color-text-muted)',
+                    fontFamily: 'var(--font-mono)',
+                    marginBottom: '8px',
+                  }}
+                >
+                  No experience records added yet.
+                </div>
+                <p
+                  style={{
+                    fontSize: '12px',
+                    color: 'var(--color-text-muted)',
+                    maxWidth: '300px',
+                    margin: 0,
+                    lineHeight: 1.5,
+                  }}
+                >
+                  Focusing on AI/ML research and building full-stack applications. Available for internships and engineering roles.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

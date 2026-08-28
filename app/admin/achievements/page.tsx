@@ -8,7 +8,6 @@ import { achievementSchema, type AchievementFormValues } from '@/lib/validations
 import { slugify, formatDate, sanitizeDateForDb } from '@/lib/utils'
 import { Plus, Pencil, Trash2, Eye, EyeOff, Award, ExternalLink } from 'lucide-react'
 import type { Achievement } from '@/types'
-import { FALLBACK_ACHIEVEMENTS } from '@/lib/data'
 import { toast, Toaster } from 'sonner'
 import StatusBadge from '@/components/admin/StatusBadge'
 import ConfirmDialog from '@/components/admin/ConfirmDialog'
@@ -118,6 +117,11 @@ function AchievementForm({
       }
 
       toast.success(isEdit ? 'Achievement updated' : 'Achievement created')
+      fetch('/api/admin/revalidate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'achievements' }),
+      }).catch(() => {})
       setSaving(false)
       onSave()
     } catch (err: unknown) {
@@ -281,8 +285,8 @@ function AchievementForm({
 }
 
 export default function AdminAchievementsPage() {
-  const [achievements, setAchievements] = useState<Achievement[]>(FALLBACK_ACHIEVEMENTS)
-  const [loading, setLoading] = useState(false)
+  const [achievements, setAchievements] = useState<Achievement[]>([])
+  const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<Achievement | undefined>()
   const [deleteTarget, setDeleteTarget] = useState<Achievement | null>(null)
@@ -297,11 +301,11 @@ export default function AdminAchievementsPage() {
       if (!error && Array.isArray(data)) {
         setAchievements(data)
       } else {
-        setAchievements(FALLBACK_ACHIEVEMENTS)
+        setAchievements([])
       }
       setLoading(false)
     } catch {
-      setAchievements(FALLBACK_ACHIEVEMENTS)
+      setAchievements([])
       setLoading(false)
     }
   }
@@ -319,13 +323,13 @@ export default function AdminAchievementsPage() {
           if (!error && Array.isArray(data)) {
             setAchievements(data)
           } else {
-            setAchievements(FALLBACK_ACHIEVEMENTS)
+            setAchievements([])
           }
           setLoading(false)
         }
       } catch {
         if (active) {
-          setAchievements(FALLBACK_ACHIEVEMENTS)
+          setAchievements([])
           setLoading(false)
         }
       }
@@ -350,11 +354,16 @@ export default function AdminAchievementsPage() {
           toast.error(`Delete failed: ${error.message}`)
           return
         }
-      } else if (deleteTarget.slug) {
-        await supabase.from('achievements').delete().eq('slug', deleteTarget.slug)
+      } else {
+        await supabase.from('achievements').delete().eq('title', deleteTarget.title)
       }
+      fetch('/api/admin/revalidate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'achievements' }),
+      }).catch(() => {})
     } catch {
-      // Ignored for non-uuid fallback item
+      // Ignored
     }
 
     toast.success('Achievement deleted')
@@ -362,7 +371,7 @@ export default function AdminAchievementsPage() {
     setDeleteTarget(null)
   }
 
-  async function togglePublished(id: string, current: boolean, slug?: string) {
+  async function togglePublished(id: string, current: boolean) {
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
     const supabase = createClient()
 
@@ -370,13 +379,15 @@ export default function AdminAchievementsPage() {
       if (isUuid) {
         const { error } = await supabase.from('achievements').update({ published: !current }).eq('id', id)
         if (error) {
-          toast.error('Update failed in database')
+          toast.error('Update failed')
         } else {
           toast.success(current ? 'Unpublished' : 'Published')
+          fetch('/api/admin/revalidate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'achievements' }),
+          }).catch(() => {})
         }
-      } else if (slug) {
-        await supabase.from('achievements').update({ published: !current }).eq('slug', slug)
-        toast.success(current ? 'Unpublished' : 'Published')
       } else {
         toast.success(current ? 'Unpublished' : 'Published')
       }
@@ -547,7 +558,7 @@ export default function AdminAchievementsPage() {
 
                 <button
                   type="button"
-                  onClick={() => togglePublished(item.id, item.published, item.slug)}
+                  onClick={() => togglePublished(item.id, item.published)}
                   style={{
                     background: 'rgba(255, 255, 255, 0.04)',
                     border: '1px solid rgba(255, 255, 255, 0.08)',

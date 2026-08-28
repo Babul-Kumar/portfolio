@@ -334,17 +334,27 @@ export default function CoCurricularForm({ activity }: { activity?: CoCurricular
         toast.success('Activity created successfully!')
       }
 
-      // Revalidate cache
-      fetch('/api/admin/revalidate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'co-curricular', slug: data.slug }),
-      }).catch(() => {})
+      // Revalidate cache non-blocking with timeout
+      try {
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 2500)
+        await fetch('/api/admin/revalidate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'co-curricular', slug: data.slug }),
+          signal: controller.signal,
+        }).catch(() => {})
+        clearTimeout(timeoutId)
+      } catch {
+        // Non-blocking
+      }
+
+      setSaving(false)
 
       setTimeout(() => {
         router.push('/admin/co-curricular')
         router.refresh()
-      }, 600)
+      }, 300)
     } catch (err: unknown) {
       handleSaveError(err, 'Saving activity')
       setSaving(false)

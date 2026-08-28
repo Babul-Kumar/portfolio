@@ -321,17 +321,27 @@ export default function TrainingForm({ training }: { training?: Training }) {
         toast.success('Training program added successfully!')
       }
 
-      // Revalidate cache
-      fetch('/api/admin/revalidate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'training', slug: data.slug }),
-      }).catch(() => {})
+      // Revalidate cache non-blocking with timeout
+      try {
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 2500)
+        await fetch('/api/admin/revalidate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'training', slug: data.slug }),
+          signal: controller.signal,
+        }).catch(() => {})
+        clearTimeout(timeoutId)
+      } catch {
+        // Non-blocking
+      }
+
+      setSaving(false)
 
       setTimeout(() => {
         router.push('/admin/training')
         router.refresh()
-      }, 600)
+      }, 300)
     } catch (err: unknown) {
       handleSaveError(err, 'Saving training')
       setSaving(false)

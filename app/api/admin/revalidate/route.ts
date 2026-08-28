@@ -7,6 +7,10 @@ import {
   invalidateTrainingCache,
   invalidateCoCurricularCache,
   invalidateProfileCache,
+  invalidateExperienceCache,
+  invalidateEducationCache,
+  invalidateAchievementCache,
+  invalidateSkillCache,
 } from '@/lib/data'
 
 export async function POST(request: NextRequest) {
@@ -28,7 +32,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => ({}))
     const { type, slug } = body
 
-    // 1. Flush in-memory cache
+    // 1. Flush in-memory cache and revalidate pages
     if (type === 'certificates' || !type) {
       invalidateCertificateCache()
       revalidatePath('/certificates')
@@ -63,6 +67,35 @@ export async function POST(request: NextRequest) {
       if (slug) {
         revalidatePath(`/co-curricular/${slug}`)
       }
+    }
+
+    if (type === 'experience' || !type) {
+      invalidateExperienceCache()
+      revalidatePath('/experience')
+      revalidatePath('/')
+      revalidatePath('/about')
+      revalidatePath('/resume')
+    }
+
+    if (type === 'education' || !type) {
+      invalidateEducationCache()
+      revalidatePath('/education')
+      revalidatePath('/')
+      revalidatePath('/about')
+      revalidatePath('/resume')
+    }
+
+    if (type === 'achievements' || !type) {
+      invalidateAchievementCache()
+      revalidatePath('/achievements')
+      revalidatePath('/')
+    }
+
+    if (type === 'skills' || !type) {
+      invalidateSkillCache()
+      revalidatePath('/resume')
+      revalidatePath('/')
+      revalidatePath('/about')
     }
 
     if (type === 'profile' || !type) {

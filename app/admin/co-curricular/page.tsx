@@ -16,7 +16,6 @@ import {
   Award,
 } from 'lucide-react'
 import type { CoCurricularActivity } from '@/types'
-import { FALLBACK_CO_CURRICULAR } from '@/lib/data'
 import { formatDate } from '@/lib/utils'
 import { toast, Toaster } from 'sonner'
 import StatusBadge from '@/components/admin/StatusBadge'
@@ -42,7 +41,7 @@ const CATEGORIES = [
 const MODES = ['All', 'Offline', 'Online', 'Hybrid']
 
 export default function AdminCoCurricularPage() {
-  const [activities, setActivities] = useState<CoCurricularActivity[]>(FALLBACK_CO_CURRICULAR)
+  const [activities, setActivities] = useState<CoCurricularActivity[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('All')
@@ -66,17 +65,15 @@ export default function AdminCoCurricularPage() {
 
         if (active) {
           if (!error && Array.isArray(data)) {
-            // When Supabase query succeeds, use the real database rows (even if empty)
             setActivities(data)
           } else {
-            // Only fallback if query encountered a connection/table error
-            setActivities(FALLBACK_CO_CURRICULAR)
+            setActivities([])
           }
           setLoading(false)
         }
       } catch {
         if (active) {
-          setActivities(FALLBACK_CO_CURRICULAR)
+          setActivities([])
           setLoading(false)
         }
       }

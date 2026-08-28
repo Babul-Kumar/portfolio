@@ -1,6 +1,5 @@
 import CoCurricularForm from '@/components/admin/forms/CoCurricularForm'
 import { createClient } from '@/lib/supabase/server'
-import { FALLBACK_CO_CURRICULAR } from '@/lib/data'
 import { notFound } from 'next/navigation'
 
 export const dynamic = 'force-dynamic'
@@ -19,18 +18,13 @@ export default async function EditCoCurricularPage({
       .from('co_curricular_activities')
       .select('*')
       .eq('id', id)
-      .single()
+      .maybeSingle()
 
     if (data) {
       activity = data
     }
   } catch {
-    // Database lookup failed, fall through to fallback check
-  }
-
-  // If not found in DB by UUID, check fallback dataset by ID or slug
-  if (!activity) {
-    activity = FALLBACK_CO_CURRICULAR.find((a) => a.id === id || a.slug === id) || null
+    // Database lookup failed
   }
 
   if (!activity) notFound()

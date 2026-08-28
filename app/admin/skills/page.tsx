@@ -7,7 +7,6 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { skillSchema, type SkillFormValues } from '@/lib/validations'
 import { Plus, Trash2, Star } from 'lucide-react'
 import type { Skill } from '@/types'
-import { FALLBACK_SKILLS } from '@/lib/data'
 import { toast, Toaster } from 'sonner'
 import ConfirmDialog from '@/components/admin/ConfirmDialog'
 
@@ -67,6 +66,11 @@ function AddSkillForm({ onAdd }: { onAdd: () => void }) {
         return
       }
       toast.success('Skill added to matrix')
+      fetch('/api/admin/revalidate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'skills' }),
+      }).catch(() => {})
       reset()
       setSaving(false)
       onAdd()
@@ -186,8 +190,8 @@ function AddSkillForm({ onAdd }: { onAdd: () => void }) {
 }
 
 export default function AdminSkillsPage() {
-  const [skills, setSkills] = useState<Skill[]>(FALLBACK_SKILLS)
-  const [loading, setLoading] = useState(false)
+  const [skills, setSkills] = useState<Skill[]>([])
+  const [loading, setLoading] = useState(true)
   const [deleteTarget, setDeleteTarget] = useState<Skill | null>(null)
 
   async function load() {
@@ -201,11 +205,11 @@ export default function AdminSkillsPage() {
       if (!error && Array.isArray(data)) {
         setSkills(data)
       } else {
-        setSkills(FALLBACK_SKILLS)
+        setSkills([])
       }
       setLoading(false)
     } catch {
-      setSkills(FALLBACK_SKILLS)
+      setSkills([])
       setLoading(false)
     }
   }
@@ -224,13 +228,13 @@ export default function AdminSkillsPage() {
           if (!error && Array.isArray(data)) {
             setSkills(data)
           } else {
-            setSkills(FALLBACK_SKILLS)
+            setSkills([])
           }
           setLoading(false)
         }
       } catch {
         if (active) {
-          setSkills(FALLBACK_SKILLS)
+          setSkills([])
           setLoading(false)
         }
       }
@@ -262,8 +266,13 @@ export default function AdminSkillsPage() {
           .eq('name', deleteTarget.name)
           .eq('category', deleteTarget.category)
       }
+      fetch('/api/admin/revalidate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'skills' }),
+      }).catch(() => {})
     } catch {
-      // Ignored for non-uuid fallback item
+      // Ignore
     }
 
     toast.success('Skill deleted')

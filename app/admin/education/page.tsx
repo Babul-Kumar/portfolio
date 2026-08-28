@@ -7,7 +7,6 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { educationSchema, type EducationFormValues } from '@/lib/validations'
 import { Plus, Trash2, Pencil, GraduationCap, Eye, EyeOff, ExternalLink } from 'lucide-react'
 import type { Education } from '@/types'
-import { FALLBACK_EDUCATION } from '@/lib/data'
 import { formatDate, sanitizeDateForDb } from '@/lib/utils'
 import { toast, Toaster } from 'sonner'
 import StatusBadge from '@/components/admin/StatusBadge'
@@ -109,6 +108,11 @@ function EducationForm({
       }
 
       toast.success(isEdit ? 'Education updated' : 'Education added')
+      fetch('/api/admin/revalidate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'education' }),
+      }).catch(() => {})
       setSaving(false)
       onSave()
     } catch (err: unknown) {
@@ -251,8 +255,8 @@ function EducationForm({
 }
 
 export default function AdminEducationPage() {
-  const [items, setItems] = useState<Education[]>(FALLBACK_EDUCATION)
-  const [loading, setLoading] = useState(false)
+  const [items, setItems] = useState<Education[]>([])
+  const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<Education | undefined>()
   const [deleteTarget, setDeleteTarget] = useState<Education | null>(null)
@@ -264,11 +268,11 @@ export default function AdminEducationPage() {
       if (!error && Array.isArray(data)) {
         setItems(data)
       } else {
-        setItems(FALLBACK_EDUCATION)
+        setItems([])
       }
       setLoading(false)
     } catch {
-      setItems(FALLBACK_EDUCATION)
+      setItems([])
       setLoading(false)
     }
   }
@@ -283,13 +287,13 @@ export default function AdminEducationPage() {
           if (!error && Array.isArray(data)) {
             setItems(data)
           } else {
-            setItems(FALLBACK_EDUCATION)
+            setItems([])
           }
           setLoading(false)
         }
       } catch {
         if (active) {
-          setItems(FALLBACK_EDUCATION)
+          setItems([])
           setLoading(false)
         }
       }
@@ -315,8 +319,13 @@ export default function AdminEducationPage() {
       } else {
         await supabase.from('education').delete().eq('institution', deleteTarget.institution)
       }
+      fetch('/api/admin/revalidate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'education' }),
+      }).catch(() => {})
     } catch {
-      // Ignored for non-uuid fallback item
+      // Ignore
     }
 
     toast.success('Education entry deleted')
@@ -335,6 +344,11 @@ export default function AdminEducationPage() {
           toast.error('Update failed')
         } else {
           toast.success(current ? 'Unpublished' : 'Published')
+          fetch('/api/admin/revalidate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'education' }),
+          }).catch(() => {})
         }
       } else {
         toast.success(current ? 'Unpublished' : 'Published')

@@ -15,7 +15,6 @@ import {
   Calendar,
 } from 'lucide-react'
 import type { Certificate } from '@/types'
-import { FALLBACK_CERTIFICATES } from '@/lib/data'
 import { formatDate } from '@/lib/utils'
 import { toast, Toaster } from 'sonner'
 import { getCertificatePublicUrl, isPdfDocument, extractStoragePath } from '@/lib/supabase/storage'
@@ -38,7 +37,7 @@ const DEFAULT_CATEGORIES = [
 ]
 
 export default function AdminCertificatesPage() {
-  const [certs, setCerts] = useState<Certificate[]>(FALLBACK_CERTIFICATES)
+  const [certs, setCerts] = useState<Certificate[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('All')
@@ -75,13 +74,13 @@ export default function AdminCertificatesPage() {
           if (!error && Array.isArray(data)) {
             setCerts(data)
           } else {
-            setCerts(FALLBACK_CERTIFICATES)
+            setCerts([])
           }
           setLoading(false)
         }
       } catch {
         if (active) {
-          setCerts(FALLBACK_CERTIFICATES)
+          setCerts([])
           setLoading(false)
         }
       }

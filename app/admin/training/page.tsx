@@ -16,7 +16,6 @@ import {
   Clock,
 } from 'lucide-react'
 import type { Training } from '@/types'
-import { FALLBACK_TRAININGS } from '@/lib/data'
 import { formatDate } from '@/lib/utils'
 import { toast, Toaster } from 'sonner'
 import StatusBadge from '@/components/admin/StatusBadge'
@@ -40,7 +39,7 @@ const CATEGORIES = [
 const MODES = ['All', 'Online', 'Offline', 'Hybrid']
 
 export default function AdminTrainingPage() {
-  const [trainings, setTrainings] = useState<Training[]>(FALLBACK_TRAININGS)
+  const [trainings, setTrainings] = useState<Training[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('All')
@@ -64,17 +63,15 @@ export default function AdminTrainingPage() {
 
         if (active) {
           if (!error && Array.isArray(data)) {
-            // When Supabase query succeeds, use the real database rows (even if empty)
             setTrainings(data)
           } else {
-            // Only fallback if query encountered a connection/table error
-            setTrainings(FALLBACK_TRAININGS)
+            setTrainings([])
           }
           setLoading(false)
         }
       } catch {
         if (active) {
-          setTrainings(FALLBACK_TRAININGS)
+          setTrainings([])
           setLoading(false)
         }
       }

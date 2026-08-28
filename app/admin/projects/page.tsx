@@ -15,7 +15,6 @@ import {
   GitFork,
 } from 'lucide-react'
 import type { Project } from '@/types'
-import { FALLBACK_PROJECTS } from '@/lib/data'
 import { toast, Toaster } from 'sonner'
 import StatusBadge from '@/components/admin/StatusBadge'
 import SearchBar from '@/components/admin/SearchBar'
@@ -32,7 +31,7 @@ const PROJECT_CATEGORIES = [
 ]
 
 export default function AdminProjectsPage() {
-  const [projects, setProjects] = useState<Project[]>(FALLBACK_PROJECTS)
+  const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('All')
@@ -57,13 +56,13 @@ export default function AdminProjectsPage() {
           if (!error && Array.isArray(data)) {
             setProjects(data)
           } else {
-            setProjects(FALLBACK_PROJECTS)
+            setProjects([])
           }
           setLoading(false)
         }
       } catch {
         if (active) {
-          setProjects(FALLBACK_PROJECTS)
+          setProjects([])
           setLoading(false)
         }
       }

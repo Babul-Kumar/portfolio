@@ -237,22 +237,28 @@ export default function AdminProjectForm({ project }: { project?: Project }) {
         }
       }
 
-      // Invalidate cache and revalidate public project routes
+      // Invalidate cache and revalidate public project routes (non-blocking with timeout)
       try {
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 2500)
         await fetch('/api/admin/revalidate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ type: 'projects', slug: payload.slug }),
-        })
+          signal: controller.signal,
+        }).catch(() => {})
+        clearTimeout(timeoutId)
       } catch {
         // Non-blocking
       }
 
       toast.success(isEdit ? 'Project updated successfully' : 'Project created successfully')
+      setSaving(false)
+
       setTimeout(() => {
         router.push('/admin/projects')
         router.refresh()
-      }, 500)
+      }, 300)
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to save project'
       toast.error(message)
