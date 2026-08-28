@@ -18,9 +18,16 @@ export default async function AboutPage() {
 
   const name = profile?.name ?? 'Babul Kumar'
   const tagline = profile?.tagline ?? 'Computer Science · AI / ML · Software Development'
+
+  const OLD_DEFAULT_BIO =
+    'B.Tech Computer Science & Engineering student at Lovely Professional University, exploring Artificial Intelligence, Machine Learning and Full-Stack Development.'
+  const OLD_DEFAULT_BIO_EXTENDED =
+    'I am deeply interested in building intelligent systems that solve real-world problems — from training ML models to architecting full-stack applications. I thrive at the intersection of research and engineering.'
+
   const intro =
-    profile?.bio ??
-    'I’m a B.Tech CSE student at Lovely Professional University with an interest in AI/ML and software development.'
+    profile?.bio && profile.bio !== OLD_DEFAULT_BIO
+      ? profile.bio
+      : 'I’m a B.Tech CSE student at Lovely Professional University with an interest in AI/ML and software development.'
 
   const defaultParagraphs = [
     'I have knowledge of Python, Machine Learning, FastAPI, React, and Generative AI, and I enjoy learning new technologies by building projects.',
@@ -29,12 +36,17 @@ export default async function AboutPage() {
     'If you’re working on AI/ML, GenAI, or software development projects, feel free to connect with me and collaborate.',
   ]
 
-  const paragraphs = profile?.bio_extended
+  const customParagraphs = profile?.bio_extended
     ? profile.bio_extended
         .split(/\n\s*\n/)
         .map((p) => p.trim())
         .filter(Boolean)
-    : defaultParagraphs
+    : []
+
+  const paragraphs =
+    customParagraphs.length > 1 && profile?.bio_extended !== OLD_DEFAULT_BIO_EXTENDED
+      ? customParagraphs
+      : defaultParagraphs
 
   return (
     <div
