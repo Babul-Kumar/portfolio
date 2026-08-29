@@ -41,13 +41,11 @@ export default function HeroAvatarStage({ mouse, isVisible = true }: HeroAvatarS
   const isLight = theme === 'light'
 
   const containerRef = useRef<HTMLDivElement>(null)
+  const wrapperRef = useRef<HTMLDivElement>(null)
   const coreRef = useRef<HTMLDivElement>(null)
 
   // Motion states
-  const [tilt, setTilt] = useState({ x: 0, y: 0 })
   const [coreHovered, setCoreHovered] = useState(false)
-  const [coreProximity, setCoreProximity] = useState(0) // 0 (far) to 1 (near)
-
 
   // Subtle floating micro-particles along the hand-to-core energy field
   const energyParticles = useMemo(() => {
@@ -60,7 +58,7 @@ export default function HeroAvatarStage({ mouse, isVisible = true }: HeroAvatarS
     })
   }, [])
 
-  // Smooth mouse tilt & proximity calculation
+  // Smooth mouse tilt via direct DOM transform (zero React re-renders)
   useEffect(() => {
     if (reducedMotion || !isVisible) return
 
@@ -69,30 +67,14 @@ export default function HeroAvatarStage({ mouse, isVisible = true }: HeroAvatarS
     let currentY = 0
 
     const tick = () => {
-      if (mouse.current) {
-        // Natural 3D parallax tilt (subtle and controlled)
+      if (mouse.current && wrapperRef.current) {
         const targetX = mouse.current.x * 4 // max 4 deg yaw
         const targetY = mouse.current.y * -3 // max 3 deg pitch
 
         currentX += (targetX - currentX) * 0.08
         currentY += (targetY - currentY) * 0.08
 
-        setTilt({ x: currentX, y: currentY })
-
-        // Proximity calculation relative to the AI Core
-        if (containerRef.current && coreRef.current) {
-          const rect = containerRef.current.getBoundingClientRect()
-          const cursorClientX = rect.left + rect.width / 2 + (mouse.current.x * rect.width) / 2
-          const cursorClientY = rect.top + rect.height / 2 + (mouse.current.y * rect.height) / 2
-
-          const coreRect = coreRef.current.getBoundingClientRect()
-          const coreCenterX = coreRect.left + coreRect.width / 2
-          const coreCenterY = coreRect.top + coreRect.height / 2
-
-          const dist = Math.hypot(cursorClientX - coreCenterX, cursorClientY - coreCenterY)
-          const proximityVal = Math.max(0, Math.min(1, 1 - (dist - 40) / 220))
-          setCoreProximity(proximityVal)
-        }
+        wrapperRef.current.style.transform = `rotateY(${currentX.toFixed(2)}deg) rotateX(${currentY.toFixed(2)}deg)`
       }
       animId = requestAnimationFrame(tick)
     }
@@ -115,6 +97,8 @@ export default function HeroAvatarStage({ mouse, isVisible = true }: HeroAvatarS
         perspective: '1200px',
         userSelect: 'none',
         pointerEvents: 'auto',
+        contain: 'layout paint',
+        overflow: 'hidden',
       }}
       aria-label="Large Full-Body 3D AI Engineer Avatar of Babul Kumar holding an AI Intelligence Core"
     >
@@ -123,20 +107,19 @@ export default function HeroAvatarStage({ mouse, isVisible = true }: HeroAvatarS
         mouse={mouse}
         isLight={isLight}
         reducedMotion={reducedMotion}
-        coreProximity={coreProximity}
+        coreProximity={coreHovered ? 1 : 0}
       />
 
       {/* Dynamic 3D Parallax & Breathing Layer */}
       <div
+        ref={wrapperRef}
         className={`avatar-perspective-wrapper ${!reducedMotion ? 'animate-idle-breathing' : ''}`}
         style={{
           position: 'relative',
           height: '100%',
           maxHeight: '100%',
           aspectRatio: '457 / 1163',
-          transform: !reducedMotion
-            ? `rotateY(${tilt.x}deg) rotateX(${tilt.y}deg)`
-            : 'none',
+          transform: 'none',
           transformStyle: 'preserve-3d',
           transition: 'transform 0.1s cubic-bezier(0.2, 0, 0.2, 1)',
           display: 'flex',
@@ -297,7 +280,7 @@ export default function HeroAvatarStage({ mouse, isVisible = true }: HeroAvatarS
               height: '85%',
               borderRadius: '50%',
               background: `radial-gradient(circle at 45% 45%, ${
-                coreHovered || coreProximity > 0.35
+                coreHovered
                   ? 'rgba(249, 115, 22, 0.40)'
                   : 'rgba(249, 115, 22, 0.22)'
               } 0%, rgba(249, 115, 22, 0.10) 45%, rgba(6, 182, 212, 0.06) 65%, transparent 80%)`,
@@ -318,7 +301,7 @@ export default function HeroAvatarStage({ mouse, isVisible = true }: HeroAvatarS
               height: '20px',
               borderRadius: '50%',
               background: `radial-gradient(ellipse, ${
-                coreHovered || coreProximity > 0.35
+                coreHovered
                   ? 'rgba(249, 115, 22, 0.55)'
                   : 'rgba(249, 115, 22, 0.30)'
               } 0%, rgba(6, 182, 212, 0.18) 60%, transparent 85%)`,
@@ -357,7 +340,7 @@ export default function HeroAvatarStage({ mouse, isVisible = true }: HeroAvatarS
               strokeWidth="1.1"
               strokeDasharray="2 3"
               className={!reducedMotion ? 'animate-pulse-subtle' : ''}
-              opacity={coreHovered || coreProximity > 0.3 ? '0.80' : '0.45'}
+              opacity={coreHovered ? '0.80' : '0.45'}
             />
 
             {/* Center palm to core base */}
@@ -367,7 +350,7 @@ export default function HeroAvatarStage({ mouse, isVisible = true }: HeroAvatarS
               stroke="url(#coreConduitGlow)"
               strokeWidth="1.3"
               className={!reducedMotion ? 'animate-pulse-subtle' : ''}
-              opacity={coreHovered || coreProximity > 0.3 ? '0.85' : '0.50'}
+              opacity={coreHovered ? '0.85' : '0.50'}
             />
 
             {/* Right finger contact to core strut */}
@@ -378,7 +361,7 @@ export default function HeroAvatarStage({ mouse, isVisible = true }: HeroAvatarS
               strokeWidth="1.1"
               strokeDasharray="2 3"
               className={!reducedMotion ? 'animate-pulse-subtle' : ''}
-              opacity={coreHovered || coreProximity > 0.3 ? '0.80' : '0.45'}
+              opacity={coreHovered ? '0.80' : '0.45'}
             />
 
             {/* Fingertip contact micro-nodes */}
@@ -419,7 +402,7 @@ export default function HeroAvatarStage({ mouse, isVisible = true }: HeroAvatarS
                 height: '140%',
                 pointerEvents: 'none',
                 overflow: 'visible',
-                opacity: coreHovered || coreProximity > 0.4 ? 0.55 : 0,
+                opacity: coreHovered ? 0.55 : 0,
                 transition: 'opacity 0.5s ease',
               }}
               aria-hidden="true"
@@ -516,7 +499,7 @@ export default function HeroAvatarStage({ mouse, isVisible = true }: HeroAvatarS
           }
           100% {
             opacity: 0;
-            transform: translate(${tilt.x > 0 ? '3px' : '-3px'}, -24px);
+            transform: translate(0px, -24px);
           }
         }
 

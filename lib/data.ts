@@ -27,9 +27,39 @@ const memoryCache = new Map<string, CacheEntry<unknown>>()
 const CACHE_TTL_MS = 60 * 1000 // 1 minute
 const QUERY_TIMEOUT_MS = 6000 // 6s network timeout before fallback
 
+// Duplicate short slugs that clashed with canonical system slugs
+export const FAKE_PROJECT_SLUGS = [
+  'botbro', // duplicate short slug of botbro-local-ai-desktop-orchestration-system
+  'flight-delay-prediction', // duplicate short slug of flight-delay-prediction-system
+]
+
+export const FAKE_TRAINING_SLUGS = [
+  'full-stack-web-ai-systems-engineering',
+  'applied-machine-learning-neural-architectures',
+  'cloud-architecture-distributed-microservices',
+  'advanced-data-structures-algorithmic-engineering',
+]
+
+export const FAKE_CO_CURRICULAR_SLUGS = [
+  'smart-india-hackathon',
+  'lpu-developer-community-tech-conclave',
+  'inter-university-ai-vision-challenge',
+  'global-open-source-contribution-sprint',
+]
+
+export const FAKE_ACHIEVEMENT_SLUGS = [
+  'global-ai-hackathon-2026',
+  'university-codesprint',
+  'deans-honor-list',
+]
+
+export function flushAllCache(): void {
+  memoryCache.clear()
+}
+
 export function invalidateCertificateCache(): void {
   for (const key of memoryCache.keys()) {
-    if (key.startsWith('certs_') || key.startsWith('cert_')) {
+    if (key.startsWith('certs_') || key.startsWith('cert_') || key.includes('certificate')) {
       memoryCache.delete(key)
     }
   }
@@ -37,7 +67,7 @@ export function invalidateCertificateCache(): void {
 
 export function invalidateProjectCache(): void {
   for (const key of memoryCache.keys()) {
-    if (key.startsWith('projects_') || key.startsWith('project_')) {
+    if (key.startsWith('projects_') || key.startsWith('project_') || key.includes('project')) {
       memoryCache.delete(key)
     }
   }
@@ -45,7 +75,7 @@ export function invalidateProjectCache(): void {
 
 export function invalidateTrainingCache(): void {
   for (const key of memoryCache.keys()) {
-    if (key.startsWith('trainings_') || key.startsWith('training_') || key.startsWith('admin_trainings')) {
+    if (key.startsWith('trainings_') || key.startsWith('training_') || key.includes('training')) {
       memoryCache.delete(key)
     }
   }
@@ -53,7 +83,7 @@ export function invalidateTrainingCache(): void {
 
 export function invalidateCoCurricularCache(): void {
   for (const key of memoryCache.keys()) {
-    if (key.startsWith('co_curr_') || key.startsWith('admin_co_curr')) {
+    if (key.startsWith('co_curr_') || key.includes('co_curr')) {
       memoryCache.delete(key)
     }
   }
@@ -61,7 +91,7 @@ export function invalidateCoCurricularCache(): void {
 
 export function invalidateProfileCache(): void {
   for (const key of memoryCache.keys()) {
-    if (key.startsWith('profile')) {
+    if (key.startsWith('profile') || key.includes('profile')) {
       memoryCache.delete(key)
     }
   }
@@ -69,7 +99,7 @@ export function invalidateProfileCache(): void {
 
 export function invalidateExperienceCache(): void {
   for (const key of memoryCache.keys()) {
-    if (key.startsWith('experience') || key.startsWith('admin_experience')) {
+    if (key.startsWith('experience') || key.includes('experience')) {
       memoryCache.delete(key)
     }
   }
@@ -77,7 +107,7 @@ export function invalidateExperienceCache(): void {
 
 export function invalidateEducationCache(): void {
   for (const key of memoryCache.keys()) {
-    if (key.startsWith('education') || key.startsWith('admin_education')) {
+    if (key.startsWith('education') || key.includes('education')) {
       memoryCache.delete(key)
     }
   }
@@ -85,7 +115,7 @@ export function invalidateEducationCache(): void {
 
 export function invalidateAchievementCache(): void {
   for (const key of memoryCache.keys()) {
-    if (key.startsWith('achievements') || key.startsWith('admin_achievements')) {
+    if (key.startsWith('achievements') || key.includes('achievement')) {
       memoryCache.delete(key)
     }
   }
@@ -93,8 +123,16 @@ export function invalidateAchievementCache(): void {
 
 export function invalidateSkillCache(): void {
   for (const key of memoryCache.keys()) {
-    if (key.startsWith('skills') || key.startsWith('admin_skills')) {
+    if (key.startsWith('skills') || key.includes('skill')) {
       memoryCache.delete(key)
+    }
+  }
+}
+
+export function invalidateSiteSettingCache(key?: string): void {
+  for (const k of memoryCache.keys()) {
+    if (key ? k === `setting_${key}` : k.startsWith('setting_')) {
+      memoryCache.delete(k)
     }
   }
 }
@@ -297,7 +335,61 @@ export const FALLBACK_PROJECTS: Project[] = [
     created_at: nowIso,
     updated_at: nowIso,
   },
+  {
+    id: '00000000-0000-4000-a000-000000000006',
+    title: 'City Pollution Monitor',
+    slug: 'city-pollution-monitor',
+    short_desc:
+      'A web platform for visualizing and analyzing air quality and pollution data across geographic regions.',
+    description:
+      'Comprehensive environmental telemetry platform integrating public air quality index (AQI) APIs, particulate matter (PM2.5 / PM10) trend models, and geospatial heatmaps.',
+    problem: 'Citizens lack accessible, localized visualization of air quality and historical pollution fluctuations.',
+    solution: 'Built interactive geospatial dashboard with real-time AQI API integration and historical trend forecasting.',
+    architecture: 'Next.js, Leaflet maps, Python backend API, Chart.js telemetry visualization.',
+    results: 'Provided live monitoring across 100+ reporting stations with automated threshold alerts.',
+    challenges: 'Handling inconsistent reporting latency across third-party municipal sensor nodes.',
+    category: 'Full Stack',
+    technologies: ['Next.js', 'Python', 'Leaflet', 'APIs', 'Data Visualization'],
+    github_url: 'https://github.com/babul-kumar/city-pollution-monitor',
+    live_url: null,
+    hero_image_url: null,
+    thumbnail_url: null,
+    project_date: '2024-11-05',
+    featured: true,
+    published: true,
+    sort_order: 6,
+    created_at: nowIso,
+    updated_at: nowIso,
+  },
+  {
+    id: '00000000-0000-4000-a000-000000000007',
+    title: 'Efficient Page Replacement Algorithm Simulator',
+    slug: 'efficient-page-replacement-algorithm-simulator',
+    short_desc:
+      'An interactive simulator visualizing operating system page replacement algorithms (FIFO, LRU, Optimal).',
+    description:
+      'Educational systems simulator demonstrating memory management techniques, virtual memory paging, and comparative performance analysis between FIFO, LRU, and Belady Optimal algorithms.',
+    problem: 'Operating system paging algorithms are difficult to visualize and benchmark under varying reference strings.',
+    solution: 'Engineered visual step-by-step simulator with frame-by-frame memory state animation and hit/miss ratio graphs.',
+    architecture: 'Python, Streamlit, Matplotlib algorithm analysis charts.',
+    results: 'Demonstrated Belady anomaly in FIFO and verified optimal hit ratios under diverse workloads.',
+    challenges: 'Designing intuitive visual state representation for multi-frame allocation.',
+    category: 'Tools',
+    technologies: ['Python', 'Algorithms', 'Simulation', 'Streamlit', 'OS Systems'],
+    github_url: 'https://github.com/babul-kumar/page-replacement-simulator',
+    live_url: null,
+    hero_image_url: null,
+    thumbnail_url: null,
+    project_date: '2024-08-14',
+    featured: true,
+    published: true,
+    sort_order: 7,
+    created_at: nowIso,
+    updated_at: nowIso,
+  },
 ]
+
+export const REAL_PORTFOLIO_PROJECTS = FALLBACK_PROJECTS
 
 export const FALLBACK_CERTIFICATES: Certificate[] = [
   {
@@ -823,7 +915,19 @@ export async function getProfile(): Promise<Profile | null> {
     if (error) {
       console.warn('getProfile supabase error:', error.message)
     }
-    return data || FALLBACK_PROFILE
+    let res: Profile = (data as unknown as Profile) || FALLBACK_PROFILE
+    if (!res.resume_url) {
+      try {
+        const { data: setting } = await supabase.from('site_settings').select('value').eq('key', 'resume_url').maybeSingle()
+        const settingRow = setting as { value?: string } | null
+        if (settingRow?.value) {
+          res = { ...res, resume_url: settingRow.value }
+        }
+      } catch {
+        // Non-blocking
+      }
+    }
+    return res
   })()
 
   const data = await withTimeout(fetchPromise, FALLBACK_PROFILE)
@@ -862,9 +966,15 @@ export async function getProjects(options?: {
       const { data, error } = await query
       if (error) {
         console.error('getProjects database error:', error.message)
-        return []
       }
-      return data || []
+      const list = data && Array.isArray(data) ? (data as Project[]) : []
+      const merged = [...list]
+      for (const p of REAL_PORTFOLIO_PROJECTS) {
+        if (!merged.some((ep) => ep.slug === p.slug)) {
+          merged.push(p as Project)
+        }
+      }
+      return merged.filter((p) => !FAKE_PROJECT_SLUGS.includes(p.slug))
     } catch (err: unknown) {
       console.error('getProjects unexpected error:', err)
       return []
@@ -1049,7 +1159,7 @@ export async function getTrainings(options?: {
         console.error('getTrainings database error:', error.message)
         return []
       }
-      return data || []
+      return ((data as Training[]) || []).filter((t) => !FAKE_TRAINING_SLUGS.includes(t.slug))
     } catch (err: unknown) {
       console.error('getTrainings unexpected error:', err)
       return []
@@ -1175,7 +1285,7 @@ export async function getCoCurricularActivities(options?: {
         console.error('getCoCurricularActivities database error:', error.message)
         return []
       }
-      return data || []
+      return ((data as CoCurricularActivity[]) || []).filter((a) => !FAKE_CO_CURRICULAR_SLUGS.includes(a.slug))
     } catch (err: unknown) {
       console.error('getCoCurricularActivities unexpected error:', err)
       return []
@@ -1293,7 +1403,7 @@ export async function getAchievements(options?: {
         console.error('getAchievements database error:', error.message)
         return []
       }
-      return data || []
+      return ((data as Achievement[]) || []).filter((a) => !FAKE_ACHIEVEMENT_SLUGS.includes(a.slug))
     } catch (err: unknown) {
       console.error('getAchievements unexpected error:', err)
       return []
@@ -1487,190 +1597,121 @@ export async function getSiteSetting(key: string): Promise<string | null> {
 // ============================================================
 
 export async function getAdminProjects(): Promise<Project[]> {
-  const cached = getCached<Project[]>('admin_projects')
-  if (cached !== null) return cached
-
-  const fetchPromise = (async () => {
-    try {
-      const supabase = getPublicSupabase()
-      const { data, error } = await supabase.from('projects').select('*').order('sort_order', { ascending: true })
-      if (!error && Array.isArray(data)) return data
-      return []
-    } catch {
-      return []
+  try {
+    const supabase = getPublicSupabase()
+    const { data, error } = await supabase.from('projects').select('*').order('sort_order', { ascending: true })
+    const list = !error && Array.isArray(data) ? (data as Project[]) : []
+    const merged = [...list]
+    for (const p of REAL_PORTFOLIO_PROJECTS) {
+      if (!merged.some((ep) => ep.slug === p.slug)) {
+        merged.push(p as Project)
+      }
     }
-  })()
-
-  const data = await withTimeout(fetchPromise, [], QUERY_TIMEOUT_MS)
-  setCache('admin_projects', data)
-  return data
+    return merged.filter((p) => !FAKE_PROJECT_SLUGS.includes(p.slug))
+  } catch {
+    return REAL_PORTFOLIO_PROJECTS.filter((p) => !FAKE_PROJECT_SLUGS.includes(p.slug))
+  }
 }
 
 export async function getAdminCertificates(): Promise<Certificate[]> {
-  const cached = getCached<Certificate[]>('admin_certificates')
-  if (cached !== null) return cached
-
-  const fetchPromise = (async () => {
-    try {
-      const supabase = getPublicSupabase()
-      const { data, error } = await supabase.from('certificates').select('*').order('issue_date', { ascending: false })
-      if (!error && Array.isArray(data)) return data
-      return []
-    } catch {
-      return []
-    }
-  })()
-
-  const data = await withTimeout(fetchPromise, [], QUERY_TIMEOUT_MS)
-  setCache('admin_certificates', data)
-  return data
+  try {
+    const supabase = getPublicSupabase()
+    const { data, error } = await supabase.from('certificates').select('*').order('issue_date', { ascending: false })
+    if (!error && Array.isArray(data)) return data as Certificate[]
+    return []
+  } catch {
+    return []
+  }
 }
 
 export async function getAdminAchievements(): Promise<Achievement[]> {
-  const cached = getCached<Achievement[]>('admin_achievements')
-  if (cached !== null) return cached
-
-  const fetchPromise = (async () => {
-    try {
-      const supabase = getPublicSupabase()
-      const { data, error } = await supabase.from('achievements').select('*').order('date', { ascending: false })
-      if (!error && Array.isArray(data)) return data
-      return []
-    } catch {
-      return []
+  try {
+    const supabase = getPublicSupabase()
+    const { data, error } = await supabase.from('achievements').select('*').order('date', { ascending: false })
+    if (!error && Array.isArray(data)) {
+      return (data as Achievement[]).filter((a) => !FAKE_ACHIEVEMENT_SLUGS.includes(a.slug))
     }
-  })()
-
-  const data = await withTimeout(fetchPromise, [], QUERY_TIMEOUT_MS)
-  setCache('admin_achievements', data)
-  return data
+    return []
+  } catch {
+    return []
+  }
 }
 
 export async function getAdminEducation(): Promise<Education[]> {
-  const cached = getCached<Education[]>('admin_education')
-  if (cached !== null) return cached
-
-  const fetchPromise = (async () => {
-    try {
-      const supabase = getPublicSupabase()
-      const { data, error } = await supabase.from('education').select('*').order('sort_order', { ascending: true })
-      if (!error && Array.isArray(data)) return data
-      return []
-    } catch {
-      return []
-    }
-  })()
-
-  const data = await withTimeout(fetchPromise, [], QUERY_TIMEOUT_MS)
-  setCache('admin_education', data)
-  return data
+  try {
+    const supabase = getPublicSupabase()
+    const { data, error } = await supabase.from('education').select('*').order('sort_order', { ascending: true })
+    if (!error && Array.isArray(data)) return data as Education[]
+    return []
+  } catch {
+    return []
+  }
 }
 
 export async function getAdminExperience(): Promise<Experience[]> {
-  const cached = getCached<Experience[]>('admin_experience')
-  if (cached !== null) return cached
-
-  const fetchPromise = (async () => {
-    try {
-      const supabase = getPublicSupabase()
-      const { data, error } = await supabase.from('experience').select('*').order('sort_order', { ascending: true })
-      if (!error && Array.isArray(data)) return data
-      return []
-    } catch {
-      return []
-    }
-  })()
-
-  const data = await withTimeout(fetchPromise, [], QUERY_TIMEOUT_MS)
-  setCache('admin_experience', data)
-  return data
+  try {
+    const supabase = getPublicSupabase()
+    const { data, error } = await supabase.from('experience').select('*').order('sort_order', { ascending: true })
+    if (!error && Array.isArray(data)) return data as Experience[]
+    return []
+  } catch {
+    return []
+  }
 }
 
 export async function getAdminSkills(): Promise<Skill[]> {
-  const cached = getCached<Skill[]>('admin_skills')
-  if (cached !== null) return cached
-
-  const fetchPromise = (async () => {
-    try {
-      const supabase = getPublicSupabase()
-      const { data, error } = await supabase.from('skills').select('*').order('category').order('sort_order')
-      if (!error && Array.isArray(data)) return data
-      return []
-    } catch {
-      return []
-    }
-  })()
-
-  const data = await withTimeout(fetchPromise, [], QUERY_TIMEOUT_MS)
-  setCache('admin_skills', data)
-  return data
+  try {
+    const supabase = getPublicSupabase()
+    const { data, error } = await supabase.from('skills').select('*').order('category').order('sort_order')
+    if (!error && Array.isArray(data)) return data as Skill[]
+    return []
+  } catch {
+    return []
+  }
 }
 
 export async function getAdminProfile(): Promise<Profile> {
-  const cached = getCached<Profile>('admin_profile')
-  if (cached !== null) return cached
-
-  const fetchPromise = (async () => {
-    try {
-      const supabase = getPublicSupabase()
-      const { data } = await supabase.from('profiles').select('*').limit(1).single()
-      return data || FALLBACK_PROFILE
-    } catch {
-      return FALLBACK_PROFILE
-    }
-  })()
-
-  const data = await withTimeout(fetchPromise, FALLBACK_PROFILE, QUERY_TIMEOUT_MS)
-  setCache('admin_profile', data)
-  return data
+  try {
+    const supabase = getPublicSupabase()
+    const { data } = await supabase.from('profiles').select('*').limit(1).single()
+    return data || FALLBACK_PROFILE
+  } catch {
+    return FALLBACK_PROFILE
+  }
 }
 
 export async function getAdminTrainings(): Promise<Training[]> {
-  const cached = getCached<Training[]>('admin_trainings')
-  if (cached !== null) return cached
-
-  const fetchPromise = (async () => {
-    try {
-      const supabase = getPublicSupabase()
-      const { data, error } = await supabase
-        .from('training')
-        .select('*')
-        .order('display_order', { ascending: true })
-        .order('start_date', { ascending: false })
-      if (!error && Array.isArray(data)) return data
-      return []
-    } catch {
-      return []
+  try {
+    const supabase = getPublicSupabase()
+    const { data, error } = await supabase
+      .from('training')
+      .select('*')
+      .order('display_order', { ascending: true })
+      .order('start_date', { ascending: false })
+    if (!error && Array.isArray(data)) {
+      return (data as Training[]).filter((t) => !FAKE_TRAINING_SLUGS.includes(t.slug))
     }
-  })()
-
-  const data = await withTimeout(fetchPromise, [], QUERY_TIMEOUT_MS)
-  setCache('admin_trainings', data)
-  return data
+    return []
+  } catch {
+    return []
+  }
 }
 
 export async function getAdminCoCurricularActivities(): Promise<CoCurricularActivity[]> {
-  const cached = getCached<CoCurricularActivity[]>('admin_co_curr')
-  if (cached) return cached
-
-  const fetchPromise = (async () => {
-    try {
-      const supabase = getPublicSupabase()
-      const { data, error } = await supabase
-        .from('co_curricular_activities')
-        .select('*')
-        .order('display_order', { ascending: true })
-        .order('date', { ascending: false })
-      if (!error && Array.isArray(data)) return data
-      return []
-    } catch {
-      return []
+  try {
+    const supabase = getPublicSupabase()
+    const { data, error } = await supabase
+      .from('co_curricular_activities')
+      .select('*')
+      .order('display_order', { ascending: true })
+      .order('date', { ascending: false })
+    if (!error && Array.isArray(data)) {
+      return (data as CoCurricularActivity[]).filter((a) => !FAKE_CO_CURRICULAR_SLUGS.includes(a.slug))
     }
-  })()
-
-  const data = await withTimeout(fetchPromise, [], QUERY_TIMEOUT_MS)
-  setCache('admin_co_curr', data)
-  return data
+    return []
+  } catch {
+    return []
+  }
 }
 
 export async function getAdminDashboardStats(): Promise<{
@@ -1684,59 +1725,31 @@ export async function getAdminDashboardStats(): Promise<{
   skills: number
   messages: number
 }> {
-  const cached = getCached<{
-    projects: number
-    certificates: number
-    trainings: number
-    coCurricular: number
-    achievements: number
-    education: number
-    experience: number
-    skills: number
-    messages: number
-  }>('admin_dashboard_stats')
-  if (cached !== null) return cached
-
-  const fetchPromise = (async () => {
-    const supabase = getPublicSupabase()
-    const [
-      { count: projectsCount },
-      { count: certsCount },
-      { count: trainingsCount },
-      { count: coCurrCount },
-      { count: skillsCount },
-      { count: expCount },
-      { count: eduCount },
-      { count: achCount },
-      { count: msgCount },
-    ] = await Promise.all([
-      supabase.from('projects').select('*', { count: 'exact', head: true }),
-      supabase.from('certificates').select('*', { count: 'exact', head: true }),
-      supabase.from('training').select('*', { count: 'exact', head: true }),
-      supabase.from('co_curricular_activities').select('*', { count: 'exact', head: true }),
-      supabase.from('skills').select('*', { count: 'exact', head: true }),
-      supabase.from('experience').select('*', { count: 'exact', head: true }),
-      supabase.from('education').select('*', { count: 'exact', head: true }),
-      supabase.from('achievements').select('*', { count: 'exact', head: true }),
-      supabase.from('contact_messages').select('*', { count: 'exact', head: true }).eq('read', false),
+  try {
+    const [projs, certs, trns, cocurr, achs, edus, exps, skls] = await Promise.all([
+      getAdminProjects(),
+      getAdminCertificates(),
+      getAdminTrainings(),
+      getAdminCoCurricularActivities(),
+      getAdminAchievements(),
+      getAdminEducation(),
+      getAdminExperience(),
+      getAdminSkills(),
     ])
 
     return {
-      projects: projectsCount ?? 0,
-      certificates: certsCount ?? 0,
-      trainings: trainingsCount ?? 0,
-      coCurricular: coCurrCount ?? 0,
-      achievements: achCount ?? 0,
-      education: eduCount ?? 0,
-      experience: expCount ?? 0,
-      skills: skillsCount ?? 0,
-      messages: msgCount ?? 0,
+      projects: projs.length,
+      certificates: certs.length,
+      trainings: trns.length,
+      coCurricular: cocurr.length,
+      achievements: achs.length,
+      education: edus.length,
+      experience: exps.length,
+      skills: skls.length,
+      messages: 0,
     }
-  })()
-
-  const data = await withTimeout(
-    fetchPromise,
-    {
+  } catch {
+    return {
       projects: 0,
       certificates: 0,
       trainings: 0,
@@ -1746,10 +1759,7 @@ export async function getAdminDashboardStats(): Promise<{
       experience: 0,
       skills: 0,
       messages: 0,
-    },
-    QUERY_TIMEOUT_MS
-  )
-  setCache('admin_dashboard_stats', data)
-  return data
+    }
+  }
 }
 

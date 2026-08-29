@@ -33,110 +33,145 @@ export default function Footer({ profile }: FooterProps = {}) {
     <footer
       style={{
         borderTop: '1px solid var(--color-border)',
-        padding: '36px 0 28px',
+        padding: '16px 0 14px',
         background: 'var(--color-surface)',
         position: 'relative',
         zIndex: 1,
         overflow: 'hidden',
       }}
     >
-      <AmbientSectionEnvironment variant="minimal" intensity={0.15} accentMode="cyan" />
+      <AmbientSectionEnvironment variant="minimal" intensity={0.08} accentMode="cyan" />
       <div
         className="container"
         style={{
           display: 'flex',
           flexDirection: 'column',
-          gap: '24px',
+          gap: '12px',
           position: 'relative',
           zIndex: 1,
         }}
       >
-        {/* Top row: Brand & Back to Top */}
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'flex-start',
-            flexWrap: 'wrap',
-            gap: '24px',
-          }}
-        >
-          <div>
-            <div
-              style={{
-                fontSize: 'clamp(28px, 4.5vw, 56px)',
-                fontWeight: 700,
-                letterSpacing: '-0.03em',
-                lineHeight: 0.95,
-                color: 'var(--color-text)',
-              }}
-            >
-              BABUL<br />
-              <span style={{ color: 'var(--color-accent)' }}>KUMAR</span>
-            </div>
-            <div
-              style={{
-                fontSize: '12px',
-                letterSpacing: '0.12em',
-                color: 'var(--color-text-secondary)',
-                textTransform: 'uppercase',
-                marginTop: '10px',
-                fontFamily: 'var(--font-mono)',
-                fontWeight: 600,
-              }}
-            >
-              AI / ML Engineer · Full Stack Developer
-            </div>
-          </div>
-
-          <button
-            onClick={scrollToTop}
-            aria-label="Scroll back to top"
-            style={{
-              background: 'var(--color-surface-2)',
-              border: '1px solid var(--color-border)',
-              borderRadius: 'var(--radius-sm)',
-              boxShadow: 'var(--shadow-sm)',
-              padding: '10px 18px',
-              color: 'var(--color-text)',
-              fontSize: '11px',
-              fontFamily: 'var(--font-mono)',
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              transition: 'all 0.2s ease',
-              fontWeight: 600,
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = 'var(--color-accent-border)'
-              e.currentTarget.style.color = 'var(--color-accent)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = 'var(--color-border)'
-              e.currentTarget.style.color = 'var(--color-text)'
-            }}
-          >
-            <span>Back to Top</span>
-            <span>↑</span>
-          </button>
-        </div>
-
-        {/* Bottom row: Social Links + Tech Specs + Copyright */}
+        {/* Row 1: Brand + Nav Links + Back to Top */}
         <div
           style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
             flexWrap: 'wrap',
-            gap: '16px',
-            paddingTop: '24px',
+            gap: '12px',
+          }}
+        >
+          {/* Brand & Role */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            <span
+              style={{
+                fontSize: '15px',
+                fontWeight: 700,
+                letterSpacing: '-0.02em',
+                color: 'var(--color-text)',
+                textTransform: 'uppercase',
+              }}
+            >
+              BABUL <span style={{ color: 'var(--color-accent)' }}>KUMAR</span>
+            </span>
+            <span
+              style={{
+                fontSize: '10px',
+                fontFamily: 'var(--font-mono)',
+                color: 'var(--color-text-secondary)',
+                letterSpacing: '0.06em',
+                textTransform: 'uppercase',
+                background: 'var(--color-surface-2)',
+                border: '1px solid var(--color-border-subtle)',
+                padding: '2px 7px',
+                borderRadius: 'var(--radius-sm)',
+              }}
+            >
+              AI / ML Engineer · Full-Stack Architect
+            </span>
+          </div>
+
+          {/* Quick Nav Links & Back to Top */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+              {[
+                { href: '/', label: 'ABOUT' },
+                { href: '/training', label: 'TRAINING' },
+                { href: '/certificates', label: 'CERTIFICATES' },
+                { href: '/co-curricular', label: 'CO-CURRICULAR' },
+                { href: '/work', label: 'WORK' },
+                { href: '/contact', label: 'CONTACT' },
+                { href: '/resume', label: 'RESUME' },
+              ].map((item) => (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  style={{
+                    fontSize: '10.5px',
+                    fontFamily: 'var(--font-mono)',
+                    color: 'var(--color-text-secondary)',
+                    textDecoration: 'none',
+                    letterSpacing: '0.06em',
+                    fontWeight: 600,
+                    transition: 'color 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--color-accent)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--color-text-secondary)')}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+
+            <button
+              onClick={scrollToTop}
+              aria-label="Scroll back to top"
+              style={{
+                background: 'var(--color-surface-2)',
+                border: '1px solid var(--color-border)',
+                borderRadius: 'var(--radius-sm)',
+                boxShadow: 'var(--shadow-sm)',
+                padding: '4px 10px',
+                color: 'var(--color-text)',
+                fontSize: '10px',
+                fontFamily: 'var(--font-mono)',
+                letterSpacing: '0.06em',
+                textTransform: 'uppercase',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                transition: 'all 0.2s ease',
+                fontWeight: 600,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = 'var(--color-accent-border)'
+                e.currentTarget.style.color = 'var(--color-accent)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'var(--color-border)'
+                e.currentTarget.style.color = 'var(--color-text)'
+              }}
+            >
+              <span>TOP</span>
+              <span>↑</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Row 2: Social Links + Status + Copyright */}
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '10px',
+            paddingTop: '8px',
             borderTop: '1px solid var(--color-border-subtle)',
           }}
         >
-          <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'center' }}>
             {externalLinks.map(({ href, label }) => (
               <a
                 key={label}
@@ -144,7 +179,7 @@ export default function Footer({ profile }: FooterProps = {}) {
                 target="_blank"
                 rel="noreferrer"
                 style={{
-                  fontSize: '13px',
+                  fontSize: '11px',
                   color: 'var(--color-text-secondary)',
                   textDecoration: 'none',
                   display: 'inline-flex',
@@ -159,24 +194,36 @@ export default function Footer({ profile }: FooterProps = {}) {
                 {label} ↗
               </a>
             ))}
-            <Link
-              href="/contact"
-              style={{
-                fontSize: '13px',
-                color: 'var(--color-text-secondary)',
-                textDecoration: 'none',
-                transition: 'color 0.2s ease',
-                fontWeight: 500,
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--color-accent)')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--color-text-secondary)')}
-            >
-              Contact ↗
-            </Link>
           </div>
 
-          <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
-            © {year} Babul Kumar. Architecture: Next.js 16 · Three.js · Supabase.
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontFamily: 'var(--font-mono)',
+              fontSize: '10px',
+              color: 'var(--color-text-secondary)',
+              background: 'var(--color-surface-2)',
+              border: '1px solid var(--color-border)',
+              padding: '2px 8px',
+              borderRadius: 'var(--radius-sm)',
+            }}
+          >
+            <span
+              style={{
+                width: '5px',
+                height: '5px',
+                borderRadius: '50%',
+                background: '#10B981',
+                boxShadow: '0 0 6px #10B981',
+              }}
+            />
+            <span style={{ fontWeight: 600, letterSpacing: '0.06em' }}>SYSTEM: ONLINE</span>
+          </div>
+
+          <div style={{ fontSize: '10.5px', color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
+            © {year} Babul Kumar · Next.js 16 · Supabase
           </div>
         </div>
       </div>

@@ -9,7 +9,7 @@ import {
   type TrainingFormValues,
 } from '@/lib/validations'
 import { createClient } from '@/lib/supabase/client'
-import { slugify, joinCSV, parseCSV, sanitizeDateForDb } from '@/lib/utils'
+import { slugify, joinCSV, parseCSV, sanitizeDateForDb, formatDateForInput } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import FileUpload from '@/components/admin/FileUpload'
@@ -99,8 +99,8 @@ export default function TrainingForm({ training }: { training?: Training }) {
       organization: training?.organization ?? '',
       category: training?.category ?? 'Full Stack',
       description: training?.description ?? '',
-      start_date: training?.start_date ?? '',
-      end_date: training?.end_date ?? '',
+      start_date: formatDateForInput(training?.start_date),
+      end_date: formatDateForInput(training?.end_date),
       duration: training?.duration ?? '',
       location: training?.location ?? '',
       mode: training?.mode ?? 'Online',

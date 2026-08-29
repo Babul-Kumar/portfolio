@@ -3,15 +3,16 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect, useSyncExternalStore } from 'react'
+import { motion } from 'framer-motion'
 
-// Strict Section Order: ABOUT -> TRAINING -> CERTIFICATES -> CO-CURRICULAR -> WORK -> CONTACT
+// Multi-Page Dedicated Navigation Routes
 const NAV_ITEMS = [
-  { label: 'ABOUT', href: '/#about', path: '/about' },
-  { label: 'TRAINING', href: '/#training', path: '/training' },
-  { label: 'CERTIFICATES', href: '/#certificates', path: '/certificates' },
-  { label: 'CO-CURRICULAR', href: '/#co-curricular', path: '/co-curricular' },
-  { label: 'WORK', href: '/#work', path: '/projects' },
-  { label: 'CONTACT', href: '/#contact', path: '/contact' },
+  { label: 'ABOUT', href: '/' },
+  { label: 'TRAINING', href: '/training' },
+  { label: 'CERTIFICATES', href: '/certificates' },
+  { label: 'CO-CURRICULAR', href: '/co-curricular' },
+  { label: 'WORK', href: '/work' },
+  { label: 'CONTACT', href: '/contact' },
 ]
 
 function getThemeSnapshot(): 'light' | 'dark' {
@@ -28,10 +29,8 @@ function subscribeTheme(callback: () => void) {
 
 export default function Navbar() {
   const pathname = usePathname()
-  const isHome = pathname === '/'
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
-  const [activeSection, setActiveSection] = useState<string>('')
   const theme = useSyncExternalStore(subscribeTheme, getThemeSnapshot, () => 'dark' as const)
 
   // Scroll background effect
@@ -43,29 +42,32 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // Active section tracker on homepage in exact order: about, training, certificates, co-curricular, work, contact
+  // Auto-close mobile menu on route change
+  const [prevPathname, setPrevPathname] = useState(pathname)
+  if (pathname !== prevPathname) {
+    setPrevPathname(pathname)
+    setMenuOpen(false)
+  }
+
+  // Lock body scroll while mobile menu is open
   useEffect(() => {
-    if (!isHome) return
+    if (menuOpen) {
+      const originalOverflow = document.body.style.overflow
+      document.body.style.overflow = 'hidden'
+      return () => {
+        document.body.style.overflow = originalOverflow
+      }
+    }
+  }, [menuOpen])
 
-    const sections = ['about', 'training', 'certificates', 'co-curricular', 'work', 'contact']
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setActiveSection(entry.target.id)
-          }
-        })
-      },
-      { rootMargin: '-25% 0px -50% 0px' }
-    )
-
-    sections.forEach((id) => {
-      const el = document.getElementById(id)
-      if (el) observer.observe(el)
-    })
-
-    return () => observer.disconnect()
-  }, [isHome])
+  // Close mobile menu on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false)
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
 
   function toggleTheme() {
     const next = theme === 'light' ? 'dark' : 'light'
@@ -73,17 +75,15 @@ export default function Navbar() {
     document.documentElement.setAttribute('data-theme', next)
   }
 
-  const handleNavClick = (href: string, e: React.MouseEvent<HTMLAnchorElement>) => {
-    setMenuOpen(false)
-    if (isHome && href.startsWith('/#')) {
-      const targetId = href.replace('/#', '')
-      const targetEl = document.getElementById(targetId)
-      if (targetEl) {
-        e.preventDefault()
-        targetEl.scrollIntoView({ behavior: 'smooth' })
-        window.history.pushState(null, '', href)
-      }
+  // Active state matching supporting nested routes
+  const isItemActive = (href: string) => {
+    if (href === '/') {
+      return pathname === '/' || pathname === '/about'
     }
+    if (href === '/work') {
+      return pathname.startsWith('/work') || pathname.startsWith('/projects')
+    }
+    return pathname === href || pathname.startsWith(`${href}/`)
   }
 
   return (
@@ -101,8 +101,8 @@ export default function Navbar() {
           background: scrolled
             ? 'var(--color-card-bg)'
             : theme === 'light'
-              ? 'rgba(247, 245, 240, 0.85)'
-              : 'rgba(6, 7, 9, 0.75)',
+              ? 'rgba(247, 245, 240, 0.88)'
+              : 'rgba(6, 7, 9, 0.82)',
           borderBottom: scrolled
             ? '1px solid var(--color-border)'
             : theme === 'light'
@@ -110,7 +110,7 @@ export default function Navbar() {
               : '1px solid rgba(255, 255, 255, 0.04)',
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
-          transition: 'all 0.35s var(--ease-out)',
+          transition: 'all 0.3s var(--ease-out)',
         }}
       >
         <div
@@ -158,27 +158,23 @@ export default function Navbar() {
             </span>
           </Link>
 
-          {/* Center Navigation in exact order: ABOUT, CERTIFICATES, WORK, CONTACT */}
+          {/* Center Navigation in exact order: ABOUT, TRAINING, CERTIFICATES, CO-CURRICULAR, WORK, CONTACT */}
           <nav
             className="desktop-nav"
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '32px',
+              gap: '28px',
             }}
             aria-label="Main Navigation"
           >
             {NAV_ITEMS.map((item) => {
-              const sectionKey = item.href.replace('/#', '')
-              const isActive = isHome
-                ? activeSection === sectionKey
-                : pathname.startsWith(item.path)
+              const isActive = isItemActive(item.href)
 
               return (
                 <Link
                   key={item.label}
                   href={item.href}
-                  onClick={(e) => handleNavClick(item.href, e)}
                   style={{
                     fontSize: '12px',
                     fontWeight: 500,
@@ -195,7 +191,9 @@ export default function Navbar() {
                 >
                   {item.label}
                   {isActive && (
-                    <span
+                    <motion.span
+                      layoutId="activeNavIndicator"
+                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                       style={{
                         position: 'absolute',
                         bottom: 0,
@@ -204,6 +202,7 @@ export default function Navbar() {
                         height: '2px',
                         background: 'var(--color-accent)',
                         borderRadius: '1px',
+                        boxShadow: '0 0 10px var(--color-accent), 0 0 20px rgba(228, 93, 44, 0.4)',
                       }}
                     />
                   )}
@@ -216,6 +215,7 @@ export default function Navbar() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
             {/* Theme Toggle */}
             <button
+              type="button"
               onClick={toggleTheme}
               aria-label={theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme'}
               style={{
@@ -276,6 +276,7 @@ export default function Navbar() {
 
             {/* Mobile Menu Hamburger */}
             <button
+              type="button"
               onClick={() => setMenuOpen(!menuOpen)}
               className="mobile-burger"
               style={{
@@ -283,39 +284,40 @@ export default function Navbar() {
                 background: 'transparent',
                 border: 'none',
                 cursor: 'pointer',
-                padding: '6px',
+                padding: '8px',
                 flexDirection: 'column',
                 gap: '5px',
-                zIndex: 110,
+                zIndex: 115,
               }}
               aria-label="Toggle navigation menu"
               aria-expanded={menuOpen}
+              aria-controls="mobile-navigation-menu"
             >
               <span
                 style={{
-                  width: '20px',
-                  height: '1.5px',
+                  width: '22px',
+                  height: '2px',
                   background: 'var(--color-text)',
-                  transition: 'transform 0.3s ease',
-                  transform: menuOpen ? 'rotate(45deg) translate(4.5px, 4.5px)' : 'none',
+                  transition: 'transform 0.25s ease',
+                  transform: menuOpen ? 'rotate(45deg) translate(5px, 5px)' : 'none',
                 }}
               />
               <span
                 style={{
-                  width: '20px',
-                  height: '1.5px',
+                  width: '22px',
+                  height: '2px',
                   background: 'var(--color-text)',
-                  transition: 'opacity 0.3s ease',
+                  transition: 'opacity 0.2s ease',
                   opacity: menuOpen ? 0 : 1,
                 }}
               />
               <span
                 style={{
-                  width: '20px',
-                  height: '1.5px',
+                  width: '22px',
+                  height: '2px',
                   background: 'var(--color-text)',
-                  transition: 'transform 0.3s ease',
-                  transform: menuOpen ? 'rotate(-45deg) translate(4.5px, -4.5px)' : 'none',
+                  transition: 'transform 0.25s ease',
+                  transform: menuOpen ? 'rotate(-45deg) translate(5px, -5px)' : 'none',
                 }}
               />
             </button>
@@ -323,37 +325,42 @@ export default function Navbar() {
         </div>
       </header>
 
-      {/* Mobile Drawer Navigation in exact order */}
+      {/* Mobile Menu Overlay */}
       <div
+        id="mobile-navigation-menu"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Mobile Navigation Menu"
         style={{
           position: 'fixed',
           inset: 0,
-          zIndex: 99,
-          background: theme === 'light' ? 'rgba(247, 245, 240, 0.96)' : 'rgba(6, 7, 9, 0.96)',
+          background: theme === 'light' ? 'rgba(247, 245, 240, 0.98)' : 'rgba(6, 7, 9, 0.98)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
+          zIndex: 110,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: '24px',
+          gap: '18px',
           opacity: menuOpen ? 1 : 0,
           pointerEvents: menuOpen ? 'all' : 'none',
           transition: 'opacity 0.25s ease, transform 0.25s ease',
-          transform: menuOpen ? 'none' : 'translateY(-8px)',
+          transform: menuOpen ? 'none' : 'translateY(-10px)',
         }}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) setMenuOpen(false)
+        }}
+        aria-hidden={!menuOpen}
       >
         {NAV_ITEMS.map((item) => {
-          const sectionKey = item.href.replace('/#', '')
-          const isActive = isHome
-            ? activeSection === sectionKey
-            : pathname.startsWith(item.path)
+          const isActive = isItemActive(item.href)
 
           return (
             <Link
               key={item.label}
               href={item.href}
-              onClick={(e) => handleNavClick(item.href, e)}
+              onClick={() => setMenuOpen(false)}
               style={{
                 fontSize: '18px',
                 fontWeight: 600,
@@ -384,7 +391,7 @@ export default function Navbar() {
             textTransform: 'uppercase',
             fontWeight: 600,
             fontFamily: 'var(--font-mono)',
-            padding: '10px 20px',
+            padding: '10px 24px',
             borderRadius: 'var(--radius-sm)',
             border: '1px solid var(--color-accent)',
             background: 'var(--color-accent-bg)',
@@ -402,7 +409,7 @@ export default function Navbar() {
           border-color: var(--color-accent-border);
           transform: scale(1.05);
         }
-        @media (max-width: 768px) {
+        @media (max-width: 860px) {
           .desktop-nav { display: none !important; }
           .mobile-burger { display: flex !important; }
         }

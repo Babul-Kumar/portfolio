@@ -58,7 +58,7 @@ export default async function NotFound() {
             <Link href="/" className="btn btn-primary">
               Return Home
             </Link>
-            <Link href="/projects" className="btn btn-ghost">
+            <Link href="/work" className="btn btn-ghost">
               Explore Projects
             </Link>
           </div>

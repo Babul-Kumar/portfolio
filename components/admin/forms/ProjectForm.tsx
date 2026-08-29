@@ -8,7 +8,7 @@ import {
   type ProjectFormValues,
 } from '@/lib/validations'
 import { createClient } from '@/lib/supabase/client'
-import { slugify, joinCSV, parseCSV, sanitizeDateForDb } from '@/lib/utils'
+import { slugify, joinCSV, parseCSV, sanitizeDateForDb, formatDateForInput } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 import { useState, useCallback } from 'react'
 import FileUpload from '@/components/admin/FileUpload'
@@ -16,6 +16,7 @@ import GitHubAiUploader from '@/components/admin/GitHubAiUploader'
 import type { Project, GitHubProjectAnalysis } from '@/types'
 import { toast, Toaster } from 'sonner'
 import { uploadFileFromBrowser } from '@/lib/supabase/storage-client'
+import { getProjectPublicAssetUrl } from '@/lib/supabase/storage'
 import {
   Save,
   FolderKanban,
@@ -59,7 +60,9 @@ export default function AdminProjectForm({ project }: { project?: Project }) {
   const router = useRouter()
   const isEdit = !!project
   const [saving, setSaving] = useState(false)
-  const [heroUrl, setHeroUrl] = useState<string | null>(project?.hero_image_url ?? null)
+  const [heroUrl, setHeroUrl] = useState<string | null>(
+    project?.hero_image_url ?? project?.thumbnail_url ?? null
+  )
   const [uploading, setUploading] = useState(false)
 
   const {
@@ -84,7 +87,7 @@ export default function AdminProjectForm({ project }: { project?: Project }) {
       technologies: project ? joinCSV(project.technologies) : '',
       github_url: project?.github_url ?? '',
       live_url: project?.live_url ?? '',
-      project_date: project?.project_date ?? '',
+      project_date: formatDateForInput(project?.project_date),
       featured: project?.featured ?? false,
       published: project?.published ?? false,
     },
@@ -132,7 +135,7 @@ export default function AdminProjectForm({ project }: { project?: Project }) {
     }
     applyString('github_url', data.github_url)
     applyString('live_url', data.live_url)
-    applyString('project_date', data.project_date)
+    applyString('project_date', formatDateForInput(data.project_date))
 
     if (data.preview_image_url && !heroUrl) {
       setHeroUrl(data.preview_image_url)
@@ -180,6 +183,8 @@ export default function AdminProjectForm({ project }: { project?: Project }) {
         featured: values.featured,
         published: values.published,
         hero_image_url: heroUrl,
+        thumbnail_url: heroUrl,
+        updated_at: new Date().toISOString(),
       }
 
       const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
@@ -239,11 +244,15 @@ export default function AdminProjectForm({ project }: { project?: Project }) {
 
       // Invalidate cache and revalidate public project routes (non-blocking with timeout)
       try {
+        const { data: { session } } = await supabase.auth.getSession()
         const controller = new AbortController()
         const timeoutId = setTimeout(() => controller.abort(), 2500)
         await fetch('/api/admin/revalidate', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+          },
           body: JSON.stringify({ type: 'projects', slug: payload.slug }),
           signal: controller.signal,
         }).catch(() => {})
@@ -560,7 +569,7 @@ export default function AdminProjectForm({ project }: { project?: Project }) {
             hint="JPG, PNG, or WebP · Max 5MB"
             maxSize={5 * 1024 * 1024}
             onFileSelect={handleHeroUpload}
-            currentUrl={heroUrl}
+            currentUrl={getProjectPublicAssetUrl(heroUrl)}
             onRemove={() => setHeroUrl(null)}
             uploading={uploading}
           />

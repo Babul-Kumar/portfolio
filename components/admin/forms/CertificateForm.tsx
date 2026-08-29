@@ -8,7 +8,7 @@ import {
   type CertificateFormValues,
 } from '@/lib/validations'
 import { createClient } from '@/lib/supabase/client'
-import { slugify, joinCSV, parseCSV, sanitizeDateForDb } from '@/lib/utils'
+import { slugify, joinCSV, parseCSV, sanitizeDateForDb, formatDateForInput } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import FileUpload from '@/components/admin/FileUpload'
@@ -77,8 +77,8 @@ export default function AdminCertificateForm({ certificate }: { certificate?: Ce
       slug: certificate?.slug ?? '',
       issuer: certificate?.issuer ?? '',
       category: certificate?.category ?? 'AI / ML',
-      issue_date: certificate?.issue_date ?? '',
-      expiry_date: certificate?.expiry_date ?? '',
+      issue_date: formatDateForInput(certificate?.issue_date),
+      expiry_date: formatDateForInput(certificate?.expiry_date),
       credential_id: certificate?.credential_id ?? '',
       verification_url: certificate?.verification_url ?? '',
       description: certificate?.description ?? '',

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useSyncExternalStore } from 'react'
+import { useEffect, useRef, useSyncExternalStore } from 'react'
 
 function subscribeReducedMotion(callback: () => void) {
   if (typeof window === 'undefined') return () => {}
@@ -42,18 +42,36 @@ export default function HeroBackground({
   mouse: React.RefObject<{ x: number; y: number }>
 }) {
   const reducedMotion = useSyncExternalStore(subscribeReducedMotion, getReducedMotionSnapshot, () => false)
-  const [parallax, setParallax] = useState({ x: 0, y: 0 })
+  const layer1Ref = useRef<HTMLDivElement>(null)
+  const layer2Ref = useRef<HTMLDivElement>(null)
+  const layer3Ref = useRef<HTMLDivElement>(null)
 
+  // Direct DOM hardware transform without continuous React re-renders
   useEffect(() => {
     if (reducedMotion) return
 
     let animationFrameId: number
+    let lastX = -9999
+    let lastY = -9999
+
     const updateParallax = () => {
       if (mouse.current) {
-        setParallax({
-          x: mouse.current.x * 12,
-          y: mouse.current.y * 12,
-        })
+        const px = mouse.current.x * 12
+        const py = mouse.current.y * 12
+
+        if (Math.abs(px - lastX) > 0.05 || Math.abs(py - lastY) > 0.05) {
+          lastX = px
+          lastY = py
+          if (layer1Ref.current) {
+            layer1Ref.current.style.transform = `translate3d(${(px * 0.15).toFixed(2)}px, ${(py * 0.15).toFixed(2)}px, 0)`
+          }
+          if (layer2Ref.current) {
+            layer2Ref.current.style.transform = `translate3d(${(px * 0.25).toFixed(2)}px, ${(py * 0.25).toFixed(2)}px, 0)`
+          }
+          if (layer3Ref.current) {
+            layer3Ref.current.style.transform = `translate3d(${(px * 0.18).toFixed(2)}px, ${(py * 0.18).toFixed(2)}px, 0)`
+          }
+        }
       }
       animationFrameId = requestAnimationFrame(updateParallax)
     }
@@ -77,6 +95,7 @@ export default function HeroBackground({
           Layer 1: Dual-Scale Precision Computational Blueprint Grid
           ========================================================================= */}
       <div
+        ref={layer1Ref}
         style={{
           position: 'absolute',
           inset: 0,
@@ -88,7 +107,6 @@ export default function HeroBackground({
           `,
           backgroundSize: '24px 24px, 24px 24px, 96px 96px, 96px 96px',
           opacity: 0.65,
-          transform: `translate3d(${parallax.x * 0.15}px, ${parallax.y * 0.15}px, 0)`,
           transition: 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
       />
@@ -98,6 +116,7 @@ export default function HeroBackground({
           ========================================================================= */}
       {/* Primary Warm Terracotta / Orange Glow centered behind 3D Network */}
       <div
+        ref={layer2Ref}
         style={{
           position: 'absolute',
           top: '15%',
@@ -113,13 +132,13 @@ export default function HeroBackground({
           )`,
           filter: 'blur(50px)',
           opacity: 0.85,
-          transform: `translate3d(${parallax.x * 0.25}px, ${parallax.y * 0.25}px, 0)`,
           transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
       />
 
       {/* Secondary Faint Cyan/Teal Ambient Glow */}
       <div
+        ref={layer3Ref}
         style={{
           position: 'absolute',
           top: '8%',
@@ -134,163 +153,69 @@ export default function HeroBackground({
           )`,
           filter: 'blur(60px)',
           opacity: 0.75,
-          transform: `translate3d(${parallax.x * 0.18}px, ${parallax.y * 0.18}px, 0)`,
           transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
       />
 
       {/* =========================================================================
-          Layer 3: 2D Engineering Construction Lines & Blueprint Blueprint Marks (SVG)
+          Layer 3: Technical Telemetry HUD HUD Data Tickers
           ========================================================================= */}
-      <svg
-        viewBox="0 0 1440 900"
+      <div
         style={{
           position: 'absolute',
-          inset: 0,
-          width: '100%',
-          height: '100%',
-          opacity: 0.55,
-          transform: `translate3d(${parallax.x * 0.35}px, ${parallax.y * 0.35}px, 0)`,
-          transition: 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+          top: '104px',
+          left: 'max(24px, 4vw)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '6px',
+          fontFamily: 'var(--font-mono)',
+          fontSize: '10px',
+          letterSpacing: '0.12em',
+          color: 'var(--color-text-muted)',
+          opacity: 0.6,
         }}
-        preserveAspectRatio="xMidYMid slice"
       >
-        <defs>
-          <linearGradient id="traceGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="var(--color-accent)" stopOpacity="0" />
-            <stop offset="50%" stopColor="var(--color-accent)" stopOpacity="0.4" />
-            <stop offset="100%" stopColor="var(--color-accent)" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-
-        {/* Large Faint Architectural Arc framing the right-hand visual */}
-        <path
-          d="M 1320,120 A 420 420 0 0 0 920,580"
-          fill="none"
-          stroke="var(--color-border)"
-          strokeWidth="1"
-          strokeDasharray="4 8"
-        />
-
-        <path
-          d="M 1280,180 A 340 340 0 0 0 980,540"
-          fill="none"
-          stroke="var(--color-border-subtle)"
-          strokeWidth="1"
-        />
-
-        {/* Horizontal Technical Axis Trace */}
-        <line
-          x1="860"
-          y1="340"
-          x2="1380"
-          y2="340"
-          stroke="url(#traceGrad)"
-          strokeWidth="1"
-        />
-
-        {/* Measurement Crosshairs (+) at key structural intersections */}
-        {/* Crosshair 1 */}
-        <g transform="translate(960, 240)">
-          <line x1="-8" y1="0" x2="8" y2="0" stroke="var(--color-border-hover)" strokeWidth="1" />
-          <line x1="0" y1="-8" x2="0" y2="8" stroke="var(--color-border-hover)" strokeWidth="1" />
-          <circle cx="0" cy="0" r="2" fill="none" stroke="var(--color-accent)" strokeWidth="0.8" />
-        </g>
-
-        {/* Crosshair 2 */}
-        <g transform="translate(1260, 480)">
-          <line x1="-8" y1="0" x2="8" y2="0" stroke="var(--color-border-hover)" strokeWidth="1" />
-          <line x1="0" y1="-8" x2="0" y2="8" stroke="var(--color-border-hover)" strokeWidth="1" />
-          <circle cx="0" cy="0" r="2" fill="none" stroke="var(--color-accent-teal)" strokeWidth="0.8" />
-        </g>
-
-        {/* Crosshair 3 */}
-        <g transform="translate(1080, 620)">
-          <line x1="-6" y1="0" x2="6" y2="0" stroke="var(--color-border)" strokeWidth="1" />
-          <line x1="0" y1="-6" x2="0" y2="6" stroke="var(--color-border)" strokeWidth="1" />
-        </g>
-
-        {/* Technical Coordinate Indicators */}
-        <text
-          x="1000"
-          y="180"
-          fill="var(--color-text-muted)"
-          fontSize="9"
-          fontFamily="var(--font-mono)"
-          letterSpacing="0.12em"
-          opacity="0.6"
-        >
-          [SYS_LAT: 31.2536° N // 75.7037° E]
-        </text>
-
-        <text
-          x="1240"
-          y="660"
-          fill="var(--color-text-muted)"
-          fontSize="9"
-          fontFamily="var(--font-mono)"
-          letterSpacing="0.12em"
-          opacity="0.6"
-        >
-          [TENSOR_MATRIX // α-01]
-        </text>
-
-        <text
-          x="940"
-          y="520"
-          fill="var(--color-accent)"
-          fontSize="8"
-          fontFamily="var(--font-mono)"
-          letterSpacing="0.1em"
-          opacity="0.5"
-        >
-          + 0.892_ROC
-        </text>
-      </svg>
+        <span>{'// AI_SYSTEM_INITIALIZED'}</span>
+        <span>{'// TENSOR_GRAPH: ACTIVE'}</span>
+        <span>{'// LATENCY: 12MS'}</span>
+      </div>
 
       {/* =========================================================================
-          Layer 4: Subtle Ambient Data Particles
-          ========================================================================= */}
-      {AMBIENT_PARTICLES.map((p) => {
-        const isTeal = p.color === 'teal'
-        return (
-          <div
-            key={p.id}
-            style={{
-              position: 'absolute',
-              left: p.x,
-              top: p.y,
-              width: `${p.size}px`,
-              height: `${p.size}px`,
-              borderRadius: '50%',
-              backgroundColor: isTeal ? 'var(--color-accent-teal)' : 'var(--color-accent)',
-              boxShadow: isTeal
-                ? '0 0 6px rgba(20, 184, 166, 0.4)'
-                : '0 0 6px rgba(228, 93, 44, 0.4)',
-              opacity: 0.45,
-              transform: `translate3d(${parallax.x * 0.3}px, ${parallax.y * 0.3}px, 0)`,
-              transition: 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
-            }}
-          />
-        )
-      })}
-
-      {/* =========================================================================
-          Layer 5: Soft Viewport Edge Vignette
+          Layer 4: Deterministic Micro Floating Particles
           ========================================================================= */}
       <div
         style={{
           position: 'absolute',
           inset: 0,
-          background: `radial-gradient(
-            ellipse at center,
-            transparent 50%,
-            var(--color-bg) 95%
-          )`,
-          opacity: 0.6,
+          overflow: 'hidden',
           pointerEvents: 'none',
         }}
-      />
+      >
+        {AMBIENT_PARTICLES.map((p) => {
+          const isTeal = p.color === 'teal'
+          return (
+            <div
+              key={p.id}
+              className={!reducedMotion ? 'animate-particle-float' : ''}
+              style={{
+                position: 'absolute',
+                top: p.y,
+                left: p.x,
+                width: `${p.size}px`,
+                height: `${p.size}px`,
+                borderRadius: '50%',
+                backgroundColor: isTeal ? 'var(--color-accent-teal)' : 'var(--color-accent)',
+                boxShadow: isTeal
+                  ? '0 0 8px var(--color-accent-teal)'
+                  : '0 0 8px var(--color-accent)',
+                animationDuration: p.duration,
+                animationDelay: p.delay,
+                opacity: 0.7,
+              }}
+            />
+          )
+        })}
+      </div>
     </div>
   )
 }

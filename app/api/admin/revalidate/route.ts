@@ -11,6 +11,7 @@ import {
   invalidateEducationCache,
   invalidateAchievementCache,
   invalidateSkillCache,
+  invalidateSiteSettingCache,
 } from '@/lib/data'
 
 export async function POST(request: NextRequest) {
@@ -98,17 +99,28 @@ export async function POST(request: NextRequest) {
       revalidatePath('/about')
     }
 
-    if (type === 'profile' || !type) {
+    if (type === 'profile' || type === 'resume' || type === 'settings' || !type) {
       invalidateProfileCache()
+      invalidateSiteSettingCache()
       revalidatePath('/', 'layout')
       revalidatePath('/')
       revalidatePath('/about')
       revalidatePath('/contact')
+      revalidatePath('/resume')
+      revalidatePath('/admin/settings')
+    }
+
+    // Always revalidate admin dashboard and specific admin sections for instant synchronization
+    revalidatePath('/admin/dashboard')
+    revalidatePath('/admin')
+    if (type) {
+      revalidatePath(`/admin/${type}`)
     }
 
     return NextResponse.json({
       success: true,
-      message: `Revalidated paths for ${type || 'all'} successfully`,
+      revalidated: true,
+      type: type || 'all',
       timestamp: new Date().toISOString(),
     })
   } catch (err: unknown) {

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import type { Project } from '@/types'
 import { formatDate } from '@/lib/utils'
+import ProjectPreviewMedia from '@/components/projects/ProjectPreviewMedia'
 
 const CATEGORIES = ['All', 'AI / ML', 'Machine Learning', 'Full Stack', 'Tools']
 
@@ -73,85 +74,105 @@ export default function InteractiveProjectList({ projects }: { projects: Project
           }}
           className="projects-showcase-grid"
         >
-          {filtered.map((project, i) => (
-            <article
-              key={project.id}
-              className="glass-card card-3d-tilt"
-              style={{
-                padding: '32px',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                minHeight: '340px',
-              }}
-            >
-              <div>
-                {/* Header */}
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '20px',
-                  }}
-                >
-                  <span
+          {filtered.map((project, i) => {
+            const projectImageUrl =
+              project.hero_image_url ||
+              project.thumbnail_url ||
+              (project.project_images && project.project_images.length > 0
+                ? project.project_images[0].url
+                : null)
+
+            return (
+              <article
+                key={project.id}
+                className="glass-card card-3d-tilt"
+                style={{
+                  padding: '24px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  minHeight: '340px',
+                }}
+              >
+                <div>
+                  {/* Visual Preview Media */}
+                  <div style={{ marginBottom: '18px' }}>
+                    <ProjectPreviewMedia
+                      imageUrl={projectImageUrl}
+                      title={project.title}
+                      slug={project.slug}
+                      category={project.category}
+                      technologies={project.technologies}
+                      isFeatured={false}
+                    />
+                  </div>
+
+                  {/* Header */}
+                  <div
                     style={{
-                      fontSize: '12px',
-                      fontFamily: 'var(--font-mono)',
-                      color: 'var(--color-accent)',
-                      fontWeight: 600,
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '16px',
                     }}
                   >
-                    {(i + 1).toString().padStart(2, '0')}
-                  </span>
+                    <span
+                      style={{
+                        fontSize: '12px',
+                        fontFamily: 'var(--font-mono)',
+                        color: 'var(--color-accent)',
+                        fontWeight: 600,
+                      }}
+                    >
+                      {(i + 1).toString().padStart(2, '0')}
+                    </span>
 
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <span
-                      style={{
-                        fontSize: '10px',
-                        fontFamily: 'var(--font-mono)',
-                        letterSpacing: '0.1em',
-                        textTransform: 'uppercase',
-                        color: 'var(--color-text-secondary)',
-                        background: 'var(--color-surface-2)',
-                        border: '1px solid var(--color-border)',
-                        padding: '3px 8px',
-                        borderRadius: 'var(--radius-sm)',
-                      }}
-                    >
-                      {project.category}
-                    </span>
-                    <span
-                      style={{
-                        fontSize: '11px',
-                        color: 'var(--color-text-muted)',
-                        fontFamily: 'var(--font-mono)',
-                      }}
-                    >
-                      {formatDate(project.project_date, 'yyyy')}
-                    </span>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <span
+                        style={{
+                          fontSize: '10px',
+                          fontFamily: 'var(--font-mono)',
+                          letterSpacing: '0.1em',
+                          textTransform: 'uppercase',
+                          color: 'var(--color-text-secondary)',
+                          background: 'var(--color-surface-2)',
+                          border: '1px solid var(--color-border)',
+                          padding: '3px 8px',
+                          borderRadius: 'var(--radius-sm)',
+                        }}
+                      >
+                        {project.category}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: '11px',
+                          color: 'var(--color-text-muted)',
+                          fontFamily: 'var(--font-mono)',
+                        }}
+                      >
+                        {formatDate(project.project_date, 'yyyy')}
+                      </span>
+                    </div>
                   </div>
-                </div>
 
-                {/* Title */}
-                <h2
-                  style={{
-                    fontSize: '22px',
-                    fontWeight: 600,
-                    letterSpacing: '-0.02em',
-                    color: 'var(--color-text)',
-                    marginBottom: '12px',
-                    lineHeight: 1.2,
-                  }}
-                >
-                  <Link
-                    href={`/projects/${project.slug}`}
-                    style={{ color: 'inherit', textDecoration: 'none' }}
+                  {/* Title */}
+                  <h2
+                    style={{
+                      fontSize: '20px',
+                      fontWeight: 600,
+                      letterSpacing: '-0.02em',
+                      color: 'var(--color-text)',
+                      marginBottom: '10px',
+                      lineHeight: 1.25,
+                    }}
                   >
-                    {project.title}
-                  </Link>
-                </h2>
+                    <Link
+                      href={`/projects/${project.slug}`}
+                      style={{ color: 'inherit', textDecoration: 'none' }}
+                    >
+                      {project.title}
+                    </Link>
+                  </h2>
 
                 {/* Description */}
                 <p
@@ -267,7 +288,8 @@ export default function InteractiveProjectList({ projects }: { projects: Project
                 </Link>
               </div>
             </article>
-          ))}
+          )
+        })}
         </div>
       )}
 

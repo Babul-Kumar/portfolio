@@ -7,9 +7,9 @@ import {
   ArrowRight,
   ExternalLink,
   Code2,
-  CheckCircle2,
 } from 'lucide-react'
 import AmbientSectionEnvironment from '@/components/ambient/AmbientSectionEnvironment'
+import ProjectPreviewMedia from '@/components/projects/ProjectPreviewMedia'
 
 export default function SelectedWorkSection({ projects }: { projects: Project[] }) {
   if (!projects || projects.length === 0) return null
@@ -39,7 +39,7 @@ export default function SelectedWorkSection({ projects }: { projects: Project[] 
           </div>
 
           <Link
-            href="/projects"
+            href="/work"
             className="work-archive-btn"
             aria-label="View complete archive of all engineering projects"
           >
@@ -688,12 +688,13 @@ function RegularProjectCard({ project, index }: { project: Project; index: numbe
 /* =========================================================================
    COMPACT PROJECT PREVIEW
    Strictly controlled height (~155-170px), zero giant empty black rectangles!
-   Renders genuine code/architecture telemetry tailored to each real project.
+   Renders genuine uploaded image media or code/architecture telemetry.
    ========================================================================= */
 function CompactProjectPreview({
   imageUrl,
   title,
   slug,
+  category,
   technologies,
   isFeatured,
 }: {
@@ -704,277 +705,14 @@ function CompactProjectPreview({
   technologies: string[]
   isFeatured: boolean
 }) {
-  const containerHeight = isFeatured ? '195px' : '155px'
-
-  // If a real screenshot or image exists, display it cleanly with object-fit: cover
-  if (imageUrl) {
-    return (
-      <div
-        style={{
-          width: '100%',
-          height: containerHeight,
-          borderRadius: 'var(--radius-sm)',
-          overflow: 'hidden',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-          background: '#0B0D13',
-          position: 'relative',
-        }}
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={imageUrl}
-          alt={`Project screenshot for ${title}`}
-          className="work-preview-media"
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            display: 'block',
-            transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-          }}
-        />
-      </div>
-    )
-  }
-
-  // If no screenshot is uploaded, generate a high-density, real technical showcase
-  // matching the project's actual engineering stack:
-  const snippet = getProjectSnippet(slug, technologies)
-
   return (
-    <div
-      className="work-preview-media"
-      style={{
-        width: '100%',
-        height: containerHeight,
-        borderRadius: 'var(--radius-sm)',
-        overflow: 'hidden',
-        border: '1px solid rgba(255, 255, 255, 0.09)',
-        background: '#0D0F17',
-        display: 'flex',
-        flexDirection: 'column',
-        fontFamily: 'var(--font-mono)',
-        position: 'relative',
-        transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-      }}
-    >
-      {/* Mini Titlebar */}
-      <div
-        style={{
-          height: '24px',
-          background: 'rgba(255, 255, 255, 0.04)',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
-          padding: '0 10px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          fontSize: '9.5px',
-          color: 'var(--color-text-muted)',
-          flexShrink: 0,
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-          <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#EF4444' }} />
-          <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#F59E0B' }} />
-          <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10B981' }} />
-          <span style={{ marginLeft: '4px', color: '#A0AEC0' }}>{snippet.fileName}</span>
-        </div>
-
-        <span
-          style={{
-            fontSize: '8.5px',
-            color: 'var(--color-accent)',
-            fontWeight: 600,
-            letterSpacing: '0.04em',
-          }}
-        >
-          {snippet.badge}
-        </span>
-      </div>
-
-      {/* High-Density Code & Architecture Body */}
-      <div
-        style={{
-          flex: 1,
-          padding: '8px 12px',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          background: 'linear-gradient(180deg, rgba(13, 15, 23, 0.95) 0%, rgba(9, 11, 17, 0.98) 100%)',
-          fontSize: '11px',
-          lineHeight: 1.45,
-          overflow: 'hidden',
-        }}
-      >
-        {/* Real Code Snippet Lines */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-          {snippet.lines.map((line, i) => (
-            <div
-              key={i}
-              style={{
-                color: line.color,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                fontSize: '10.5px',
-              }}
-            >
-              {line.text}
-            </div>
-          ))}
-        </div>
-
-        {/* Live Architecture Status Bar */}
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            paddingTop: '6px',
-            borderTop: '1px solid rgba(255, 255, 255, 0.05)',
-            fontSize: '9.5px',
-            color: 'var(--color-text-muted)',
-          }}
-        >
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#10B981' }}>
-            <CheckCircle2 size={10} />
-            <span>{snippet.statusText}</span>
-          </span>
-
-          <span
-            style={{
-              color: 'var(--color-text-secondary)',
-              background: 'rgba(255, 255, 255, 0.04)',
-              padding: '1px 6px',
-              borderRadius: '2px',
-              border: '1px solid rgba(255, 255, 255, 0.06)',
-            }}
-          >
-            {snippet.runtimeTag}
-          </span>
-        </div>
-      </div>
-    </div>
+    <ProjectPreviewMedia
+      imageUrl={imageUrl}
+      title={title}
+      slug={slug}
+      category={category}
+      technologies={technologies}
+      isFeatured={isFeatured}
+    />
   )
-}
-
-/* =========================================================================
-   PROJECT CODE & TELEMETRY SNIPPET GENERATOR
-   Supplies genuine, high-contrast code tokens tailored to each real project
-   ========================================================================= */
-interface SnippetConfig {
-  fileName: string
-  badge: string
-  lines: { text: string; color: string }[]
-  statusText: string
-  runtimeTag: string
-}
-
-function getProjectSnippet(slug: string, technologies: string[]): SnippetConfig {
-  switch (slug) {
-    case 'botbro-local-ai-desktop-orchestration-system':
-      return {
-        fileName: 'botbro_agent.py',
-        badge: 'LOCAL_AGENT_ACTIVE',
-        lines: [
-          { text: 'engine = DesktopOrchestrator(model="qwen2.5:7b-coder")', color: '#93C5FD' },
-          { text: 'intent = engine.parse_voice_intent(user_audio)', color: '#FCD34D' },
-          { text: 'engine.execute_win32_action(intent.action_tree)', color: '#6EE7B7' },
-          { text: '# Zero Cloud Latency · 18 Subsystems Connected', color: '#6B7280' },
-        ],
-        statusText: '18 Win32 APIs Active',
-        runtimeTag: 'Ollama + Python',
-      }
-
-    case 'flight-delay-prediction-system':
-      return {
-        fileName: 'flight_delay_model.py',
-        badge: 'ML_PIPELINE_OK',
-        lines: [
-          { text: 'model = RandomForestClassifier(n_estimators=100)', color: '#93C5FD' },
-          { text: 'y_pred = model.predict(preprocessed_features)', color: '#FCD34D' },
-          { text: 'score = roc_auc_score(y_test, y_pred) # 94.2%', color: '#6EE7B7' },
-        ],
-        statusText: 'Dataset: 434K Records',
-        runtimeTag: 'Scikit-learn + Joblib',
-      }
-
-    case 'smart-system-monitor':
-      return {
-        fileName: 'system_telemetry.py',
-        badge: 'HARDWARE_STREAM',
-        lines: [
-          { text: 'cpu_usage = psutil.cpu_percent(interval=1.0)', color: '#93C5FD' },
-          { text: 'mem_info = psutil.virtual_memory() # 4.2GB/16GB', color: '#FCD34D' },
-          { text: 'render_realtime_stream(cpu_usage, mem_info)', color: '#6EE7B7' },
-        ],
-        statusText: 'Polling: 1000ms Interval',
-        runtimeTag: 'Python + psutil',
-      }
-
-    case 'steganography-detector':
-      return {
-        fileName: 'stego_forensics.py',
-        badge: 'ENTROPY_ANALYSIS',
-        lines: [
-          { text: 'entropy = calculate_shannon_entropy(image_pixels)', color: '#93C5FD' },
-          { text: 'lsb_bits = extract_lsb_plane(image_array, bit=0)', color: '#FCD34D' },
-          { text: 'payload = detect_anomaly_distribution(lsb_bits)', color: '#6EE7B7' },
-        ],
-        statusText: 'LSB Bit Plane Scanned',
-        runtimeTag: 'OpenCV + NumPy',
-      }
-
-    case 'ai-product-review-analyzer':
-      return {
-        fileName: 'review_nlp.py',
-        badge: 'TRANSFORMER_NLP',
-        lines: [
-          { text: 'tokens = tokenizer(review_text, return_tensors="pt")', color: '#93C5FD' },
-          { text: 'sentiment = transformer_model(**tokens).logits', color: '#FCD34D' },
-          { text: 'aspects = extract_opinion_mining_pairs(tokens)', color: '#6EE7B7' },
-        ],
-        statusText: 'Inference: <35ms Latency',
-        runtimeTag: 'Transformers + PyTorch',
-      }
-
-    case 'page-replacement-simulator':
-      return {
-        fileName: 'os_paging_sim.py',
-        badge: 'PAGE_FAULT_ANALYTICS',
-        lines: [
-          { text: 'sim = MemoryPagingSimulator(frames=4, policy="LRU")', color: '#93C5FD' },
-          { text: 'for ref in access_trace: sim.access(ref)', color: '#FCD34D' },
-          { text: 'report = compare_fault_ratios(FIFO, LRU, OPT)', color: '#6EE7B7' },
-        ],
-        statusText: 'LRU Fault Ratio: 14.2%',
-        runtimeTag: 'OS Architecture Sim',
-      }
-
-    case 'pollution-monitoring':
-      return {
-        fileName: 'air_quality_portal.js',
-        badge: 'AQI_TELEMETRY',
-        lines: [
-          { text: 'const aqiData = await fetchAirQualityIndex(station)', color: '#93C5FD' },
-          { text: 'const { pm25, pm10 } = parsePollutants(aqiData)', color: '#FCD34D' },
-          { text: 'renderRegionalHeatmap({ pm25, pm10, aqi })', color: '#6EE7B7' },
-        ],
-        statusText: 'Live Sensor Ingestion',
-        runtimeTag: 'JavaScript + REST API',
-      }
-
-    default:
-      return {
-        fileName: `${slug.slice(0, 16)}.py`,
-        badge: 'SYSTEM_READY',
-        lines: [
-          { text: `import ${technologies[0] || 'os'}`, color: '#93C5FD' },
-          { text: `app = initialize_engine("${technologies[1] || 'core'}")`, color: '#FCD34D' },
-          { text: 'app.start_service_daemon() # Ready', color: '#6EE7B7' },
-        ],
-        statusText: 'Service Status: OK',
-        runtimeTag: technologies[0] || 'Python',
-      }
-  }
 }

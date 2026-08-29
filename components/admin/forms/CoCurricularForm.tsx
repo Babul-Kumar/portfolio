@@ -9,7 +9,7 @@ import {
   type CoCurricularFormValues,
 } from '@/lib/validations'
 import { createClient } from '@/lib/supabase/client'
-import { slugify, joinCSV, parseCSV, sanitizeDateForDb } from '@/lib/utils'
+import { slugify, joinCSV, parseCSV, sanitizeDateForDb, formatDateForInput } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import FileUpload from '@/components/admin/FileUpload'
@@ -104,8 +104,8 @@ export default function CoCurricularForm({ activity }: { activity?: CoCurricular
       organization: activity?.organization ?? '',
       category: activity?.category ?? 'Hackathon',
       description: activity?.description ?? '',
-      date: activity?.date ?? '',
-      end_date: activity?.end_date ?? '',
+      date: formatDateForInput(activity?.date),
+      end_date: formatDateForInput(activity?.end_date),
       location: activity?.location ?? '',
       mode: activity?.mode ?? 'Offline',
       role: activity?.role ?? '',

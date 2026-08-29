@@ -46,14 +46,24 @@ export default function AdminCertificatesPage() {
 
   // Dynamically compute all unique categories from actual certificates
   const dynamicCategories = useMemo(() => {
-    const present = new Set<string>()
+    const seen = new Set<string>()
+    const result: string[] = ['All']
+    seen.add('all')
+
     for (const c of certs) {
-      if (c.category?.trim()) present.add(c.category.trim())
+      const cat = c.category?.trim()
+      if (cat && !seen.has(cat.toLowerCase())) {
+        seen.add(cat.toLowerCase())
+        result.push(cat)
+      }
     }
     for (const def of DEFAULT_CATEGORIES) {
-      present.add(def)
+      if (!seen.has(def.toLowerCase())) {
+        seen.add(def.toLowerCase())
+        result.push(def)
+      }
     }
-    return ['All', ...Array.from(present).filter((c) => c !== 'All')]
+    return result
   }, [certs])
 
   // Confirm Delete Dialog State

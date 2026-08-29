@@ -92,6 +92,7 @@ export default function ContactSection({ profile }: ContactSectionProps = {}) {
     register,
     handleSubmit,
     reset,
+    getValues,
     formState: { errors },
   } = useForm<ContactFormValues>({
     resolver: zodResolver(contactSchema),
@@ -132,7 +133,38 @@ export default function ContactSection({ profile }: ContactSectionProps = {}) {
           {/* ----------------- LEFT COLUMN: HEADING & SOCIAL CARDS ----------------- */}
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <div className="text-label" style={{ marginBottom: '12px' }}>
-              07 / Direct Contact &amp; Collaboration
+              {'// COMMUNICATION_TERMINAL'}
+            </div>
+
+            {/* Availability Status Badge */}
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '4px 12px',
+                borderRadius: 'var(--radius-full)',
+                background: 'rgba(16, 185, 129, 0.08)',
+                border: '1px solid rgba(16, 185, 129, 0.25)',
+                color: '#10B981',
+                fontSize: '11px',
+                fontFamily: 'var(--font-mono)',
+                fontWeight: 600,
+                letterSpacing: '0.06em',
+                marginBottom: '16px',
+                width: 'fit-content',
+              }}
+            >
+              <span
+                style={{
+                  width: '6px',
+                  height: '6px',
+                  borderRadius: '50%',
+                  background: '#10B981',
+                  boxShadow: '0 0 8px #10B981',
+                }}
+              />
+              <span>Available for SDE &amp; AI/ML opportunities</span>
             </div>
 
             <h2
@@ -451,27 +483,50 @@ export default function ContactSection({ profile }: ContactSectionProps = {}) {
                   )}
                 </div>
 
-                {/* Error Notice */}
+                {/* Error Notice with 1-Click Fallback */}
                 {status === 'error' && (
                   <div
                     style={{
                       marginBottom: '20px',
-                      fontSize: '13px',
-                      color: 'var(--color-accent)',
-                      padding: '12px 16px',
+                      fontSize: '12.5px',
+                      color: 'var(--color-text)',
+                      padding: '14px 18px',
                       borderRadius: 'var(--radius-sm)',
                       background: 'var(--color-accent-bg)',
                       border: '1px solid var(--color-accent-border)',
                       fontFamily: 'var(--font-mono)',
+                      lineHeight: 1.5,
                     }}
                   >
-                    Failed to transmit message. Please try again or email directly at{' '}
-                    <a
-                      href={emailHref}
-                      style={{ color: 'var(--color-accent)', textDecoration: 'underline' }}
-                    >
-                      {email}
-                    </a>.
+                    <div style={{ fontWeight: 700, color: 'var(--color-accent)', marginBottom: '4px' }}>
+                      {'// TRANSMISSION_FAILED'}
+                    </div>
+                    <div>
+                      Network submission could not be completed. Use the 1-click email client fallback or message directly.
+                    </div>
+                    <div style={{ marginTop: '12px', display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+                      <a
+                        href={`mailto:${email}?subject=${encodeURIComponent(
+                          'Contact via Portfolio from ' + (getValues('name') || 'Visitor')
+                        )}&body=${encodeURIComponent(
+                          `Hi Babul,\n\n${getValues('message') || ''}\n\nFrom: ${getValues('name') || ''} (${getValues('email') || ''})`
+                        )}`}
+                        className="btn-primary"
+                        style={{ fontSize: '11px', padding: '6px 14px', textDecoration: 'none' }}
+                      >
+                        OPEN MAIL CLIENT ↗
+                      </a>
+                      <a
+                        href={emailHref}
+                        style={{
+                          fontSize: '11.5px',
+                          color: 'var(--color-accent)',
+                          textDecoration: 'underline',
+                        }}
+                      >
+                        Direct Copy ({email})
+                      </a>
+                    </div>
                   </div>
                 )}
 
@@ -508,7 +563,7 @@ export default function ContactSection({ profile }: ContactSectionProps = {}) {
                       <span>Transmitting Message…</span>
                     </>
                   ) : (
-                    <span>Transmit Message →</span>
+                    <span>SEND MESSAGE →</span>
                   )}
                 </button>
               </form>

@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { experienceSchema, type ExperienceFormValues } from '@/lib/validations'
-import { parseCSV, joinCSV, formatDate, sanitizeDateForDb } from '@/lib/utils'
+import { parseCSV, joinCSV, formatDate, sanitizeDateForDb, formatDateForInput } from '@/lib/utils'
 import { Plus, Trash2, Pencil, Briefcase, Eye, EyeOff, ExternalLink } from 'lucide-react'
 import type { Experience } from '@/types'
 import { toast, Toaster } from 'sonner'
@@ -50,8 +50,8 @@ function ExperienceForm({
     defaultValues: {
       company: item?.company ?? '',
       role: item?.role ?? '',
-      start_date: item?.start_date ?? '',
-      end_date: item?.end_date ?? '',
+      start_date: formatDateForInput(item?.start_date),
+      end_date: formatDateForInput(item?.end_date),
       is_current: item?.is_current ?? false,
       description: item?.description ?? '',
       technologies: item ? joinCSV(item.technologies) : '',

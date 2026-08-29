@@ -140,23 +140,14 @@ export default function HeroSection({ profile }: HeroProps) {
               <h1
                 className="text-display"
                 style={{
-                  color: 'var(--color-text)',
-                  fontSize: 'clamp(46px, 7.2vw, 92px)',
-                  letterSpacing: '-0.04em',
+                  fontSize: 'clamp(34px, 4.6vw, 60px)',
+                  letterSpacing: '-0.03em',
+                  lineHeight: 1.02,
+                  margin: 0,
                 }}
               >
-                {firstName || 'BABUL'}
-              </h1>
-              <h1
-                className="text-display"
-                style={{
-                  color: 'var(--color-accent)',
-                  fontSize: 'clamp(46px, 7.2vw, 92px)',
-                  letterSpacing: '-0.04em',
-                  marginTop: '-6px',
-                }}
-              >
-                {lastName || 'KUMAR'}
+                <span style={{ color: 'var(--color-text)', display: 'block' }}>{firstName || 'BABUL'}</span>
+                <span style={{ color: 'var(--color-accent)', display: 'block' }}>{lastName || 'KUMAR'}</span>
               </h1>
             </div>
 
@@ -199,35 +190,21 @@ export default function HeroSection({ profile }: HeroProps) {
                 marginBottom: '32px',
               }}
             >
-              <a
-                href="#work"
-                onClick={(e) => {
-                  const target = document.getElementById('work')
-                  if (target) {
-                    e.preventDefault()
-                    target.scrollIntoView({ behavior: 'smooth' })
-                  }
-                }}
+              <Link
+                href="/work"
                 className="btn-primary"
               >
                 <span>EXPLORE WORK</span>
                 <ArrowDown size={14} />
-              </a>
+              </Link>
 
-              <a
-                href="#contact"
-                onClick={(e) => {
-                  const target = document.getElementById('contact')
-                  if (target) {
-                    e.preventDefault()
-                    target.scrollIntoView({ behavior: 'smooth' })
-                  }
-                }}
+              <Link
+                href="/contact"
                 className="btn-secondary"
               >
                 <span>GET IN TOUCH</span>
                 <span>→</span>
-              </a>
+              </Link>
 
               <Link
                 href="/resume"

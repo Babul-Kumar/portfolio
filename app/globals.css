@@ -108,15 +108,12 @@
   padding: 0;
 }
 
-html[data-scroll-behavior="smooth"] {
-  scroll-behavior: smooth;
-}
-
 html {
   -webkit-text-size-adjust: 100%;
   tab-size: 4;
   background-color: var(--color-bg);
   color-scheme: dark;
+  overflow-x: hidden;
 }
 
 [data-theme="light"] {
@@ -199,21 +196,32 @@ div.container {
 /* --- Typography Hierarchy Scales --- */
 .text-display {
   font-family: var(--font-sans);
-  font-size: clamp(44px, 7vw, 92px);
+  font-size: clamp(26px, 3.6vw, 42px);
   font-weight: 700;
-  line-height: 0.94;
-  letter-spacing: -0.04em;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
   text-transform: uppercase;
 }
 
 .text-display-sm {
   font-family: var(--font-sans);
-  font-size: clamp(30px, 4vw, 50px);
+  font-size: clamp(20px, 2.4vw, 30px);
   font-weight: 700;
-  line-height: 1.05;
-  letter-spacing: -0.03em;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
   text-transform: uppercase;
   color: var(--color-text);
+}
+
+.smooth-card {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.25s ease,
+              box-shadow 0.25s ease,
+              background-color 0.25s ease;
+}
+
+.smooth-card:hover {
+  transform: translateY(-2px);
 }
 
 .text-editorial-serif {

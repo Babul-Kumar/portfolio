@@ -54,6 +54,7 @@ export default function AdminLayoutShell({ children }: { children: React.ReactNo
             maxWidth: '1280px',
             width: '100%',
             margin: '0 auto',
+            contain: 'layout style',
           }}
         >
           {children}

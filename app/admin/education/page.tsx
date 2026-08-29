@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { educationSchema, type EducationFormValues } from '@/lib/validations'
 import { Plus, Trash2, Pencil, GraduationCap, Eye, EyeOff, ExternalLink } from 'lucide-react'
 import type { Education } from '@/types'
-import { formatDate, sanitizeDateForDb } from '@/lib/utils'
+import { formatDate, sanitizeDateForDb, formatDateForInput } from '@/lib/utils'
 import { toast, Toaster } from 'sonner'
 import StatusBadge from '@/components/admin/StatusBadge'
 import ConfirmDialog from '@/components/admin/ConfirmDialog'
@@ -51,8 +51,8 @@ function EducationForm({
       institution: item?.institution ?? '',
       degree: item?.degree ?? '',
       field: item?.field ?? '',
-      start_date: item?.start_date ?? '',
-      end_date: item?.end_date ?? '',
+      start_date: formatDateForInput(item?.start_date),
+      end_date: formatDateForInput(item?.end_date),
       is_current: item?.is_current ?? false,
       grade: item?.grade ?? '',
       description: item?.description ?? '',

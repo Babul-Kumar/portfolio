@@ -121,6 +121,53 @@ export function getTrainingPublicAssetUrl(pathOrUrl?: string | null): string | n
 }
 
 /**
+ * Normalizes any project image URL or storage path into a fully-qualified public URL.
+ * Handles full Supabase URLs (including legacy bucket normalization), external URLs,
+ * client preview blob URLs, and relative storage paths.
+ */
+export function getProjectPublicAssetUrl(pathOrUrl?: string | null): string | null {
+  if (!pathOrUrl || typeof pathOrUrl !== 'string') return null
+  const trimmed = pathOrUrl.trim()
+  if (!trimmed) return null
+
+  // 1. Client preview blob / data URLs
+  if (trimmed.startsWith('blob:') || trimmed.startsWith('data:')) {
+    return trimmed
+  }
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
+
+  // 2. Full HTTP(S) URLs
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    // Legacy /projects/ bucket URLs: normalize to /certificate/projects/
+    if (trimmed.includes('/storage/v1/object/public/projects/')) {
+      return trimmed.replace('/storage/v1/object/public/projects/', '/storage/v1/object/public/certificate/projects/')
+    }
+    return trimmed
+  }
+
+  // 3. Relative storage paths
+  let cleanPath = trimmed.replace(/^\/+/, '')
+  // If it starts with 'certificate/', strip the bucket name
+  if (cleanPath.toLowerCase().startsWith('certificate/')) {
+    cleanPath = cleanPath.slice('certificate/'.length)
+  }
+  // Ensure the projects/ folder prefix is preserved
+  if (!cleanPath.toLowerCase().startsWith('projects/')) {
+    cleanPath = `projects/${cleanPath}`
+  }
+
+  return `${supabaseUrl}/storage/v1/object/public/certificate/${cleanPath}`
+}
+
+/**
+ * Single source of truth for resolving any project asset URL.
+ */
+export function resolveProjectUrl(pathOrUrl?: string | null): string | null {
+  return getProjectPublicAssetUrl(pathOrUrl)
+}
+
+/**
  * Single source of truth for resolving any certificate or training asset URL.
  * Handles full public URLs, Supabase storage paths across buckets ('certificate', 'projects'),
  * local blob/data URLs, and legacy paths.

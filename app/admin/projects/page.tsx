@@ -20,6 +20,7 @@ import StatusBadge from '@/components/admin/StatusBadge'
 import SearchBar from '@/components/admin/SearchBar'
 import ConfirmDialog from '@/components/admin/ConfirmDialog'
 import { ContentCardSkeleton } from '@/components/admin/LoadingSkeleton'
+import { getProjectPublicAssetUrl } from '@/lib/supabase/storage'
 
 const PROJECT_CATEGORIES = [
   'All',
@@ -348,27 +349,32 @@ export default function AdminProjectsPage() {
                     marginBottom: '14px',
                   }}
                 >
-                  {project.hero_image_url || project.thumbnail_url ? (
-                    /* eslint-disable-next-line @next/next/no-img-element */
-                    <img
-                      src={project.hero_image_url || project.thumbnail_url || ''}
-                      alt={project.title}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    />
-                  ) : (
-                    <div
-                      style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: '6px',
-                        color: '#6B7280',
-                      }}
-                    >
-                      <Code2 size={32} />
-                      <span style={{ fontSize: '11px' }}>Engineering Project</span>
-                    </div>
-                  )}
+                  {(() => {
+                    const resolvedImg = getProjectPublicAssetUrl(
+                      project.hero_image_url || project.thumbnail_url
+                    )
+                    return resolvedImg ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img
+                        src={resolvedImg}
+                        alt={project.title}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                    ) : (
+                      <div
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          gap: '6px',
+                          color: '#6B7280',
+                        }}
+                      >
+                        <Code2 size={32} />
+                        <span style={{ fontSize: '11px' }}>Engineering Project</span>
+                      </div>
+                    )
+                  })()}
 
                   {/* Top Badges */}
                   <div

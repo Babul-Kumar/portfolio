@@ -42,16 +42,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.85,
     },
     {
-      url: `${baseUrl}/projects`,
+      url: `${baseUrl}/work`,
       lastModified: new Date(),
       changeFrequency: 'weekly',
-      priority: 0.9,
+      priority: 0.95,
+    },
+    {
+      url: `${baseUrl}/projects`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.4,
     },
     {
       url: `${baseUrl}/certificates`,
       lastModified: new Date(),
       changeFrequency: 'weekly',
-      priority: 0.8,
+      priority: 0.85,
     },
     {
       url: `${baseUrl}/achievements`,
@@ -85,11 +91,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ]
 
+  const dynamicWorkRoutes: MetadataRoute.Sitemap = projectSlugs.map((slug) => ({
+    url: `${baseUrl}/work/${slug}`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly',
+    priority: 0.85,
+  }))
+
   const dynamicProjectRoutes: MetadataRoute.Sitemap = projectSlugs.map((slug) => ({
     url: `${baseUrl}/projects/${slug}`,
     lastModified: new Date(),
     changeFrequency: 'monthly',
-    priority: 0.8,
+    priority: 0.4,
   }))
 
   const dynamicCertificateRoutes: MetadataRoute.Sitemap = certificateSlugs.map((slug) => ({
@@ -115,6 +128,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     ...staticRoutes,
+    ...dynamicWorkRoutes,
     ...dynamicProjectRoutes,
     ...dynamicCertificateRoutes,
     ...dynamicTrainingRoutes,

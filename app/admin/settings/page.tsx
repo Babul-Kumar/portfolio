@@ -66,7 +66,17 @@ export default function AdminSettingsPage() {
         setResumeUrl(result.url)
         const supabase = createClient()
         await supabase.from('site_settings').upsert({ key: 'resume_url', value: result.url })
-        toast.success('Resume uploaded to Supabase Storage')
+        await supabase.from('profiles').update({ resume_url: result.url }).neq('id', '00000000-0000-0000-0000-000000000000')
+
+        // Instant revalidation so the public website updates immediately
+        try {
+          await fetch('/api/admin/revalidate?type=profile', { method: 'POST' })
+          await fetch('/api/admin/revalidate?type=settings', { method: 'POST' })
+        } catch {
+          // Non-blocking
+        }
+
+        toast.success('Resume uploaded & synchronized across the portfolio!')
       } else {
         toast.error(result.error ?? 'Upload failed')
       }
@@ -75,6 +85,19 @@ export default function AdminSettingsPage() {
       toast.error(msg)
     } finally {
       setUploading(false)
+    }
+  }
+
+  async function handleResumeRemove() {
+    setResumeUrl('')
+    try {
+      const supabase = createClient()
+      await supabase.from('site_settings').upsert({ key: 'resume_url', value: '' })
+      await supabase.from('profiles').update({ resume_url: null }).neq('id', '00000000-0000-0000-0000-000000000000')
+      await fetch('/api/admin/revalidate?type=profile', { method: 'POST' })
+      toast.success('Resume removed from portfolio')
+    } catch {
+      toast.error('Failed to remove resume')
     }
   }
 
@@ -197,7 +220,7 @@ export default function AdminSettingsPage() {
           maxSize={10 * 1024 * 1024}
           onFileSelect={handleResumeUpload}
           currentUrl={resumeUrl}
-          onRemove={() => setResumeUrl('')}
+          onRemove={handleResumeRemove}
           uploading={uploading}
         />
       </div>

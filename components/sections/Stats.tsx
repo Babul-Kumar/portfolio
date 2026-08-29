@@ -12,6 +12,8 @@ function AnimatedCounter({ target, duration = 1600 }: { target: number; duration
     const el = ref.current
     if (!el) return
 
+    let animId: number
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && !started.current) {
@@ -23,10 +25,12 @@ function AnimatedCounter({ target, duration = 1600 }: { target: number; duration
             const progress = Math.min(elapsed / duration, 1)
             const ease = 1 - Math.pow(1 - progress, 4)
             setCount(Math.round(ease * target))
-            if (progress < 1) requestAnimationFrame(tick)
+            if (progress < 1) {
+              animId = requestAnimationFrame(tick)
+            }
           }
 
-          requestAnimationFrame(tick)
+          animId = requestAnimationFrame(tick)
           observer.disconnect()
         }
       },
@@ -34,7 +38,10 @@ function AnimatedCounter({ target, duration = 1600 }: { target: number; duration
     )
 
     observer.observe(el)
-    return () => observer.disconnect()
+    return () => {
+      observer.disconnect()
+      if (animId) cancelAnimationFrame(animId)
+    }
   }, [target, duration])
 
   return <span ref={ref}>{count.toString().padStart(2, '0')}+</span>

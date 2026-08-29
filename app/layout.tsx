@@ -49,7 +49,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -58,6 +58,41 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 const theme = localStorage.getItem('theme') ?? 'dark';
                 document.documentElement.setAttribute('data-theme', theme);
               } catch {}
+
+              // Guard against third-party/extension/DevTools performance observer instrumentation bugs (e.g. web-vitals reportAllChanges 'startTime')
+              if (typeof window !== 'undefined') {
+                if (typeof window.PerformanceObserver === 'function') {
+                  try {
+                    const OrigPO = window.PerformanceObserver;
+                    window.PerformanceObserver = class SafePerformanceObserver extends OrigPO {
+                      constructor(callback) {
+                        super(function(list, observer) {
+                          try {
+                            callback(list, observer);
+                          } catch (err) {
+                            if (err && (err.message || '').includes('startTime')) {
+                              return;
+                            }
+                            throw err;
+                          }
+                        });
+                      }
+                    };
+                    window.PerformanceObserver.prototype = OrigPO.prototype;
+                  } catch {}
+                }
+
+                window.addEventListener('error', function(event) {
+                  if (
+                    event &&
+                    event.message &&
+                    (event.message.includes('startTime') || event.message.includes('reportAllChanges'))
+                  ) {
+                    event.preventDefault();
+                    event.stopImmediatePropagation();
+                  }
+                }, true);
+              }
             `,
           }}
         />

@@ -119,6 +119,15 @@ export function sanitizeDateForDb(dateStr: string | null | undefined): string | 
 }
 
 /**
+ * Formats any date string (ISO timestamps, year-month, formatted dates) into strictly 'YYYY-MM-DD'
+ * for HTML5 <input type="date"> elements. Returns '' if invalid or empty to eliminate browser format warnings.
+ */
+export function formatDateForInput(dateStr: string | null | undefined): string {
+  const sanitized = sanitizeDateForDb(dateStr)
+  return sanitized ?? ''
+}
+
+/**
  * Truncate text to a max length with ellipsis
  */
 export function truncate(text: string, maxLength: number): string {

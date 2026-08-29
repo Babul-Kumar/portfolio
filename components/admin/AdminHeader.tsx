@@ -111,8 +111,7 @@ export default function AdminHeader({ onToggleMobileSidebar }: AdminHeaderProps)
     <header
       style={{
         height: '60px',
-        background: 'rgba(10, 12, 16, 0.92)',
-        backdropFilter: 'blur(12px)',
+        background: '#0A0C10',
         borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
         position: 'sticky',
         top: 0,

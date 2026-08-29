@@ -435,8 +435,7 @@ export default function AdminSidebar({
             style={{
               position: 'fixed',
               inset: 0,
-              background: 'rgba(0, 0, 0, 0.7)',
-              backdropFilter: 'blur(4px)',
+              background: 'rgba(0, 0, 0, 0.82)',
             }}
           />
 

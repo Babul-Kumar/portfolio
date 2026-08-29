@@ -493,20 +493,20 @@ export default function CertificateLightbox({
       </main>
 
       {/* =========================================================================
-          3. BOTTOM INFORMATION & ACTIONS BAR (Isolated 54px Footer at bottom: 0)
+          3. BOTTOM INFORMATION & ACTIONS BAR (Isolated 44px Footer at bottom: 0)
           ========================================================================= */}
       <footer
         style={{
-          flex: '0 0 54px',
-          height: '54px',
-          padding: '0 clamp(16px, 3vw, 32px)',
+          flex: '0 0 44px',
+          height: '44px',
+          padding: '0 clamp(14px, 2.5vw, 24px)',
           background: '#0A0E16',
           borderTop: '1px solid rgba(255, 255, 255, 0.1)',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           flexWrap: 'wrap',
-          gap: '12px',
+          gap: '10px',
           zIndex: 10,
         }}
         onClick={(e) => e.stopPropagation()}

@@ -2,6 +2,7 @@ import { getTrainings } from '@/lib/data'
 import type { Metadata } from 'next'
 import TrainingClientView from '@/components/training/TrainingClientView'
 import AmbientSectionEnvironment from '@/components/ambient/AmbientSectionEnvironment'
+import PageHeader from '@/components/layout/PageHeader'
 
 export const revalidate = 60 // 1-minute ISR / on-demand revalidation
 
@@ -18,33 +19,19 @@ export default async function TrainingPage() {
     <div style={{ position: 'relative', overflow: 'hidden', padding: 'var(--section-gap) var(--container-pad)', minHeight: '85vh' }}>
       <AmbientSectionEnvironment variant="learning" intensity={0.5} accentMode="dual" />
       <div style={{ position: 'relative', zIndex: 1, maxWidth: 'var(--container-max)', margin: '0 auto' }}>
-        {/* Page Header */}
-        <div
-          style={{
-            marginBottom: '48px',
-            borderBottom: '1px solid var(--color-border)',
-            paddingBottom: '28px',
-          }}
-        >
-          <div className="text-label" style={{ marginBottom: '12px' }}>
-            03 / TRAINING
-          </div>
-          <h1 className="text-display" style={{ maxWidth: '800px', marginBottom: '18px' }}>
-            TRAINING THAT<br />BUILT MY FOUNDATION.
-          </h1>
-          <p
-            style={{
-              fontSize: '15px',
-              color: 'var(--color-text-secondary)',
-              maxWidth: '620px',
-              lineHeight: 1.65,
-              margin: 0,
-            }}
-          >
-            Curated industrial training, specialized workshops, and engineering programs focused on
-            applied artificial intelligence, scalable distributed backends, and algorithmic system design.
-          </p>
-        </div>
+        {/* Futuristic Module Page Header */}
+        <PageHeader
+          moduleTag="// TRAINING_MODULE_01"
+          title={
+            <>
+              TECHNICAL TRAINING &amp;<br />
+              FOUNDATIONAL PROGRAMS
+            </>
+          }
+          quote="Learning systems, building systems."
+          description="Curated industrial training, specialized bootcamps, and engineering programs focused on applied artificial intelligence, scalable distributed backends, and algorithmic system design."
+          statusBadge="CURRICULUM_VERIFIED"
+        />
 
         {/* Dynamic Database-Driven Training View */}
         <TrainingClientView initialTrainings={trainings} />
