@@ -282,14 +282,14 @@ export default function HeroSection({ profile }: HeroProps) {
           {/* Right Column: Large Full-Body 3D AI Engineer Avatar Stage */}
           <div
             style={{
-              height: 'clamp(620px, 78vh, 800px)',
+              height: 'calc(clamp(620px, 78vh, 800px) - 64px)',
               width: '100%',
               position: 'relative',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               pointerEvents: 'auto',
-              transform: 'translateY(-24px)',
+              transform: 'translateY(40px)',
             }}
             className="hero-visual"
           >
@@ -317,7 +317,8 @@ export default function HeroSection({ profile }: HeroProps) {
             gap: 20px !important;
           }
           .hero-visual {
-            height: clamp(600px, 80vh, 740px) !important;
+            height: calc(clamp(600px, 80vh, 740px) - 48px) !important;
+            transform: translateY(24px) !important;
           }
         }
 
