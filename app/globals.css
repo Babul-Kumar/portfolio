@@ -152,25 +152,88 @@ body::before {
   will-change: transform;
 }
 
-/* --- Coordinated Cinematic Hero Reveal during Portfolio Intro --- */
-html.intro-active .hero-grid,
-html.intro-active header {
+/* --- Progressive Homepage Awakening during Intro --- */
+html.intro-active .hero-grid > div:nth-child(2) /* Avatar stage */ {
   opacity: 0;
-  pointer-events: none;
+  transform: translateY(8px);
+  animation: heroAvatarAwaken 4.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-html.intro-content-reveal .hero-grid,
-html.intro-content-reveal header {
-  opacity: 1;
-  pointer-events: auto;
-  transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+html.intro-active .hero-grid > div:nth-child(1) /* Narrative & Headline */ {
+  opacity: 0;
+  transform: translateY(6px);
+  animation: heroNarrativeAwaken 4.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-html.intro-seen .hero-grid,
+html.intro-active header /* Fixed Navbar */ {
+  opacity: 0;
+  transform: translateY(-6px);
+  animation: heroHeaderAwaken 4.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes heroAvatarAwaken {
+  0%, 64% {
+    opacity: 0;
+    transform: translateY(8px);
+    pointer-events: none;
+  }
+  85% {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+}
+
+@keyframes heroNarrativeAwaken {
+  0%, 68% {
+    opacity: 0;
+    transform: translateY(6px);
+    pointer-events: none;
+  }
+  88% {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+}
+
+@keyframes heroHeaderAwaken {
+  0%, 73% {
+    opacity: 0;
+    transform: translateY(-6px);
+    pointer-events: none;
+  }
+  92% {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+}
+
+html.intro-seen .hero-grid > div:nth-child(1),
+html.intro-seen .hero-grid > div:nth-child(2),
 html.intro-seen header,
-html:not(.intro-active):not(.intro-content-reveal) .hero-grid,
-html:not(.intro-active):not(.intro-content-reveal) header {
+html:not(.intro-active) .hero-grid > div:nth-child(1),
+html:not(.intro-active) .hero-grid > div:nth-child(2),
+html:not(.intro-active) header {
   opacity: 1;
+  transform: none;
+  animation: none;
   pointer-events: auto;
 }
 
@@ -178,16 +241,16 @@ html:not(.intro-active):not(.intro-content-reveal) header {
   html {
     scroll-behavior: auto !important;
   }
-  html.intro-active .hero-grid,
-  html.intro-active header,
-  html.intro-content-reveal .hero-grid,
-  html.intro-content-reveal header {
+  html.intro-active .hero-grid > div:nth-child(1),
+  html.intro-active .hero-grid > div:nth-child(2),
+  html.intro-active header {
     opacity: 1 !important;
     transform: none !important;
-    transition: none !important;
+    animation: none !important;
     pointer-events: auto !important;
   }
 }
+
 
 /* --- Global Container & Section Density --- */
 .container,

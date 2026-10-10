@@ -127,23 +127,22 @@ Located in `lib/data.ts`:
 A personal brand opening sequence communicating:
 > *"Welcome to Babul Kumar's AI / ML / Full-Stack portfolio."*
 
-### Premium Android Boot Experience Motion Sequence (~4.35s total duration)
-1. **`0.00s – 0.15s` (`start`)**: Calm, deep OLED obsidian dark canvas matching site theme (`#060709`).
-2. **`0.15s – 1.20s` (`monogram`)**: **`BK /`** monogram mark gently awakens at center with soft backlight radial halo (`scale: 0.85 -> 1.0`), controlled scale easing (`scale: 0.94 -> 1.0`), and letter-spacing settling (`0.12em -> 0.08em`). Holds stably for clear visual recognition.
-3. **`1.20s – 1.80s` (`transform`)**: Visually connected morph from `BK` into **`BABUL KUMAR`**. The monogram expands outward (`scale: 1.0 -> 1.05`, spacing `0.08em -> 0.18em`) as it dissolves, while `BABUL KUMAR` interpolates from `scale: 0.96 -> 1.0` at the exact same anchor with an authentic horizontal light sheen pass (`@keyframes androidSheenPass`, 0.65s). Technical sub-signature `AI • ML • FULL-STACK` emerges with cyan micro-glow accents.
-4. **`1.80s – 2.80s` (`hold`)**: Deliberate, motionless 1.0-second reading hold. Complete typographical clarity and comfortable cognitive perception.
-5. **`2.80s – 3.40s` (`wake`)**: Android wake-up activation: diffuse radial halo blooms and expands outward (`scale: 1.15 -> 3.4`), dissolving the dark canvas overlay (`transition: opacity 1.05s`) to illuminate the portfolio environment underneath.
-6. **`3.40s – 4.35s` (`content`)**: `html.intro-content-reveal` activates. The real avatar, hero narrative, and fixed navbar resolve into resting view simultaneously via natural easing (`cubic-bezier(0.16, 1, 0.3, 1)`). Zero side curtains, zero abrupt jumps.
-7. **`4.35s` (`complete`)**: Overlay unmounts completely from the DOM (`return null`). Full interactivity restored.
+### Continuous Boot Experience Motion Choreography (4.40s Master Timeline)
+1. **`0.00s – 0.20s` (Dark Stillness)**: Calm, deep OLED obsidian dark canvas matching site theme (`#060709`). Zero initial flash or layout jitter.
+2. **`0.20s – 1.15s` (BK Mark Awakening)**: **`BK /`** awakens at the shared optical center with diffuse terracotta radial halo (`rgba(228, 93, 44, 0.35)` core, `rgba(20, 184, 166, 0.16)` mid), settling smoothly (`scale: 0.94 -> 1.0`, `opacity: 0 -> 1`), and holds stably for clear cognitive recognition.
+3. **`0.95s – 1.85s` (True Overlapping Morph)**: Connected transformation between persistent elements. `BK` gently expands (`scale: 1.0 -> 1.045`) as its opacity decreases (`1.0 -> 0.0`), while **`BABUL KUMAR`** simultaneously crystallizes (`scale: 0.96 -> 1.0`, `opacity: 0 -> 1`) at the exact same geometric anchor. Subtitle is positioned absolutely (`top: calc(100% + 14px)`) to eliminate any vertical center drift. Continuous overlap ensures zero empty frame and zero opaque collision.
+4. **`1.85s – 2.60s` (Stationary Reading Hold & Sheen Pass)**: Motionless reading hold on `BABUL KUMAR`. An authentic horizontal light sheen beam sweeps across the typographic signature between 1.89s and 2.45s (`introSheenSweep`).
+5. **`2.45s – 3.55s` (Radial Halo Bloom & Overlay Dissolution)**: Central radial halo blooms outward from `scale: 1.18` to `scale: 4.4`, lighting up the viewport. The dark overlay dissolves (`opacity: 1 -> 0`), revealing the authentic portfolio background and technical grid underneath. The identity softly dissolves into the light bloom.
+6. **`3.10s – 4.35s` (Progressive Content Emergence)**: The real avatar stage (`2.85s–3.75s`), hero narrative (`3.05s–3.90s`), and fixed navbar (`3.30s–4.10s`) emerge progressively and settle in unison with natural easing. Zero side curtains, zero abrupt jumps.
+7. **`4.35s` (Clean Completion)**: Overlay cleanly unmounts from the DOM (`return null`). Full interactivity restored.
 
-### Premium Boot Motion Principles
-* **Connected Morphological Continuity**: Monogram doesn't vanish into a blank slate; it expands outward into the full identity at the exact same optical anchor.
-* **Controlled Light Sheen**: A single restrained horizontal light beam (`androidSheenPass`) sweeps across the name during transformation, mimicking premium flagship hardware wakeups without cheesy neon glows.
-* **Expanding Diffuse Radial Bloom**: Avoids cartoonish hard circle iris clips. Instead, a diffuse ambient radial halo scales outward (`scale 3.4`) while dissolving the dark overlay.
-* **Unified Scene Emergence**: Navbar (`header`) and `.hero-grid` transition synchronously under `html.intro-content-reveal`, completely eliminating the optical illusion of side panels or curtains opening outward.
-* **Pure Opacity Transitions**: Uses pure GPU-composited opacity with zero `clip-path`, `scaleX`, or width animations.
-* **Coordinated Single Reveal**: Zero duplicate avatars or secondary canvases; the real hero environment simply emerges underneath.
-* **Session Storage & Replay Testing**: `sessionStorage.getItem('bk_intro_seen')` prevents re-triggering for returning users. Testing overrides via URL parameters (`?replay=true`, `?intro=true`, `?intro_phase=<phase>`) or keyboard shortcuts (`Shift + R`, `Shift + I`).
+### Motion Engineering Architecture
+* **Single Master CSS Timeline**: All layers run on the compositor via synchronized `@keyframes` over a shared 4.40s duration, completely eliminating React timer drift and re-render interruptions.
+* **Millimeter-Precise Optical Anchor**: Monogram and full name share the exact same `(50%, 50%)` anchor in `.intro-optical-stage`.
+* **Persistent Overlapping Elements**: Elements stay mounted during the cross-transition, smoothly blending opacities.
+* **Controlled Light Sheen & Diffuse Bloom**: High-contrast reflection sweep on stationary text; diffuse halo expansion (`scale 4.4`) without hard circle clipping.
+* **Progressive Homepage Revealing**: Background grid, avatar stage, and narrative emerge through the dissolving overlay.
+* **Session Storage & Replay Testing**: `sessionStorage.getItem('bk_intro_seen')` prevents re-triggering. Testing overrides via URL parameters (`?replay=true`, `?intro=true`, `?intro_phase=<phase>`) or keyboard shortcuts (`Shift + R`, `Shift + I`).
 * **Instant User Skip**: Pressing `Escape`, `Space`, or `Enter`, or clicking anywhere immediately skips the intro.
 * **Reduced Motion Compliance**: Immediately bypassed if `prefers-reduced-motion: reduce` is detected.
 

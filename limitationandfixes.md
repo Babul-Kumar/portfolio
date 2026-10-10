@@ -313,6 +313,42 @@
      * Full Name, bio, email, location, GitHub, LinkedIn, degree, university, timeline (2024 — 2028), projects, technologies, and skills categories verified 100% unchanged between baseline and post-edit.
   6. **Validation**: Zero TypeScript errors (`npx tsc --noEmit`), zero ESLint warnings (`npm run lint`), verified HTTP 200 on `/resume`, `/resume/viewer`, and `/api/resume/download`, and 100% successful production build (`npm run build`).
 
+---
+
+## 13. Critical Rework: Genuine Continuous Portfolio Boot Animation
+
+* **Location**: [components/intro/PortfolioIntro.tsx](file:///c:/Users/babul/Desktop/portfolio/components/intro/PortfolioIntro.tsx), [app/globals.css](file:///c:/Users/babul/Desktop/portfolio/app/globals.css)
+* **Root-Cause Diagnosis of Disconnected Motion**:
+  1. **Competing React Phase Re-renders**: Previous iterations relied on multiple separate `setTimeout` state updates (`start` -> `monogram` -> `transform` -> `hold` -> `wake` -> `content`). Each state switch triggered React re-renders that interrupted CSS transition curves, resulting in perceived abrupt card replacements.
+  2. **Optical Vertical Anchor Mismatch**: The monogram `BK /` was centered as a single text line, but the identity container was a flex column containing both `h1` (`BABUL KUMAR`) and the subtitle (`AI • ML • FULL-STACK`). The presence of the subtitle below `h1` pushed the vertical center of `BABUL KUMAR` upward, causing an optical vertical jump between the monogram and the full name during the handoff.
+  3. **Premature Unmounting & Contrast Gaps**: The sheen pass was unmounted conditionally when phase changed to `hold`. The halo was scaled with low net alpha (~0.09) and snapped to 0 opacity at the onset of wake, creating an empty dark gap before homepage content appeared.
+* **Resolution — Single Authoritative Continuous Timeline (4.40s)**:
+  1. **Persistent Elements & True Overlapping Morph (0.95s–1.85s)**:
+     * Both `BK` and `BABUL KUMAR` remain permanently mounted in a shared optical stage (`.intro-optical-stage`).
+     * The technical subtitle is positioned with `position: absolute; top: calc(100% + 14px)`, ensuring `BK` and `h1` share the exact millimeter-precise geometric center `(50%, 50%)`.
+     * `BK` awakens (`0.20s–1.15s`, `scale: 0.94 -> 1.0`, `opacity: 0 -> 1`), holds stably, and then gently expands `1.0 -> 1.045` while fading `1.0 -> 0.0` (`1.06s–1.65s`).
+     * `BABUL KUMAR` simultaneously crystallizes from `scale: 0.96 -> 1.0` while fading in from `0.0 -> 1.0`.
+     * During the 1.10s–1.65s handoff window, both elements overlap smoothly on screen. There is zero blank frame and zero opaque collision.
+  2. **Stationary Identity Hold & Sheen Pass (1.85s–2.60s)**:
+     * `BABUL KUMAR` is held in a stationary readable state at `scale(1.0)` with zero jitter.
+     * A refined horizontal light sheen beam sweeps across the typographic signature between 1.89s and 2.45s (`@keyframes introSheenSweep`).
+  3. **Luminous Environment Activation & Bloom (2.45s–3.55s)**:
+     * Central diffused terracotta radial halo blooms outward from `scale(1.18)` to `scale(4.4)` (`rgba(228, 93, 44, 0.35)` core, `rgba(20, 184, 166, 0.16)` mid), filling the viewport with ambient warmth.
+     * Dark overlay dissolves (`opacity: 1 -> 0`), revealing the authentic portfolio background and technical grid underneath.
+     * The identity softly dissolves into the light bloom (`opacity: 1 -> 0`).
+  4. **Progressive Homepage Emergence (3.10s–4.35s)**:
+     * Fully synchronized in `app/globals.css`:
+       - Background & grid revealed as overlay dissolves.
+       - Avatar stage emerges (`2.85s–3.75s`, `translateY: 8px -> 0`, `opacity: 0 -> 1`).
+       - Headline narrative emerges (`3.05s–3.90s`, `translateY: 6px -> 0`, `opacity: 0 -> 1`).
+       - Navbar settles (`3.30s–4.10s`, `translateY: -6px -> 0`, `opacity: 0 -> 1`).
+  5. **Clean Unmount at 4.35s**:
+     * Single React timer cleanly unmounts the overlay component (`return null`), sets `sessionStorage.setItem('bk_intro_seen', 'true')`, and removes `intro-active`.
+     * Zero layout jumps, zero side-opening curtains, full pointer interactivity.
+  6. **Ergonomics & Accessibility**:
+     * Supports `?replay=true`, `Shift + R` / `Shift + I`, fast skip (`Escape`, `Space`, `Enter`), click-to-dismiss, static phase inspection (`?intro_phase=<phase>`), and instant `prefers-reduced-motion` bypass.
+  7. **Validation**: Zero TypeScript errors (`npx tsc --noEmit`), zero ESLint warnings (`npm run lint`), and 100% successful production build across 65 routes (`npm run build`).
+
 
 
 
