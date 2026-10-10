@@ -175,6 +175,9 @@ html:not(.intro-active):not(.intro-content-reveal) header {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
   html.intro-active .hero-grid,
   html.intro-active header,
   html.intro-content-reveal .hero-grid,
