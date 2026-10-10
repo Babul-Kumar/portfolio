@@ -239,7 +239,7 @@ export default async function AboutPage() {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Calendar size={13} style={{ color: 'var(--color-accent)' }} />
-                <span>B.Tech CSE Class of 2026 (2022 — 2026)</span>
+                <span>B.Tech CSE Class of 2026 (2024 — 2028)</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Compass size={13} style={{ color: 'var(--color-accent)' }} />

@@ -255,5 +255,35 @@
   4. **Home Page Preservation**: Kept the homepage concise, maintaining its 3D avatar hero, availability badge, technology radar, and added a discreet bridge link in `HomeAboutSection` to `/about`.
   5. **Validation**: Zero TypeScript errors (`npx tsc --noEmit`), zero ESLint warnings (`npm run lint`), verified HTTP 200 on both `/` and `/about`, and 100% successful production build (`npm run build`).
 
+---
+
+## 11. Redesign Startup Animation — Premium Android Boot Experience
+
+* **Location**: [components/intro/PortfolioIntro.tsx](file:///c:/Users/babul/Desktop/portfolio/components/intro/PortfolioIntro.tsx), [app/globals.css](file:///c:/Users/babul/Desktop/portfolio/app/globals.css)
+* **Observed Issue**: 
+  The previous startup sequence had three stages (BK monogram, BABUL KUMAR identity, main portfolio reveal), but the transitions between them felt basic, rushed, and disconnected—like three independent, jarring screens rather than one unified, cohesive brand boot signature.
+* **Creative Direction & Implementation**:
+  Engineered a cohesive, continuous motion system inspired by a flagship modern Android device boot experience (subtle, deliberate, fluid, and cinematic):
+  1. **Stage 1 — BK Monogram Awakening (0.00s–1.20s)**:
+     * Calm, deep OLED obsidian canvas (`#060709`).
+     * Soft ambient core radial halo gently illuminates behind the mark (`scale: 0.85 -> 1.0`, diffuse orange-teal gradient).
+     * `BK /` monogram emerges smoothly with restrained scale easing (`scale: 0.94 -> 1.0`) and subtle letter-spacing adjustment (`0.12em -> 0.08em`), holding stably for clear recognition.
+  2. **Stage 2 — Connected Identity Transformation & Reading Hold (1.20s–2.80s)**:
+     * Visually connected transformation from monogram to full identity without abrupt swapping.
+     * The `BK` mark subtly expands (`scale: 1.0 -> 1.05`, letter-spacing `0.08em -> 0.18em`) as it dissolves, while `BABUL KUMAR` interpolates from `scale: 0.96 -> 1.0` at the exact same optical anchor.
+     * A restrained horizontal light sheen beam sweeps across the typographic signature (`@keyframes androidSheenPass`, 0.65s duration).
+     * Technical sub-signature `AI • ML • FULL-STACK` emerges with cyan micro-glow bullet points.
+     * **Stationary Reading Hold (1.80s–2.80s)**: A full 1.0-second motionless hold allowing comfortable reading and cognitive registration.
+  3. **Stage 3 — Organic Wake-Up Reveal (2.80s–4.35s)**:
+     * Diffuse radial light bloom gracefully expands outward (`scale: 1.15 -> 3.4`), smoothly dissolving the OLED dark overlay.
+     * No artificial side-opening curtains, hard irises, or sudden pops.
+     * At 3.40s, `html.intro-content-reveal` activates: the real avatar stage, hero narrative, and fixed navbar fade in synchronously with natural easing (`cubic-bezier(0.16, 1, 0.3, 1)`).
+  4. **Clean Handoff & Interaction Guard**:
+     * At 2.80s, `pointerEvents: none` is applied to avoid blocking interaction.
+     * At 4.35s, the intro overlay cleanly unmounts from the DOM (`return null`), permanently cleaning up all timers and event listeners.
+     * Preserves reduced-motion bypass (`prefers-reduced-motion: reduce`), session storage gating (`bk_intro_seen`), URL debug params (`?replay=true`, `?intro_phase=<phase>`), and instant skip keys (`Escape`, `Space`, `Enter`).
+  5. **Validation**: Zero TypeScript errors (`npx tsc --noEmit`), zero ESLint warnings (`npm run lint`), and 100% successful production build (`npm run build`).
+
+
 
 

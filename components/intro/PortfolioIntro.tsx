@@ -3,13 +3,13 @@
 import React, { useState, useEffect, useCallback, useRef, useSyncExternalStore } from 'react'
 
 export type IntroPhase =
-  | 'start'      // 0.00s: Pure quiet dark canvas (#060709)
-  | 'monogram'   // 0.15s: BK monogram smoothly emerges and settles into stillness
-  | 'identity'   // 1.05s: Smooth cross-fade to BABUL KUMAR & technical pillars
-  | 'hold'       // 1.65s: Deliberate, intentional, stationary readable hold
-  | 'dissolve'   // 2.70s: Identity text dissolves, dark canvas lifts to reveal environment
-  | 'content'    // 3.40s: Avatar, hero content, and navbar resolve as a unified composition
-  | 'complete'   // 4.55s: Sequence complete, overlay unmounts, homepage fully interactive
+  | 'start'      // 0.00s: Deep OLED black canvas (#060709)
+  | 'monogram'   // 0.15s: BK monogram awakens with soft ambient core glow
+  | 'transform'  // 1.20s: Connected morph from BK into BABUL KUMAR with subtle light pass
+  | 'hold'       // 1.80s: Deliberate, crisp, stationary reading hold
+  | 'wake'       // 2.80s: Android wake-up: radial bloom expands, canvas dissolves
+  | 'content'    // 3.40s: Avatar, hero narrative, and navbar resolve synchronously
+  | 'complete'   // 4.35s: Unmount cleanly, 100% interactive
 
 function subscribeNoop() {
   return () => {}
@@ -52,9 +52,9 @@ function getDebugPhaseSnapshot(): IntroPhase | null {
     const debug = params.get('intro_phase')
     if (debug) {
       if (['monogram', 'bk'].includes(debug)) return 'monogram'
-      if (['identity'].includes(debug)) return 'identity'
+      if (['transform', 'identity'].includes(debug)) return 'transform'
       if (['hold'].includes(debug)) return 'hold'
-      if (['dissolve', 'emerge'].includes(debug)) return 'dissolve'
+      if (['wake', 'dissolve', 'emerge'].includes(debug)) return 'wake'
       if (['content'].includes(debug)) return 'content'
     }
   } catch {
@@ -100,7 +100,7 @@ export default function PortfolioIntro() {
     if (debugPhase) {
       try {
         document.documentElement.classList.add('intro-active')
-        if (debugPhase === 'dissolve') {
+        if (debugPhase === 'wake') {
           document.documentElement.classList.add('intro-emerging')
         } else if (debugPhase === 'content') {
           document.documentElement.classList.add('intro-content-reveal')
@@ -115,14 +115,14 @@ export default function PortfolioIntro() {
     } catch {}
 
     // =========================================================================
-    // Coordinated Cinematic Brand Introduction Timeline (~4.5s total duration)
-    // 0.00s (0ms)   : Pure quiet dark canvas (#060709)
-    // 0.15s (150ms) : BK monogram mark emerges and settles into stillness
-    // 1.05s (1050ms): Smooth continuous cross-fade into BABUL KUMAR & AI · ML · FULL-STACK
-    // 1.65s (1650ms): Identity fully established, enters deliberate stationary hold
-    // 2.70s (2700ms): Environment emerges from darkness as overlay begins graceful dissolve
-    // 3.40s (3400ms): Real avatar, hero content, and navbar resolve into place in unison
-    // 4.55s (4550ms): Sequence complete: overlay unmounts cleanly, page fully interactive
+    // Premium Flagship Android Boot Sequence Timeline (~4.35s total duration)
+    // 0.00s (0ms)   : Deep OLED black canvas (#060709)
+    // 0.15s (150ms) : BK monogram awakens with soft ambient backlight
+    // 1.20s (1200ms): Connected morph from BK into BABUL KUMAR with subtle light pass
+    // 1.80s (1800ms): Deliberate, crisp, stationary reading hold (1.0s window)
+    // 2.80s (2800ms): Android wake-up: radial bloom expands, canvas dissolves
+    // 3.40s (3400ms): Real avatar, hero narrative, and navbar resolve in unison
+    // 4.35s (4350ms): Sequence complete: overlay unmounts cleanly, page interactive
     // =========================================================================
 
     const t1 = setTimeout(() => {
@@ -130,19 +130,19 @@ export default function PortfolioIntro() {
     }, 150)
 
     const t2 = setTimeout(() => {
-      setPhase('identity')
-    }, 1050)
+      setPhase('transform')
+    }, 1200)
 
     const t3 = setTimeout(() => {
       setPhase('hold')
-    }, 1650)
+    }, 1800)
 
     const t4 = setTimeout(() => {
-      setPhase('dissolve')
+      setPhase('wake')
       try {
         document.documentElement.classList.add('intro-emerging')
       } catch {}
-    }, 2700)
+    }, 2800)
 
     const t5 = setTimeout(() => {
       setPhase('content')
@@ -153,7 +153,7 @@ export default function PortfolioIntro() {
 
     const t6 = setTimeout(() => {
       completeIntro()
-    }, 4550)
+    }, 4350)
 
     // Safety failsafe
     const tFailsafe = setTimeout(() => {
@@ -192,13 +192,13 @@ export default function PortfolioIntro() {
   }
 
   const currentPhase = debugPhase || phase
-  const isMonogram = currentPhase === 'monogram'
-  const isIdentityOrHold = currentPhase === 'identity' || currentPhase === 'hold'
-  const isDissolving = currentPhase === 'dissolve' || currentPhase === 'content'
+  const isMonogramActive = currentPhase === 'monogram'
+  const isIdentityActive = currentPhase === 'transform' || currentPhase === 'hold'
+  const isWaking = currentPhase === 'wake' || currentPhase === 'content'
 
   return (
     <div
-      className={`portfolio-intro-overlay ${isDissolving ? 'intro-dissolving' : ''}`}
+      className={`portfolio-intro-overlay ${isWaking ? 'intro-waking' : ''}`}
       onClick={completeIntro}
       role="presentation"
       aria-hidden="true"
@@ -211,15 +211,55 @@ export default function PortfolioIntro() {
         alignItems: 'center',
         justifyContent: 'center',
         cursor: 'pointer',
-        pointerEvents: isDissolving ? 'none' : 'auto',
+        pointerEvents: isWaking ? 'none' : 'auto',
         userSelect: 'none',
-        transition: 'opacity 0.95s cubic-bezier(0.16, 1, 0.3, 1)',
-        opacity: isDissolving ? 0 : 1,
+        transition: 'opacity 1.05s cubic-bezier(0.16, 1, 0.3, 1)',
+        opacity: isWaking ? 0 : 1,
         willChange: 'opacity',
         overflow: 'hidden',
       }}
     >
-      {/* Central Identity Presentation Container (Anchored Focal Point) */}
+      {/* =========================================================================
+          Ambient Radial Wake Halo (OLED Display Backlight & Wake Bloom)
+         ========================================================================= */}
+      <div
+        className="intro-radial-halo"
+        style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          width: 'clamp(340px, 44vw, 560px)',
+          height: 'clamp(340px, 44vw, 560px)',
+          borderRadius: '50%',
+          background:
+            'radial-gradient(circle, rgba(228, 93, 44, 0.16) 0%, rgba(20, 184, 166, 0.07) 35%, transparent 70%)',
+          pointerEvents: 'none',
+          willChange: 'transform, opacity',
+          transform: isWaking
+            ? 'translate(-50%, -50%) scale(3.4)'
+            : isIdentityActive
+              ? 'translate(-50%, -50%) scale(1.15)'
+              : isMonogramActive
+                ? 'translate(-50%, -50%) scale(1.0)'
+                : 'translate(-50%, -50%) scale(0.85)',
+          opacity: isWaking
+            ? 0
+            : isIdentityActive
+              ? 0.75
+              : isMonogramActive
+                ? 0.6
+                : 0,
+          transition: isWaking
+            ? 'transform 0.95s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.95s cubic-bezier(0.16, 1, 0.3, 1)'
+            : isIdentityActive
+              ? 'transform 0.65s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.65s ease-out'
+              : 'transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.8s ease-out',
+        }}
+      />
+
+      {/* =========================================================================
+          Central Anchored Identity Container
+         ========================================================================= */}
       <div
         style={{
           position: 'relative',
@@ -232,12 +272,15 @@ export default function PortfolioIntro() {
           width: '100%',
           maxWidth: '720px',
           minHeight: '160px',
-          opacity: isDissolving ? 0 : 1,
-          transition: 'opacity 0.55s ease-out',
-          willChange: 'opacity',
+          opacity: isWaking ? 0 : 1,
+          transform: isWaking ? 'scale(1.02)' : 'scale(1.0)',
+          transition: isWaking
+            ? 'opacity 0.5s ease-out, transform 0.5s ease-out'
+            : 'none',
+          willChange: 'opacity, transform',
         }}
       >
-        {/* Stage 1: Stationary BK Monogram Mark */}
+        {/* Stage 1: BK Monogram Mark (Initial Awakening) */}
         <div
           className="intro-bk-mark"
           style={{
@@ -247,12 +290,22 @@ export default function PortfolioIntro() {
             alignItems: 'center',
             justifyContent: 'center',
             gap: '10px',
-            opacity: isMonogram ? 1 : 0,
-            transition: isMonogram
-              ? 'opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1)'
-              : 'opacity 0.35s ease-out',
-            willChange: 'opacity',
             pointerEvents: 'none',
+            willChange: 'opacity, transform, letter-spacing',
+            opacity: isMonogramActive ? 1 : 0,
+            transform: isMonogramActive
+              ? 'scale(1.0)'
+              : currentPhase === 'start'
+                ? 'scale(0.94)'
+                : 'scale(1.05)',
+            letterSpacing: isMonogramActive
+              ? '0.08em'
+              : currentPhase === 'start'
+                ? '0.12em'
+                : '0.18em',
+            transition: isMonogramActive
+              ? 'opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1), transform 0.75s cubic-bezier(0.16, 1, 0.3, 1), letter-spacing 0.75s cubic-bezier(0.16, 1, 0.3, 1)'
+              : 'opacity 0.38s ease-out, transform 0.38s ease-out, letter-spacing 0.38s ease-out',
           }}
         >
           <span
@@ -260,9 +313,9 @@ export default function PortfolioIntro() {
               fontFamily: 'var(--font-sans)',
               fontSize: 'clamp(48px, 6vw, 76px)',
               fontWeight: 700,
-              letterSpacing: '0.08em',
               color: '#F5F6F8',
               lineHeight: 1,
+              textShadow: '0 0 28px rgba(245, 246, 248, 0.12)',
             }}
           >
             BK
@@ -273,15 +326,17 @@ export default function PortfolioIntro() {
               fontSize: 'clamp(40px, 5vw, 64px)',
               fontWeight: 300,
               color: '#E45D2C',
-              opacity: 0.9,
               lineHeight: 1,
+              opacity: isMonogramActive ? 0.9 : 0,
+              transition: 'opacity 0.28s ease-out',
+              textShadow: '0 0 20px rgba(228, 93, 44, 0.28)',
             }}
           >
             /
           </span>
         </div>
 
-        {/* Stage 2 & 3: Expanded Personal Identity & Engineering Pillars */}
+        {/* Stage 2 & Hold: BABUL KUMAR Identity & Pillars */}
         <div
           className="intro-identity-wrapper"
           style={{
@@ -291,18 +346,22 @@ export default function PortfolioIntro() {
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            opacity: isIdentityOrHold ? 1 : 0,
-            transition: isIdentityOrHold
-              ? 'opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1)'
-              : 'opacity 0.4s ease-out',
-            willChange: 'opacity',
             pointerEvents: 'none',
+            willChange: 'opacity, transform',
+            opacity: isIdentityActive ? 1 : 0,
+            transform: isIdentityActive ? 'scale(1.0)' : 'scale(0.96)',
+            transition: isIdentityActive
+              ? 'opacity 0.58s cubic-bezier(0.16, 1, 0.3, 1), transform 0.58s cubic-bezier(0.16, 1, 0.3, 1)'
+              : 'opacity 0.4s ease-out, transform 0.4s ease-out',
           }}
         >
-          {/* Signature Name: BABUL KUMAR */}
+          {/* Signature Typography: BABUL KUMAR with Refined Sheen Beam */}
           <div
             style={{
+              position: 'relative',
               marginBottom: '14px',
+              display: 'inline-block',
+              overflow: 'hidden',
             }}
           >
             <h1
@@ -316,11 +375,30 @@ export default function PortfolioIntro() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '12px',
+                textShadow: '0 2px 20px rgba(0, 0, 0, 0.6)',
               }}
             >
               <span style={{ color: '#F5F6F8' }}>BABUL</span>
               <span style={{ color: '#E45D2C' }}>KUMAR</span>
             </h1>
+
+            {/* Subtle Android Horizontal Sheen Beam */}
+            {currentPhase === 'transform' && (
+              <div
+                className="android-sheen-beam"
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '60%',
+                  height: '100%',
+                  background:
+                    'linear-gradient(105deg, transparent 15%, rgba(255, 255, 255, 0.22) 50%, transparent 85%)',
+                  pointerEvents: 'none',
+                  animation: 'androidSheenPass 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                }}
+              />
+            )}
           </div>
 
           {/* Technical Sub-Signature: AI · ML · FULL-STACK */}
@@ -335,14 +413,33 @@ export default function PortfolioIntro() {
               letterSpacing: '0.22em',
               textTransform: 'uppercase',
               color: '#9499A6',
+              opacity: isIdentityActive ? 1 : 0,
+              transform: isIdentityActive ? 'translateY(0)' : 'translateY(5px)',
+              transition: isIdentityActive
+                ? 'opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.16s, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.16s'
+                : 'opacity 0.3s ease-out, transform 0.3s ease-out',
             }}
           >
             <span>AI</span>
-            <span style={{ color: 'var(--color-accent-teal, #14B8A6)', opacity: 0.85, fontSize: '9px' }}>
+            <span
+              style={{
+                color: '#14B8A6',
+                opacity: 0.9,
+                fontSize: '9px',
+                textShadow: '0 0 6px rgba(20, 184, 166, 0.6)',
+              }}
+            >
               •
             </span>
             <span>ML</span>
-            <span style={{ color: 'var(--color-accent-teal, #14B8A6)', opacity: 0.85, fontSize: '9px' }}>
+            <span
+              style={{
+                color: '#14B8A6',
+                opacity: 0.9,
+                fontSize: '9px',
+                textShadow: '0 0 6px rgba(20, 184, 166, 0.6)',
+              }}
+            >
               •
             </span>
             <span>FULL-STACK</span>
@@ -351,6 +448,23 @@ export default function PortfolioIntro() {
       </div>
 
       <style>{`
+        @keyframes androidSheenPass {
+          0% {
+            transform: translateX(-120%);
+            opacity: 0;
+          }
+          30% {
+            opacity: 0.6;
+          }
+          70% {
+            opacity: 0.45;
+          }
+          100% {
+            transform: translateX(200%);
+            opacity: 0;
+          }
+        }
+
         /* Immediate suppression for returning visitors across SSR/SSG */
         html.intro-seen .portfolio-intro-overlay,
         html[data-intro-seen="true"] .portfolio-intro-overlay {

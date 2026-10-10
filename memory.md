@@ -127,17 +127,19 @@ Located in `lib/data.ts`:
 A personal brand opening sequence communicating:
 > *"Welcome to Babul Kumar's AI / ML / Full-Stack portfolio."*
 
-### Motion Redesign V2 — Slow, Cinematic, Intentional Brand Flow (~4.55s total duration)
-1. **`0.00s – 0.15s` (`start`)**: Pure quiet obsidian dark canvas matching site theme (`#060709`).
-2. **`0.15s – 1.05s` (`monogram`)**: Minimal, stationary **`BK /`** monogram mark fades in smoothly (`opacity: 0 -> 1`, `cubic-bezier(0.16, 1, 0.3, 1)`) with crisp white lettering and subtle terracotta slash (`#E45D2C`). No scaling, spinning, bouncing, or displacement.
-3. **`1.05s – 1.65s` (`identity`)**: Monogram seamlessly cross-fades into **`BABUL KUMAR`** and technical subtitle **`AI · ML · FULL-STACK`** with cyan punctuation at the exact same optical center. Zero vertical displacement or font-size jumping.
-4. **`1.65s – 2.70s` (`hold`)**: Deliberate, intentional, stationary readable hold. No moving typography, no pulsing glows, no competing animation. The viewer has a calm 1.05-second window to register the name and identity.
-5. **`2.70s – 3.40s` (`dissolve`)**: The dark overlay gracefully lifts (`opacity: 1 -> 0`, 0.95s ease-out), allowing the underlying blueprint grid, ambient lighting, and environment to emerge from darkness.
-6. **`3.40s – 4.55s` (`content`)**: Avatar (right), hero narrative (left), and navbar (top) resolve synchronously via pure opacity with zero transforms (`transform: none`). Completely eliminates the side-opening/curtain effect.
-7. **`4.55s` (`complete`)**: Overlay unmounts completely from the DOM. Homepage is 100% interactive.
+### Premium Android Boot Experience Motion Sequence (~4.35s total duration)
+1. **`0.00s – 0.15s` (`start`)**: Calm, deep OLED obsidian dark canvas matching site theme (`#060709`).
+2. **`0.15s – 1.20s` (`monogram`)**: **`BK /`** monogram mark gently awakens at center with soft backlight radial halo (`scale: 0.85 -> 1.0`), controlled scale easing (`scale: 0.94 -> 1.0`), and letter-spacing settling (`0.12em -> 0.08em`). Holds stably for clear visual recognition.
+3. **`1.20s – 1.80s` (`transform`)**: Visually connected morph from `BK` into **`BABUL KUMAR`**. The monogram expands outward (`scale: 1.0 -> 1.05`, spacing `0.08em -> 0.18em`) as it dissolves, while `BABUL KUMAR` interpolates from `scale: 0.96 -> 1.0` at the exact same anchor with an authentic horizontal light sheen pass (`@keyframes androidSheenPass`, 0.65s). Technical sub-signature `AI • ML • FULL-STACK` emerges with cyan micro-glow accents.
+4. **`1.80s – 2.80s` (`hold`)**: Deliberate, motionless 1.0-second reading hold. Complete typographical clarity and comfortable cognitive perception.
+5. **`2.80s – 3.40s` (`wake`)**: Android wake-up activation: diffuse radial halo blooms and expands outward (`scale: 1.15 -> 3.4`), dissolving the dark canvas overlay (`transition: opacity 1.05s`) to illuminate the portfolio environment underneath.
+6. **`3.40s – 4.35s` (`content`)**: `html.intro-content-reveal` activates. The real avatar, hero narrative, and fixed navbar resolve into resting view simultaneously via natural easing (`cubic-bezier(0.16, 1, 0.3, 1)`). Zero side curtains, zero abrupt jumps.
+7. **`4.35s` (`complete`)**: Overlay unmounts completely from the DOM (`return null`). Full interactivity restored.
 
-### Zero-Lag Cinematic Motion Principles
-* **Stationary Typography**: Eliminates subpixel font rendering blurriness, letter-spacing jitter, and layout shifts.
+### Premium Boot Motion Principles
+* **Connected Morphological Continuity**: Monogram doesn't vanish into a blank slate; it expands outward into the full identity at the exact same optical anchor.
+* **Controlled Light Sheen**: A single restrained horizontal light beam (`androidSheenPass`) sweeps across the name during transformation, mimicking premium flagship hardware wakeups without cheesy neon glows.
+* **Expanding Diffuse Radial Bloom**: Avoids cartoonish hard circle iris clips. Instead, a diffuse ambient radial halo scales outward (`scale 3.4`) while dissolving the dark overlay.
 * **Unified Scene Emergence**: Navbar (`header`) and `.hero-grid` transition synchronously under `html.intro-content-reveal`, completely eliminating the optical illusion of side panels or curtains opening outward.
 * **Pure Opacity Transitions**: Uses pure GPU-composited opacity with zero `clip-path`, `scaleX`, or width animations.
 * **Coordinated Single Reveal**: Zero duplicate avatars or secondary canvases; the real hero environment simply emerges underneath.
