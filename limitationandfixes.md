@@ -375,7 +375,29 @@
      - As letters and tagline settle into full legibility, a refined light sheen reflection sweeps across the typography (`@keyframes introSheenSweep`).
   5. **Background Halo Bloom & Progressive Homepage Emergence (2.45s–4.35s)**:
      - Preserves the existing diffused terracotta radial halo bloom and progressive homepage revelation in `app/globals.css`.
-  6. **Validation**: Zero TypeScript errors (`npx tsc --noEmit`), zero ESLint warnings (`npm run lint`), and 100% successful production build across 65 routes (`npm run build`).
+---
+
+## 15. Redesign Skills Section: Professional Technology Logo Cards
+
+* **Location**: [components/home/HomeTechStackSection.tsx](file:///c:/Users/babul/Desktop/portfolio/components/home/HomeTechStackSection.tsx), [components/home/TechIcons.tsx](file:///c:/Users/babul/Desktop/portfolio/components/home/TechIcons.tsx), `public/icons/tech/`
+* **Root-Cause Diagnosis of Cluttered Dashboard Appearance**:
+  1. **System-Monitoring Dashboard Metadata**: Cards previously included artificial metrics (`STATUS: VERIFIED`, `● ACTIVE`, dashboard-style bottom separators, and repetitive status badges).
+  2. **Generic Non-Brand Icons**: Technologies used generic Lucide icons (`Terminal`, `Binary`, `Boxes`, `Server`, etc.) rather than recognizable brand logos.
+  3. **Excessive 3D Tilt**: The cards used `.card-3d-tilt` and glassmorphic borders that felt like template widgets rather than an art-directed developer directory.
+* **Resolution — Compact Technology Cards with Authentic Brand Logos**:
+  1. **Authentic Vector Brand Marks**:
+     - Built dedicated `TechIcons` SVG component rendering official Simple Icons brand vector paths (`Python`, `C++`, `JavaScript`, `TypeScript`, `React`, `Next.js`, `FastAPI`, `Scikit-learn`, `Google Gemini`, `PostgreSQL`, `Git`, `Supabase`).
+     - Backed by local SVG assets in `public/icons/tech/` for zero remote dependencies and 0ms runtime latency.
+  2. **Refined Top Row & Content Hierarchy**:
+     - **Top Row**: 36×36px restrained icon container with brand accent color and subtle border, paired with an uppercase category label aligned top-right (`color: var(--color-text-muted)`).
+     - **Main Content**: Technology name in clean medium-weight typography (`15.5px`, `font-weight: 600`), followed by a concise 1-2 sentence description explaining its role in Babul's technical toolkit.
+     - **Removed Clutter**: Completely eliminated `STATUS: VERIFIED`, `● ACTIVE`, status dots, and repeated divider lines.
+  3. **Responsive Grid & Understated Interactions**:
+     - Responsive grid: 4 columns on wide desktop (>= 1200px), 3 columns on tablet (>= 880px), 2 columns on medium screens (>= 580px), 1 column on mobile.
+     - Equal row heights with natural compact height (~118–130px).
+     - Subtle hover elevation (`translateY(-2.5px)`, subtle border brightening, 180ms ease) with full `prefers-reduced-motion` compliance.
+  4. **Validation**: Zero TypeScript errors (`npx tsc --noEmit`), zero ESLint warnings (`npm run lint`), 100% successful production build across 65 routes (`npm run build`).
+
 
 
 

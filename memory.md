@@ -218,3 +218,21 @@ A personal brand opening sequence communicating:
   5. `[ Open in New Tab ]`: Raw PDF link with `target="_blank" rel="noopener noreferrer"`.
   6. `[ Download PDF ]`: Authentic local file download (`Babul_Kumar_Resume.pdf`) via client-side blob fetch and direct streaming fallback endpoint (`/api/resume/download` with `Content-Disposition: attachment`).
 
+---
+
+## 11. Skills Section & Authentic Brand Logo Architecture (`HomeTechStackSection.tsx`)
+
+* **Component**: [components/home/HomeTechStackSection.tsx](file:///c:/Users/babul/Desktop/portfolio/components/home/HomeTechStackSection.tsx) & [components/home/TechIcons.tsx](file:///c:/Users/babul/Desktop/portfolio/components/home/TechIcons.tsx)
+* **Design Transformation**:
+  * Transitioned from monitoring-dashboard widgets (`STATUS: VERIFIED`, `● ACTIVE`, repeated bottom dividers, 3D tilt) to compact, art-directed developer directory technology cards.
+  * Card dimensions: ~118–130px natural compact height, `16px 18px` padding, 4-column responsive grid on desktop.
+* **Authentic Brand Logos**:
+  * Rendered via `TechIcons` SVG component using official Simple Icons vector geometry (`Python`, `C++`, `JavaScript`, `TypeScript`, `React`, `Next.js`, `FastAPI`, `Scikit-learn`, `Google Gemini`, `PostgreSQL`, `Git`, `Supabase`).
+  * Stored locally in `public/icons/tech/` for zero remote dependencies and zero layout shift.
+* **Card Anatomy**:
+  * **Top Row**: 36×36px restrained icon container (`rgba(255,255,255,0.03)` with `1px solid rgba(255,255,255,0.08)`) with brand color icon, and small uppercase category tag (`10.5px`, `font-mono`, `color: var(--color-text-muted)`).
+  * **Main Content**: Technology title in medium-weight typography (`15.5px`, `font-weight: 600`), and a concise description of how each technology fits into Babul's technical toolkit.
+* **Understated Motion**:
+  * `translateY(-2.5px)` elevation on hover with subtle border brightening over a `180ms` ease curve. Full `prefers-reduced-motion` compliance.
+
+
