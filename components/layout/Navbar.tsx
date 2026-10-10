@@ -7,7 +7,7 @@ import { motion } from 'framer-motion'
 
 // Multi-Page Dedicated Navigation Routes
 const NAV_ITEMS = [
-  { label: 'ABOUT', href: '/' },
+  { label: 'ABOUT', href: '/about' },
   { label: 'TRAINING', href: '/training' },
   { label: 'CERTIFICATES', href: '/certificates' },
   { label: 'CO-CURRICULAR', href: '/co-curricular' },
@@ -78,7 +78,10 @@ export default function Navbar() {
   // Active state matching supporting nested routes
   const isItemActive = (href: string) => {
     if (href === '/') {
-      return pathname === '/' || pathname === '/about'
+      return pathname === '/'
+    }
+    if (href === '/about') {
+      return pathname === '/about' || pathname.startsWith('/about/')
     }
     if (href === '/work') {
       return pathname.startsWith('/work') || pathname.startsWith('/projects')

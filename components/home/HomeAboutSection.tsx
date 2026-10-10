@@ -65,12 +65,36 @@ export default function HomeAboutSection() {
               color: 'var(--color-text-secondary)',
               maxWidth: '680px',
               lineHeight: 1.7,
-              margin: 0,
+              margin: '0 0 16px',
             }}
           >
             I am a software engineer and AI/ML practitioner focused on building pragmatic, high-density digital systems.
             From low-latency desktop automation engines to cloud-native predictive services, I architect software that solves real-world bottlenecks.
           </p>
+
+          <Link
+            href="/about"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontSize: '12px',
+              fontFamily: 'var(--font-mono, monospace)',
+              color: 'var(--color-accent)',
+              textDecoration: 'none',
+              padding: '6px 14px',
+              borderRadius: 'var(--radius-sm)',
+              background: 'var(--color-accent-bg)',
+              border: '1px solid var(--color-accent-border)',
+              fontWeight: 600,
+              letterSpacing: '0.04em',
+              transition: 'all 0.2s ease',
+            }}
+            className="hover-accent-text"
+          >
+            <span>Explore Detailed Profile &amp; Academic Journey</span>
+            <ArrowRight size={13} />
+          </Link>
         </div>
 
         {/* Two-Column Cyber Composition */}
@@ -137,7 +161,7 @@ export default function HomeAboutSection() {
                   marginBottom: '14px',
                 }}
               >
-                Lovely Professional University · 2024 — 2028
+                Lovely Professional University · 2022 — 2026
               </div>
 
               <p

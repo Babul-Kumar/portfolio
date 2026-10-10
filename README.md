@@ -85,7 +85,7 @@ The document analyzer accepts supported certificate/document images and PDFs, up
 | Route | Purpose |
 | --- | --- |
 | `/` | Portfolio homepage and interactive hero/profile overview |
-| `/about` | Permanent redirect to `/` |
+| `/about` | Dedicated personal profile, biography, education & technical journey |
 | `/work` | Project archive and showcase |
 | `/work/[slug]` | Project systems-architecture case study |
 | `/projects` | Compatibility redirect to `/work` |

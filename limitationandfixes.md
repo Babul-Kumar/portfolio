@@ -236,4 +236,24 @@
   4. **Accessibility**: Immediate bypass for `prefers-reduced-motion: reduce`.
   5. **Validation**: Zero TypeScript errors (`npx tsc --noEmit`), zero ESLint warnings (`npm run lint`), and 100% successful production build (`npm run build`).
 
+---
+
+## 10. Separation of Home Overview & Dedicated About Profile Page
+
+* **Location**: [app/(public)/about/page.tsx](file:///c:/Users/babul/Desktop/portfolio/app/%28public%29/about/page.tsx), [components/home/HomeAboutSection.tsx](file:///c:/Users/babul/Desktop/portfolio/components/home/HomeAboutSection.tsx), [components/layout/Navbar.tsx](file:///c:/Users/babul/Desktop/portfolio/components/layout/Navbar.tsx), [next.config.ts](file:///c:/Users/babul/Desktop/portfolio/next.config.ts), [app/sitemap.ts](file:///c:/Users/babul/Desktop/portfolio/app/sitemap.ts)
+* **Observed Issue**: 
+  The `/about` route was previously a hard-coded redirect to `/` (both in `app/(public)/about/page.tsx` and in `next.config.ts`). The navbar's `ABOUT` item directed users to `/`, conflating the concise homepage overview with the in-depth profile dossier.
+* **Resolution**:
+  1. **Removed Legacy Redirect**: Removed `/about` -> `/` redirect in `next.config.ts` and replaced the redirecting placeholder in `app/(public)/about/page.tsx` with a full-featured editorial server component.
+  2. **Dedicated About Page (`/about`)**:
+     * **Real Portrait Asset**: Integrated Babul Kumar's verified profile photograph (`/images/profilepicture.jpg`) within a custom architectural frame with blueprint corner crosshairs (`+`) and verification metadata tags (`● VERIFIED PORTFOLIO IDENTITY`).
+     * **In-Depth Biography**: Articulated background, motivation, research into applied ML (MCP, AST code telemetry, gradient-boosted delay forecasting), and modern full-stack systems without repeating the homepage hero text word-for-word.
+     * **Academic Foundation**: Verified university details from Lovely Professional University (B.Tech CSE 2022–2026, First Class, Punjab, India) with core coursework tags.
+     * **Technical Achievements**: Showcased verified honors (Global AI Hackathon 2026 finalist, University CodeSprint 1st Place, Dean's Honor Roll).
+     * **Inter-Module Linkages**: Contextual links to specialized trainings (`/training`), verified credentials (`/certificates`), and production project case studies (`/work`).
+  3. **Navigation & Active Route Tracking**: Updated `Navbar.tsx` to route `ABOUT` to `/about`, preserving `/` as Home, and ensuring the active indicator accurately highlights the current route.
+  4. **Home Page Preservation**: Kept the homepage concise, maintaining its 3D avatar hero, availability badge, technology radar, and added a discreet bridge link in `HomeAboutSection` to `/about`.
+  5. **Validation**: Zero TypeScript errors (`npx tsc --noEmit`), zero ESLint warnings (`npm run lint`), verified HTTP 200 on both `/` and `/about`, and 100% successful production build (`npm run build`).
+
+
 
