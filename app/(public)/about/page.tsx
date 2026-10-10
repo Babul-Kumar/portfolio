@@ -86,25 +86,10 @@ export default async function AboutPage() {
            ========================================================================= */}
         <section
           aria-labelledby="about-profile-heading"
-          style={{
-            marginBottom: '56px',
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-            gap: '36px',
-            alignItems: 'start',
-          }}
+          className="about-profile-grid"
         >
           {/* Authentic Portrait Presentation */}
-          <div
-            style={{
-              position: 'relative',
-              borderRadius: 'var(--radius-lg)',
-              background: 'var(--color-surface)',
-              border: '1px solid var(--color-border)',
-              padding: '16px',
-              boxShadow: 'var(--shadow-md)',
-            }}
-          >
+          <div className="about-portrait-card">
             {/* Corner Blueprint Crosshairs */}
             <span
               style={{
@@ -136,28 +121,19 @@ export default async function AboutPage() {
             </span>
 
             {/* Profile Image Frame */}
-            <div
-              style={{
-                position: 'relative',
-                borderRadius: 'var(--radius-md)',
-                overflow: 'hidden',
-                backgroundColor: 'var(--color-surface-2)',
-                aspectRatio: '4 / 5',
-                width: '100%',
-              }}
-            >
+            <div className="about-portrait-frame">
               <Image
-                src="/images/profilepicture.jpg"
+                src="/images/profilepicture.png"
                 alt="Babul Kumar — Computer Science & Engineering Undergraduate"
-                width={600}
-                height={750}
+                width={560}
+                height={644}
                 priority
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 45vw, 480px"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 38vw, 400px"
                 style={{
                   width: '100%',
                   height: '100%',
                   objectFit: 'cover',
-                  objectPosition: 'center 15%',
+                  objectPosition: '56% 18%',
                   display: 'block',
                 }}
               />
@@ -212,7 +188,7 @@ export default async function AboutPage() {
                     color: 'var(--color-accent)',
                   }}
                 >
-                  BK_AUTH_2026
+                  BK_AUTH_2028
                 </span>
               </div>
             </div>
@@ -239,7 +215,7 @@ export default async function AboutPage() {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Calendar size={13} style={{ color: 'var(--color-accent)' }} />
-                <span>B.Tech CSE Class of 2026 (2024 — 2028)</span>
+                <span>B.Tech CSE Class of 2028 (2024 — 2028)</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Compass size={13} style={{ color: 'var(--color-accent)' }} />
@@ -312,7 +288,7 @@ export default async function AboutPage() {
               >
                 <p>
                   I am a Computer Science &amp; Engineering undergraduate at{' '}
-                  <strong style={{ color: 'var(--color-text)' }}>Lovely Professional University</strong> (2022 — 2026)
+                  <strong style={{ color: 'var(--color-text)' }}>Lovely Professional University</strong> (2024 — 2028)
                   specializing in practical artificial intelligence and modern full-stack web architectures.
                 </p>
                 <p>
@@ -541,7 +517,7 @@ export default async function AboutPage() {
                     fontWeight: 600,
                   }}
                 >
-                  2022 — 2026
+                  2024 — 2028
                 </span>
                 <span
                   style={{

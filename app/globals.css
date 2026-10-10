@@ -252,6 +252,57 @@ html:not(.intro-active) header {
 }
 
 
+/* --- Dedicated About Page Profile Layout --- */
+.about-profile-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 32px;
+  align-items: start;
+  margin-bottom: 56px;
+}
+
+@media (min-width: 900px) {
+  .about-profile-grid {
+    grid-template-columns: minmax(300px, 400px) minmax(0, 1fr);
+    gap: clamp(36px, 4vw, 52px);
+  }
+}
+
+.about-portrait-card {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  padding: 16px;
+  box-shadow: var(--shadow-md);
+  margin-inline: auto;
+}
+
+@media (min-width: 900px) {
+  .about-portrait-card {
+    margin-inline: 0;
+  }
+}
+
+.about-portrait-frame {
+  position: relative;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background-color: var(--color-surface-2);
+  width: 100%;
+  aspect-ratio: 4 / 4.6;
+  max-height: 440px;
+}
+
+@media (max-width: 768px) {
+  .about-portrait-frame {
+    aspect-ratio: 4 / 4.2;
+    max-height: 380px;
+  }
+}
+
 /* --- Global Container & Section Density --- */
 .container,
 div.container {
