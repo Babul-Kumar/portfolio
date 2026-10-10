@@ -41,31 +41,38 @@ export default function AmbientBackground() {
     if (prefersReducedMotion) return
 
     let rafId: number
+    let isRunning = false
     let targetX = window.innerWidth / 2
     let targetY = window.innerHeight / 2
     let currentX = targetX
     let currentY = targetY
 
-    const onMouseMove = (e: MouseEvent) => {
-      targetX = e.clientX
-      targetY = e.clientY
-    }
-
     const animateSpotlight = () => {
-      // Smooth linear interpolation for buttery cursor following
       currentX += (targetX - currentX) * 0.08
       currentY += (targetY - currentY) * 0.08
 
       if (spotlightRef.current) {
-        spotlightRef.current.style.background = `radial-gradient(650px circle at ${currentX.toFixed(
-          1
-        )}px ${currentY.toFixed(1)}px, rgba(228, 93, 44, 0.07), transparent 70%)`
+        spotlightRef.current.style.transform = `translate3d(${(currentX - 325).toFixed(1)}px, ${(currentY - 325).toFixed(1)}px, 0)`
       }
 
-      rafId = requestAnimationFrame(animateSpotlight)
+      if (Math.abs(targetX - currentX) > 0.3 || Math.abs(targetY - currentY) > 0.3) {
+        rafId = requestAnimationFrame(animateSpotlight)
+      } else {
+        isRunning = false
+      }
+    }
+
+    const onMouseMove = (e: MouseEvent) => {
+      targetX = e.clientX
+      targetY = e.clientY
+      if (!isRunning) {
+        isRunning = true
+        rafId = requestAnimationFrame(animateSpotlight)
+      }
     }
 
     window.addEventListener('mousemove', onMouseMove, { passive: true })
+    isRunning = true
     rafId = requestAnimationFrame(animateSpotlight)
 
     return () => {
@@ -136,15 +143,20 @@ export default function AmbientBackground() {
         }}
       />
 
-      {/* 4. Interactive Cursor Reactive Spotlight */}
+      {/* 4. Interactive Cursor Reactive Spotlight (GPU Accelerated) */}
       <div
         ref={spotlightRef}
         style={{
           position: 'absolute',
-          inset: 0,
-          opacity: 0,
-          transition: 'opacity 0.6s ease',
+          top: 0,
+          left: 0,
+          width: '650px',
+          height: '650px',
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(228, 93, 44, 0.07) 0%, transparent 70%)',
           pointerEvents: 'none',
+          willChange: 'transform',
+          transform: 'translate3d(-9999px, -9999px, 0)',
         }}
       />
 

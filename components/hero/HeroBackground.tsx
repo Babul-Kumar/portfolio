@@ -107,7 +107,7 @@ export default function HeroBackground({
           `,
           backgroundSize: '24px 24px, 24px 24px, 96px 96px, 96px 96px',
           opacity: 0.65,
-          transition: 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+          willChange: 'transform',
         }}
       />
 
@@ -132,7 +132,7 @@ export default function HeroBackground({
           )`,
           filter: 'blur(50px)',
           opacity: 0.85,
-          transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+          willChange: 'transform',
         }}
       />
 
@@ -153,7 +153,7 @@ export default function HeroBackground({
           )`,
           filter: 'blur(60px)',
           opacity: 0.75,
-          transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+          willChange: 'transform',
         }}
       />
 
