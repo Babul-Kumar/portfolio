@@ -164,7 +164,15 @@ export default function AmbientBackground() {
       <div className="ambient-scanline" />
 
       {/* 6. Floating Cyber Data Particles */}
-      <div style={{ position: 'absolute', inset: 0 }}>
+      <div
+        className="ambient-particles-container"
+        style={{
+          position: 'absolute',
+          inset: 0,
+          contain: 'layout paint',
+          willChange: 'transform',
+        }}
+      >
         {AMBIENT_PARTICLES.map((p) => (
           <span
             key={p.id}

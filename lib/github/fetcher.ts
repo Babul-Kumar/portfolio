@@ -224,8 +224,16 @@ export async function fetchGitHubRepository(
         has_readme: false,
       }
     } else if (repoRes.status === 403) {
+      const remaining = repoRes.headers.get('x-ratelimit-remaining')
+      const reset = repoRes.headers.get('x-ratelimit-reset')
+      let resetInfo = ''
+      if (reset) {
+        const resetTime = Number(reset) * 1000
+        const minutesLeft = Math.max(0, Math.ceil((resetTime - Date.now()) / 60000))
+        resetInfo = ` Resets in ~${minutesLeft} minute(s).`
+      }
       console.warn(
-        `GitHub API rate limit reached for ${owner}/${repo}. Falling back to raw CDN & web extraction.`
+        `GitHub API rate limit reached (403 Forbidden, remaining: ${remaining ?? '0'}).${resetInfo} Falling back to raw CDN & web extraction.`
       )
       isRateLimited = true
     } else if (repoRes.status === 404) {

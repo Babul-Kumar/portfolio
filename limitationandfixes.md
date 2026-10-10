@@ -6,16 +6,18 @@
 
 ## Executive Summary Matrix
 
-| Category | Finding / Limitation | Severity | Impact | Recommended Solution |
+| Category | Finding / Limitation | Severity | Impact | Resolution Status & Applied Fix |
 | :--- | :--- | :---: | :--- | :--- |
-| **Framework** | Next.js 16 `middleware` deprecation notice | Low | Build logs show deprecation warning | Migrate to Next.js 16 proxy pattern or codemod |
-| **Performance** | Multi-instance in-memory cache isolation | Medium | Cache invalidation doesn't sync across serverless workers | Use Next.js Tagged Cache (`revalidateTag`) or Upstash Redis |
-| **Performance** | Heavy Three.js dependencies in `package.json` | Low | Unused dependencies increase bundle & install size | Tree-shake or prune `@react-three/fiber` if unused |
-| **API & AI** | GitHub API unauthenticated rate limits (60/hr) | Medium | Multi-repo sync can fail with 403 Forbidden | Require `GITHUB_TOKEN` & handle 403 reset headers |
-| **API & AI** | Large document uploads to Gemini inline payload | Medium | Large PDFs (> 10MB) can fail memory/payload thresholds | Pre-process with `sharp` or use Gemini Files API |
-| **Security** | Contact form IP rate-limiter is in-memory | Medium | Serverless instances don't share rate-limit state | Integrate Cloudflare Turnstile or Redis sliding window |
-| **Accessibility** | Secondary text color contrast (`#5E6472`) | Low | Contrast ratio ~3.8:1 falls below WCAG 4.5:1 | Increase `--color-text-muted` luminance to `#7E8597` |
-| **SEO** | Trailing slash URL canonicalization | Low | Risk of dual-indexing `/work` vs `/work/` | Normalize all canonical tags with trailing slashes |
+| **Framework** | Next.js 16 `middleware` deprecation notice | Low | Build logs show deprecation warning | **RESOLVED**: Migrated to `proxy.ts` using Next.js 16 Edge proxy convention |
+| **Auth & Network** | Supabase unreachable / DNS error (`ERR_NAME_NOT_RESOLVED`) | High | Blocks login to `/admin` CMS | **RESOLVED**: Fast error detection & Local Developer Mode bypass enabled |
+| **Performance** | Multi-instance in-memory cache isolation | Medium | Cache invalidation doesn't sync across serverless workers | Documented Next.js Tagged Cache (`revalidateTag`) architecture |
+| **Performance** | Particle layer composite layout recalculation | Low | Multi-particle layout invalidation | **RESOLVED**: Added `contain: layout paint; will-change: transform` |
+| **API & AI** | GitHub API unauthenticated rate limits (60/hr) | Medium | Multi-repo sync can fail with 403 Forbidden | **RESOLVED**: Implemented `x-ratelimit` reset header inspection & diagnostics |
+| **API & AI** | Large document uploads to Gemini inline payload | Medium | Large PDFs (> 10MB) can fail memory/payload thresholds | **RESOLVED**: Added strict 8MB buffer validation guard in certificate analyzer |
+| **Security** | Contact form IP rate-limiter is in-memory | Medium | Serverless instances don't share rate-limit state | Documented Upstash Redis sliding window architecture |
+| **Accessibility** | Secondary text color contrast (`#5E6472`) | Low | Contrast ratio ~3.8:1 falls below WCAG 4.5:1 | **RESOLVED**: Increased `--color-text-muted` to `#7E8597` (5.2:1 WCAG AA) |
+| **Accessibility** | Missing keyboard skip-to-content landmark | Low | Keyboard/screen-reader navigation | **RESOLVED**: Added `<a href="#main-content">` skip link and `main` landmark |
+| **SEO** | Trailing slash URL canonicalization | Low | Risk of dual-indexing `/work` vs `/work/` | **RESOLVED**: Normalized all routes in `app/sitemap.ts` with trailing slashes |
 
 ---
 

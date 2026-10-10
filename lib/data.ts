@@ -25,7 +25,7 @@ interface CacheEntry<T> {
 
 const memoryCache = new Map<string, CacheEntry<unknown>>()
 const CACHE_TTL_MS = 60 * 1000 // 1 minute
-const QUERY_TIMEOUT_MS = 6000 // 6s network timeout before fallback
+const QUERY_TIMEOUT_MS = 2500 // 2.5s network timeout before fast graceful fallback
 
 // Duplicate short slugs that clashed with canonical system slugs
 export const FAKE_PROJECT_SLUGS = [

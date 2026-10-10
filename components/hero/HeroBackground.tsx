@@ -184,11 +184,14 @@ export default function HeroBackground({
           Layer 4: Deterministic Micro Floating Particles
           ========================================================================= */}
       <div
+        className="ambient-particles-container"
         style={{
           position: 'absolute',
           inset: 0,
           overflow: 'hidden',
           pointerEvents: 'none',
+          contain: 'layout paint',
+          willChange: 'transform',
         }}
       >
         {AMBIENT_PARTICLES.map((p) => {

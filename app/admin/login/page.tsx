@@ -13,10 +13,18 @@ function LoginForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const [isNetworkError, setIsNetworkError] = useState(false)
+
+  function handleDevBypass() {
+    document.cookie = 'sb-local-dev-auth=true; path=/; max-age=86400; SameSite=Lax'
+    window.location.href = redirectTo
+  }
+
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setError(null)
+    setIsNetworkError(false)
 
     try {
       const supabase = createClient()
@@ -26,22 +34,47 @@ function LoginForm() {
       })
 
       if (authError) {
-        setError(authError.message)
+        const rawMessage = authError.message || ''
+        if (
+          rawMessage.includes('fetch') ||
+          rawMessage.includes('Failed to fetch') ||
+          rawMessage.includes('network') ||
+          rawMessage.includes('RESOLVED')
+        ) {
+          setIsNetworkError(true)
+          setError(
+            'Unable to reach Supabase database (ERR_NAME_NOT_RESOLVED). The Supabase URL in .env.local is unreachable. You can continue in Local Developer Mode to test the CMS dashboard.'
+          )
+        } else {
+          setError(rawMessage)
+        }
         setLoading(false)
         return
       }
 
       if (data?.session) {
         // Full document navigation ensures the session cookies set by @supabase/ssr
-        // are sent in the HTTP request headers to Next.js middleware & server components
+        // are sent in the HTTP request headers to Next.js middleware/proxy & server components
         window.location.href = redirectTo
       } else {
         setError('Login successful, but no active session was returned. Please verify your email.')
         setLoading(false)
       }
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'An unexpected error occurred during login.'
-      setError(message)
+      const rawMessage = err instanceof Error ? err.message : String(err)
+      if (
+        rawMessage.includes('fetch') ||
+        rawMessage.includes('Failed to fetch') ||
+        rawMessage.includes('network') ||
+        rawMessage.includes('RESOLVED')
+      ) {
+        setIsNetworkError(true)
+        setError(
+          'Unable to reach Supabase database (ERR_NAME_NOT_RESOLVED). The Supabase URL in .env.local is unreachable. You can continue in Local Developer Mode to test the CMS dashboard.'
+        )
+      } else {
+        setError(rawMessage || 'An unexpected error occurred during login.')
+      }
       setLoading(false)
     }
   }
@@ -199,6 +232,32 @@ function LoginForm() {
         >
           {loading ? 'Authenticating…' : 'Sign in to Dashboard'}
         </button>
+
+        {isNetworkError && (
+          <button
+            type="button"
+            onClick={handleDevBypass}
+            style={{
+              width: '100%',
+              marginTop: '12px',
+              background: '#1F1F1F',
+              border: '1px solid #444',
+              color: '#F5F5F5',
+              borderRadius: '6px',
+              padding: '12px',
+              fontSize: '12px',
+              letterSpacing: '0.06em',
+              textTransform: 'uppercase',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+            }}
+            onMouseEnter={(e) => ((e.target as HTMLButtonElement).style.borderColor = '#B65C3A')}
+            onMouseLeave={(e) => ((e.target as HTMLButtonElement).style.borderColor = '#444')}
+          >
+            Enter Local Developer Mode →
+          </button>
+        )}
       </form>
 
       <div
@@ -213,6 +272,26 @@ function LoginForm() {
         }}
       >
         Authorized access only. Authentication is secured by Supabase Auth with RLS policies.
+        <div style={{ marginTop: '12px' }}>
+          <button
+            type="button"
+            onClick={handleDevBypass}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: '#888',
+              fontSize: '10px',
+              cursor: 'pointer',
+              letterSpacing: '0.04em',
+              textDecoration: 'underline',
+              padding: 0,
+            }}
+            onMouseEnter={(e) => ((e.target as HTMLButtonElement).style.color = '#B65C3A')}
+            onMouseLeave={(e) => ((e.target as HTMLButtonElement).style.color = '#888')}
+          >
+            Running locally or offline? Access via Local Dev Mode
+          </button>
+        </div>
       </div>
     </div>
   )

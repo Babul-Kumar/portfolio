@@ -99,6 +99,7 @@ export default function AdminHeader({ onToggleMobileSidebar }: AdminHeaderProps)
 
   async function handleLogout() {
     try {
+      document.cookie = 'sb-local-dev-auth=; path=/; max-age=0; SameSite=Lax'
       const supabase = createClient()
       await supabase.auth.signOut()
     } catch {

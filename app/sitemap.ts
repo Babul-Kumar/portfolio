@@ -18,73 +18,61 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const staticRoutes: MetadataRoute.Sitemap = [
     {
-      url: baseUrl,
+      url: `${baseUrl}/`,
       lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 1.0,
     },
     {
-      url: `${baseUrl}/about`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/training`,
+      url: `${baseUrl}/training/`,
       lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 0.85,
     },
     {
-      url: `${baseUrl}/co-curricular`,
+      url: `${baseUrl}/co-curricular/`,
       lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 0.85,
     },
     {
-      url: `${baseUrl}/work`,
+      url: `${baseUrl}/work/`,
       lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 0.95,
     },
     {
-      url: `${baseUrl}/projects`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.4,
-    },
-    {
-      url: `${baseUrl}/certificates`,
+      url: `${baseUrl}/certificates/`,
       lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 0.85,
     },
     {
-      url: `${baseUrl}/achievements`,
+      url: `${baseUrl}/achievements/`,
       lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.7,
     },
     {
-      url: `${baseUrl}/experience`,
+      url: `${baseUrl}/experience/`,
       lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.7,
     },
     {
-      url: `${baseUrl}/education`,
+      url: `${baseUrl}/education/`,
       lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.6,
     },
     {
-      url: `${baseUrl}/resume`,
+      url: `${baseUrl}/resume/`,
       lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.8,
     },
     {
-      url: `${baseUrl}/contact`,
+      url: `${baseUrl}/contact/`,
       lastModified: new Date(),
       changeFrequency: 'yearly',
       priority: 0.6,
@@ -92,35 +80,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ]
 
   const dynamicWorkRoutes: MetadataRoute.Sitemap = projectSlugs.map((slug) => ({
-    url: `${baseUrl}/work/${slug}`,
+    url: `${baseUrl}/work/${slug}/`,
     lastModified: new Date(),
     changeFrequency: 'weekly',
     priority: 0.85,
   }))
 
-  const dynamicProjectRoutes: MetadataRoute.Sitemap = projectSlugs.map((slug) => ({
-    url: `${baseUrl}/projects/${slug}`,
-    lastModified: new Date(),
-    changeFrequency: 'monthly',
-    priority: 0.4,
-  }))
-
   const dynamicCertificateRoutes: MetadataRoute.Sitemap = certificateSlugs.map((slug) => ({
-    url: `${baseUrl}/certificates/${slug}`,
+    url: `${baseUrl}/certificates/${slug}/`,
     lastModified: new Date(),
     changeFrequency: 'monthly',
     priority: 0.7,
   }))
 
   const dynamicTrainingRoutes: MetadataRoute.Sitemap = trainingSlugs.map((slug) => ({
-    url: `${baseUrl}/training/${slug}`,
+    url: `${baseUrl}/training/${slug}/`,
     lastModified: new Date(),
     changeFrequency: 'monthly',
     priority: 0.75,
   }))
 
   const dynamicCoCurricularRoutes: MetadataRoute.Sitemap = coCurrSlugs.map((slug) => ({
-    url: `${baseUrl}/co-curricular/${slug}`,
+    url: `${baseUrl}/co-curricular/${slug}/`,
     lastModified: new Date(),
     changeFrequency: 'monthly',
     priority: 0.75,
@@ -129,7 +110,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     ...staticRoutes,
     ...dynamicWorkRoutes,
-    ...dynamicProjectRoutes,
     ...dynamicCertificateRoutes,
     ...dynamicTrainingRoutes,
     ...dynamicCoCurricularRoutes,

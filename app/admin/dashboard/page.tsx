@@ -28,7 +28,7 @@ import {
   FAKE_ACHIEVEMENT_SLUGS,
   REAL_PORTFOLIO_PROJECTS,
 } from '@/lib/data'
-import type { ContactMessage } from '@/types'
+import type { ContactMessage, Profile } from '@/types'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -72,57 +72,79 @@ export default async function AdminDashboardPage() {
     // Non-blocking restoration
   }
 
-  // 2. Fetch live data directly from database in parallel with exact fields
-  const [
-    { data: rawProjects },
-    { data: rawCerts },
-    { data: rawTrainings },
-    { data: rawCoCurr },
-    { data: rawAchievements },
-    { data: rawExperience },
-    { data: rawSkills },
-    { data: rawProfile },
-    { data: messagesData },
-  ] = await Promise.all([
-    supabase
-      .from('projects')
-      .select('id, title, slug, category, published, featured, sort_order')
-      .order('sort_order', { ascending: true }),
-    supabase
-      .from('certificates')
-      .select('id, title, issuer, category, published, featured, issue_date')
-      .order('issue_date', { ascending: false }),
-    supabase
-      .from('training')
-      .select('id, title, slug, provider, organization, category, published, featured, display_order')
-      .order('display_order', { ascending: true }),
-    supabase
-      .from('co_curricular_activities')
-      .select('id, title, slug, organization, category, published, featured, display_order')
-      .order('display_order', { ascending: true }),
-    supabase
-      .from('achievements')
-      .select('id, title, slug, rank, category, published, featured, date')
-      .order('date', { ascending: false }),
-    supabase
-      .from('experience')
-      .select('id, company, role, published, is_current, sort_order')
-      .order('sort_order', { ascending: true }),
-    supabase
-      .from('skills')
-      .select('id, name, category')
-      .order('category'),
-    supabase
-      .from('profiles')
-      .select('*')
-      .limit(1)
-      .maybeSingle(),
-    supabase
-      .from('contact_messages')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(50),
-  ])
+  // 2. Fetch live data directly from database in parallel with exact fields (with offline guard)
+  type RawProject = { id: string; title: string; slug: string; category: string; published: boolean; featured: boolean; sort_order: number }
+  type RawCert = { id: string; title: string; issuer: string; category: string; published: boolean; featured: boolean; issue_date: string | null }
+  type RawTraining = { id: string; title: string; slug: string; provider: string | null; organization: string | null; category: string; published: boolean; featured: boolean; display_order: number }
+  type RawCoCurr = { id: string; title: string; slug: string; organization: string | null; category: string; published: boolean; featured: boolean; display_order: number }
+  type RawAchievement = { id: string; title: string; slug: string; rank: string | null; category: string; published: boolean; featured: boolean; date: string | null }
+  type RawExperience = { id: string; company: string; role: string; published: boolean; is_current: boolean; sort_order: number }
+  type RawSkill = { id: string; name: string; category: string }
+
+  let rawProjects: RawProject[] | null = null
+  let rawCerts: RawCert[] | null = null
+  let rawTrainings: RawTraining[] | null = null
+  let rawCoCurr: RawCoCurr[] | null = null
+  let rawAchievements: RawAchievement[] | null = null
+  let rawExperience: RawExperience[] | null = null
+  let rawSkills: RawSkill[] | null = null
+  let rawProfile: Profile | null = null
+  let messagesData: ContactMessage[] | null = null
+
+  try {
+    const results = await Promise.all([
+      supabase
+        .from('projects')
+        .select('id, title, slug, category, published, featured, sort_order')
+        .order('sort_order', { ascending: true }),
+      supabase
+        .from('certificates')
+        .select('id, title, issuer, category, published, featured, issue_date')
+        .order('issue_date', { ascending: false }),
+      supabase
+        .from('training')
+        .select('id, title, slug, provider, organization, category, published, featured, display_order')
+        .order('display_order', { ascending: true }),
+      supabase
+        .from('co_curricular_activities')
+        .select('id, title, slug, organization, category, published, featured, display_order')
+        .order('display_order', { ascending: true }),
+      supabase
+        .from('achievements')
+        .select('id, title, slug, rank, category, published, featured, date')
+        .order('date', { ascending: false }),
+      supabase
+        .from('experience')
+        .select('id, company, role, published, is_current, sort_order')
+        .order('sort_order', { ascending: true }),
+      supabase
+        .from('skills')
+        .select('id, name, category')
+        .order('category'),
+      supabase
+        .from('profiles')
+        .select('*')
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from('contact_messages')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50),
+    ])
+
+    rawProjects = (results[0]?.data as RawProject[] | null) ?? null
+    rawCerts = (results[1]?.data as RawCert[] | null) ?? null
+    rawTrainings = (results[2]?.data as RawTraining[] | null) ?? null
+    rawCoCurr = (results[3]?.data as RawCoCurr[] | null) ?? null
+    rawAchievements = (results[4]?.data as RawAchievement[] | null) ?? null
+    rawExperience = (results[5]?.data as RawExperience[] | null) ?? null
+    rawSkills = (results[6]?.data as RawSkill[] | null) ?? null
+    rawProfile = (results[7]?.data as Profile | null) ?? null
+    messagesData = (results[8]?.data as ContactMessage[] | null) ?? null
+  } catch {
+    // Graceful offline fallback: allows dashboard navigation even when Supabase is unreachable
+  }
 
   // 3. Ensure all 7 genuine projects are included
   const allProjects = [...(rawProjects ?? [])]

@@ -263,6 +263,10 @@ export async function analyzeDocumentWithGemini(
     throw new Error('GEMINI_API_KEY is not configured in server environment (.env.local).')
   }
 
+  if (fileBuffer.byteLength > 8 * 1024 * 1024) {
+    throw new Error('File exceeds maximum 8MB size limit for AI analysis. Please compress or optimize the document.')
+  }
+
   const base64Data = fileBuffer.toString('base64')
   const ai = new GoogleGenAI({ apiKey })
 
