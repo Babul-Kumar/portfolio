@@ -188,3 +188,29 @@ A personal brand opening sequence communicating:
   * Navbar `ABOUT` item now navigates directly to `/about` on both desktop and mobile, with accurate active state tracking.
   * Logo returns visitors to `/`.
 
+---
+
+## 9. Permanent Factual Integrity Architecture (`.agents/rules/factual-integrity.md`)
+
+* **Rule Authority**: Established in `.agents/rules/factual-integrity.md` and registered via root `AGENTS.md`. Operates in tandem with `.agents/rules/ponytail.md`.
+* **Protected Scope**: Full name, degrees, institutions, GPA/grades, graduation dates, employment/internship timelines, project metrics/technologies, certificate dates/issuers/IDs, awards, and biographical facts.
+* **Strict Invariants**:
+  1. **Strict No-Invention**: Zero hallucinated, estimated, or inferred factual values.
+  2. **Separation of Design and Content**: UI/UX, CSS styling, responsiveness, or refactoring tasks never authorize modifying factual content.
+  3. **Explicit Authorization**: Factual edits require explicit user direction for that specific datum.
+  4. **Pre- & Post-Edit Diff Validation**: Verification diffs must be performed and reported.
+
+---
+
+## 10. Résumé Page & Document Control System (`/resume` & `/resume/viewer`)
+
+* **Enlarged Preview**: Container widened to `min(1060px, 94vw)` and preview body heightened to `clamp(580px, 72vh, 860px)` (mobile: `clamp(480px, 68vh, 640px)`). Balanced centering, aspect ratio, and surrounding whitespace preserved.
+* **Stream-Themed Wording Cleaned**: Removed misleading decorative phrases (`LIVE_DOCUMENT_STREAM`, `Interactive Document Stream`, `SUB_BASIN_STORAGE_VERIFIED`), replaced by professional indicators (`VERIFIED PDF`, `Babul Kumar — Curriculum Vitae (PDF)`).
+* **Distinct Differentiated Controls**:
+  1. `[ Preview PDF ]`: Toggles inline PDF preview inside the card.
+  2. `[ Web Version ]`: Toggles structured semantic HTML Curriculum Vitae.
+  3. `[ Dedicated Viewer ]`: Direct route to `/resume/viewer` offering distraction-free, full-height reader mode with clean document chrome.
+  4. `[ Full Screen ]`: Native HTML5 Fullscreen API invoked directly on the viewer frame with exit button and <kbd>Esc</kbd> support; graceful fallback to lightbox modal.
+  5. `[ Open in New Tab ]`: Raw PDF link with `target="_blank" rel="noopener noreferrer"`.
+  6. `[ Download PDF ]`: Authentic local file download (`Babul_Kumar_Resume.pdf`) via client-side blob fetch and direct streaming fallback endpoint (`/api/resume/download` with `Content-Disposition: attachment`).
+

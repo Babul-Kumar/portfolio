@@ -626,7 +626,7 @@ div.container {
 }
 
 .resume-container {
-  max-width: 960px;
+  max-width: min(1060px, 94vw);
   margin: 0 auto;
   position: relative;
   z-index: 1;
@@ -830,7 +830,7 @@ div.container {
 
 .resume-viewer-body {
   width: 100%;
-  height: clamp(380px, 50vh, 480px);
+  height: clamp(580px, 72vh, 860px);
   background: #13151A;
   display: flex;
   justify-content: center;
@@ -839,9 +839,30 @@ div.container {
   overflow: hidden;
 }
 
+.resume-viewer-frame:fullscreen,
+.resume-viewer-frame:-webkit-full-screen {
+  width: 100vw !important;
+  height: 100vh !important;
+  border-radius: 0 !important;
+  border: none !important;
+  max-width: 100vw !important;
+  margin: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  background: #0B0C0E !important;
+  box-shadow: none !important;
+}
+
+.resume-viewer-frame:fullscreen .resume-viewer-body,
+.resume-viewer-frame:-webkit-full-screen .resume-viewer-body {
+  flex: 1 1 0% !important;
+  height: 100% !important;
+  max-height: calc(100vh - 44px) !important;
+}
+
 .resume-pdf-paper-wrapper {
   width: 100%;
-  max-width: 650px;
+  max-width: 720px;
   height: 100%;
   margin: 0 auto;
   background: #FFFFFF;
@@ -929,7 +950,7 @@ div.container {
     gap: 8px;
   }
   .resume-viewer-body {
-    height: clamp(360px, 60vh, 520px);
+    height: clamp(480px, 68vh, 640px);
   }
 }
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import type { Profile, Education, Project, SkillsByCategory } from '@/types'
 import { formatDate } from '@/lib/utils'
 import Link from 'next/link'
@@ -12,8 +12,9 @@ import {
   Globe,
   Link2,
   Maximize2,
-  Info,
-  Sparkles,
+  Minimize2,
+  FileText,
+  BookOpen,
 } from 'lucide-react'
 import PreviewModal, { type PreviewItem } from '@/components/ui/PreviewModal'
 
@@ -35,6 +36,9 @@ export default function ResumeClientView({
   // Default to PDF view if an official resume is uploaded, otherwise Web CV
   const [viewMode, setViewMode] = useState<'pdf' | 'web'>(resumeUrl ? 'pdf' : 'web')
   const [previewModalOpen, setPreviewModalOpen] = useState(false)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const [downloading, setDownloading] = useState(false)
+  const viewerFrameRef = useRef<HTMLDivElement>(null)
 
   // Default the résumé page to the warm light theme matching the reference design
   useEffect(() => {
@@ -56,7 +60,73 @@ export default function ResumeClientView({
     }
   }, [])
 
-  // Preview modal configuration for full-screen lightbox inspection
+  // Listen to Fullscreen API changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const active = Boolean(document.fullscreenElement)
+      setIsFullscreen(active)
+    }
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange)
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange)
+    }
+  }, [])
+
+  // Full Screen action: Uses native Fullscreen API on document container with graceful modal fallback
+  const handleToggleFullscreen = async () => {
+    if (!document.fullscreenElement) {
+      if (viewerFrameRef.current?.requestFullscreen) {
+        try {
+          await viewerFrameRef.current.requestFullscreen()
+        } catch {
+          // Graceful fallback to lightbox modal if requestFullscreen fails
+          setPreviewModalOpen(true)
+        }
+      } else {
+        setPreviewModalOpen(true)
+      }
+    } else {
+      if (document.exitFullscreen) {
+        try {
+          await document.exitFullscreen()
+        } catch (err) {
+          console.warn('Exit fullscreen failed:', err)
+        }
+      }
+    }
+  }
+
+  // Download PDF action: Authentically downloads Babul_Kumar_Resume.pdf as a local file
+  const handleDownload = async () => {
+    if (!resumeUrl) return
+    setDownloading(true)
+    try {
+      const response = await fetch(resumeUrl)
+      if (!response.ok) throw new Error('Network fetch failed')
+      const blob = await response.blob()
+      const blobUrl = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = blobUrl
+      a.download = 'Babul_Kumar_Resume.pdf'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(blobUrl)
+    } catch {
+      // Direct server-side download streaming fallback
+      const fallbackLink = document.createElement('a')
+      fallbackLink.href = '/api/resume/download'
+      fallbackLink.download = 'Babul_Kumar_Resume.pdf'
+      document.body.appendChild(fallbackLink)
+      fallbackLink.click()
+      document.body.removeChild(fallbackLink)
+    } finally {
+      setDownloading(false)
+    }
+  }
+
+  // Preview modal configuration for fallback lightbox inspection
   const previewItem: PreviewItem | null = resumeUrl
     ? {
         type: 'certificate',
@@ -89,25 +159,26 @@ export default function ResumeClientView({
           </div>
         </div>
 
-        {/* Live Document Status Badge */}
+        {/* Straightforward Professional Document Status Badge */}
         {resumeUrl && (
-          <div className="resume-status-badge" title="Live verified document stream from Supabase storage">
+          <div className="resume-status-badge" title="Official verified curriculum vitae document">
             <span className="resume-status-dot" />
-            <span>LIVE_DOCUMENT_STREAM</span>
+            <span>VERIFIED PDF</span>
           </div>
         )}
       </div>
 
-      {/* 2. Compact Document Toolbar */}
-      <div className="resume-toolbar">
-        {/* Left: Document Mode Switcher */}
-        <div className="resume-toolbar-group">
+      {/* 2. Structured Document Toolbar with Clear Hierarchy */}
+      <div className="resume-toolbar" role="toolbar" aria-label="Resume viewing and document actions">
+        {/* Left: Primary View Switcher */}
+        <div className="resume-toolbar-group" role="group" aria-label="Primary View Selection">
           {resumeUrl && (
             <button
               type="button"
               onClick={() => setViewMode('pdf')}
               className={`resume-btn ${viewMode === 'pdf' ? 'resume-btn-pdf' : 'resume-btn-neutral'}`}
               aria-pressed={viewMode === 'pdf'}
+              title="Display inline PDF document preview"
             >
               <span>[ Preview PDF ]</span>
             </button>
@@ -118,48 +189,64 @@ export default function ResumeClientView({
             onClick={() => setViewMode('web')}
             className={`resume-btn ${viewMode === 'web' ? 'resume-btn-pdf' : 'resume-btn-neutral'}`}
             aria-pressed={viewMode === 'web'}
+            title="Display structured HTML curriculum vitae"
           >
             <span>[ Web Version ]</span>
           </button>
         </div>
 
-        {/* Right: Actions (Full Screen, New Tab, Download) */}
-        <div className="resume-toolbar-group">
+        {/* Right: Document Actions */}
+        <div className="resume-toolbar-group" role="group" aria-label="Document Actions">
           {resumeUrl ? (
             <>
+              {/* Dedicated Reader Route */}
+              <Link
+                href="/resume/viewer"
+                className="resume-btn resume-btn-neutral"
+                title="Open distraction-free dedicated document reader"
+                aria-label="Open dedicated resume reader"
+              >
+                <BookOpen size={13} />
+                <span>Dedicated Viewer</span>
+              </Link>
+
+              {/* Genuine Full Screen Action */}
               <button
                 type="button"
-                onClick={() => setPreviewModalOpen(true)}
+                onClick={handleToggleFullscreen}
                 className="resume-btn resume-btn-neutral"
-                title="Open full-screen document viewer"
+                title={isFullscreen ? 'Exit full-screen viewer (Esc)' : 'Enter full-screen document viewer'}
+                aria-label={isFullscreen ? 'Exit full screen' : 'Enter full screen'}
               >
-                <span>Full Screen</span>
-                <Maximize2 size={13} style={{ strokeWidth: 2 }} />
+                {isFullscreen ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
+                <span>{isFullscreen ? 'Exit Full Screen' : 'Full Screen'}</span>
               </button>
 
+              {/* Open Raw in New Tab Action */}
               <a
                 href={resumeUrl}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="resume-btn resume-btn-neutral"
-                title="Open original PDF in a new browser tab"
+                title="Open original PDF directly in a new browser tab"
                 aria-label="Open PDF in new tab"
                 style={{ padding: '7px 11px' }}
               >
                 <ExternalLink size={13} />
               </a>
 
-              <a
-                href={resumeUrl}
-                target="_blank"
-                rel="noreferrer"
-                download="Babul_Kumar_Resume.pdf"
+              {/* Authentic Download PDF Action */}
+              <button
+                type="button"
+                onClick={handleDownload}
+                disabled={downloading}
                 className="resume-btn resume-btn-download"
-                title="Download official PDF copy"
+                title="Download Babul_Kumar_Resume.pdf to your device"
+                aria-label="Download resume PDF file"
               >
                 <Download size={13} />
-                <span>Download PDF</span>
-              </a>
+                <span>{downloading ? 'Downloading...' : 'Download PDF'}</span>
+              </button>
             </>
           ) : (
             <Link
@@ -172,20 +259,33 @@ export default function ResumeClientView({
         </div>
       </div>
 
-      {/* 3. PDF Embedded Viewer (Matching Dark Frame with Centered PDF) */}
+      {/* 3. PDF Embedded Viewer (Moderately Enlarged, Centered & Balanced) */}
       {viewMode === 'pdf' && resumeUrl && (
         <>
-          <div className="resume-viewer-frame">
+          <div
+            ref={viewerFrameRef}
+            className={`resume-viewer-frame ${isFullscreen ? 'resume-viewer-fullscreen' : ''}`}
+          >
             {/* Header Status Bar inside Dark Container */}
             <div className="resume-viewer-header">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#D9512B', fontWeight: 500 }}>
-                <Info size={12} />
-                <span>LIVE_DOCUMENT // SUB_BASIN_STORAGE_VERIFIED</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '7px', color: '#E45D2C', fontWeight: 600 }}>
+                <FileText size={12} />
+                <span>BABUL KUMAR — CURRICULUM VITAE</span>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#8F756C' }}>
-                <Sparkles size={11} style={{ color: '#D9512B' }} />
-                <span>Interactive Document Stream</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#9E978F' }}>
+                <span>PDF Preview • Standard Format</span>
+                {isFullscreen && (
+                  <button
+                    type="button"
+                    onClick={handleToggleFullscreen}
+                    className="resume-btn resume-btn-neutral"
+                    style={{ padding: '3px 8px', fontSize: '10.5px' }}
+                  >
+                    <Minimize2 size={11} />
+                    <span>Exit (Esc)</span>
+                  </button>
+                )}
               </div>
             </div>
 
@@ -205,23 +305,32 @@ export default function ResumeClientView({
             </div>
           </div>
 
-          {/* Understated Fallback Link */}
+          {/* Understated Fallback & Navigation Bar */}
           <div className="resume-fallback-bar">
-            <span>Having trouble?</span>
+            <span>Having trouble viewing the PDF inline?</span>
+            <Link
+              href="/resume/viewer"
+              className="resume-fallback-link"
+              title="Open dedicated document reader"
+            >
+              Open in Dedicated Reader
+            </Link>
+            <span style={{ margin: '0 6px', opacity: 0.5 }}>·</span>
             <a
               href={resumeUrl}
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="resume-fallback-link"
+              title="Open raw PDF file in new browser tab"
             >
-              Open in Viewer
+              Open Raw PDF in Tab
             </a>
           </div>
         </>
       )}
 
       {/* ============================================================ */}
-      {/* 2. STRUCTURED WEB CV (HTML SHEET) */}
+      {/* 2. STRUCTURED WEB CV (HTML SHEET — PRESERVED FACTUAL FIDELITY) */}
       {/* ============================================================ */}
       {viewMode === 'web' && (
         <div
@@ -286,7 +395,7 @@ export default function ResumeClientView({
                 <a
                   href={profile.github_url}
                   target="_blank"
-                  rel="noreferrer"
+                  rel="noopener noreferrer"
                   style={{
                     color: 'var(--color-accent)',
                     textDecoration: 'none',
@@ -302,7 +411,7 @@ export default function ResumeClientView({
                 <a
                   href={profile.linkedin_url}
                   target="_blank"
-                  rel="noreferrer"
+                  rel="noopener noreferrer"
                   style={{
                     color: 'var(--color-accent)',
                     textDecoration: 'none',
@@ -418,7 +527,7 @@ export default function ResumeClientView({
                     <a
                       href={proj.github_url}
                       target="_blank"
-                      rel="noreferrer"
+                      rel="noopener noreferrer"
                       style={{
                         fontSize: '11px',
                         fontFamily: 'var(--font-mono)',
@@ -486,7 +595,7 @@ export default function ResumeClientView({
         </div>
       )}
 
-      {/* Lightbox Preview Modal for Fullscreen Document Review */}
+      {/* Lightbox Preview Modal for Fallback Fullscreen Document Review */}
       {previewItem && (
         <PreviewModal
           isOpen={previewModalOpen}

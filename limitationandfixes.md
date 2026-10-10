@@ -284,6 +284,36 @@
      * Preserves reduced-motion bypass (`prefers-reduced-motion: reduce`), session storage gating (`bk_intro_seen`), URL debug params (`?replay=true`, `?intro_phase=<phase>`), and instant skip keys (`Escape`, `Space`, `Enter`).
   5. **Validation**: Zero TypeScript errors (`npx tsc --noEmit`), zero ESLint warnings (`npm run lint`), and 100% successful production build (`npm run build`).
 
+---
+
+## 12. Résumé Page Refinements, PDF Controls & Permanent Factual Integrity Rules
+
+* **Location**: [.agents/rules/factual-integrity.md](file:///c:/Users/babul/Desktop/portfolio/.agents/rules/factual-integrity.md), [AGENTS.md](file:///c:/Users/babul/Desktop/portfolio/AGENTS.md), [components/resume/ResumeClientView.tsx](file:///c:/Users/babul/Desktop/portfolio/components/resume/ResumeClientView.tsx), [components/resume/DedicatedResumeViewer.tsx](file:///c:/Users/babul/Desktop/portfolio/components/resume/DedicatedResumeViewer.tsx), [app/(public)/resume/viewer/page.tsx](file:///c:/Users/babul/Desktop/portfolio/app/%28public%29/resume/viewer/page.tsx), [app/api/resume/download/route.ts](file:///c:/Users/babul/Desktop/portfolio/app/api/resume/download/route.ts), [app/globals.css](file:///c:/Users/babul/Desktop/portfolio/app/globals.css), [app/sitemap.ts](file:///c:/Users/babul/Desktop/portfolio/app/sitemap.ts)
+* **Observed Issue**: 
+  1. No formal workspace rule existed to permanently protect personal, academic, project, or certificate facts from accidental alteration, inference, or hallucination.
+  2. The PDF preview container on `/resume` was constrained to a small slit (`height: clamp(380px, 50vh, 480px)`), making reading difficult on desktop screens.
+  3. Misleading wording suggested a "live stream" ("LIVE_DOCUMENT_STREAM", "Interactive Document Stream", "SUB_BASIN_STORAGE_VERIFIED") for a static PDF resume.
+  4. PDF controls had overlapping or duplicate behaviors: Full Screen opened a modal instead of native fullscreen, Download was subject to browser CORS ignoring `<a download>`, and "Open in Viewer" was a duplicate raw link.
+* **Resolution**:
+  1. **Permanent Factual Integrity Rules**:
+     * Created [.agents/rules/factual-integrity.md](file:///c:/Users/babul/Desktop/portfolio/.agents/rules/factual-integrity.md) covering protected info (identity, education timelines, employment dates, project metrics, credential IDs), strict no-invention policy, separation of design and content, explicit authorization requirements, and mandatory verification diffs.
+     * Integrated into the workspace rule system via [AGENTS.md](file:///c:/Users/babul/Desktop/portfolio/AGENTS.md) and `.agents/rules/` rule-discovery.
+  2. **Moderately Enlarged, Centered Preview**:
+     * Increased container max-width to `min(1060px, 94vw)` and preview body height to `clamp(580px, 72vh, 860px)` (mobile: `clamp(480px, 68vh, 640px)`). Document aspect ratio, margins, and natural scrolling preserved without dominating the page.
+  3. **Stream Wording Cleaned**:
+     * Replaced stream decorations with honest professional indicators: `VERIFIED PDF` status badge in header, and `BABUL KUMAR — CURRICULUM VITAE` / `PDF Preview • Standard Format` in the frame header.
+  4. **Distinct Control Behaviors**:
+     * **Preview PDF**: Inline interactive PDF preview in the primary card.
+     * **Web Version**: Semantic structured HTML Curriculum Vitae with search and copyable text.
+     * **Dedicated Viewer**: Direct route to `/resume/viewer` offering a distraction-free, full-height dedicated reader mode with clean document chrome and return link.
+     * **Full Screen**: Native Fullscreen API invoked directly on the viewer frame with exit button and <kbd>Esc</kbd> support; graceful fallback to lightbox modal.
+     * **Open in New Tab**: Direct `target="_blank" rel="noopener noreferrer"` link to raw PDF asset URL without leaving the page.
+     * **Download PDF**: Authentic local file download (`Babul_Kumar_Resume.pdf`) using client-side blob fetch with fallback streaming via `/api/resume/download` route with `Content-Disposition: attachment`.
+  5. **Factual Integrity Verified**:
+     * Full Name, bio, email, location, GitHub, LinkedIn, degree, university, timeline (2024 — 2028), projects, technologies, and skills categories verified 100% unchanged between baseline and post-edit.
+  6. **Validation**: Zero TypeScript errors (`npx tsc --noEmit`), zero ESLint warnings (`npm run lint`), verified HTTP 200 on `/resume`, `/resume/viewer`, and `/api/resume/download`, and 100% successful production build (`npm run build`).
+
+
 
 
 
