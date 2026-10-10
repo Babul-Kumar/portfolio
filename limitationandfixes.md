@@ -197,3 +197,22 @@
   * Production Turbopack build: `npm run build` (**100% PASS**)
 * **Recommended Next Step**:
   * Add lightweight Vitest unit tests for Zod schemas (`lib/validations/index.ts`) and GitHub markdown cleaners (`lib/github/cleaner.ts`) to prevent regressions during future refactors.
+
+---
+
+## 8. Résumé Page Redesign — Match First Reference Target
+
+* **Location**: [app/(public)/resume/page.tsx](file:///c:/Users/babul/Desktop/portfolio/app/%28public%29/resume/page.tsx), [components/resume/ResumeClientView.tsx](file:///c:/Users/babul/Desktop/portfolio/components/resume/ResumeClientView.tsx), [app/globals.css](file:///c:/Users/babul/Desktop/portfolio/app/globals.css)
+* **Observed Issue**: 
+  The previous implementation presented an overly dense, terminal-inspired dark dashboard with scanlines, verbose status headers (`// CURRICULUM_VITAE`, `OFFICIAL RÉSUMÉ & PROFESSIONAL DOSSIER`), heavy high-contrast button styling, and full-width iframe stretching.
+* **Resolution**:
+  1. Rebuilt the page canvas using warm alabaster off-white `#F7F4EF` with subtle radial lighting.
+  2. Streamlined the header to a clean, bold `RÉSUMÉ` title with an elegant rounded specialty badge: `Applied AI/ML & Scalable Systems Engineering`.
+  3. Added the understated top-right `● LIVE_DOCUMENT_STREAM` status badge.
+  4. Redesigned the toolbar with refined `[ Preview PDF ]` (terracotta), `[ Web Version ]`, `Full Screen`, new tab, and `Download PDF` controls.
+  5. Built the document viewer frame with dark charcoal `#13151A`, rounded corners, soft shadow, top verification header strip, and native horizontal-fit PDF display.
+  6. Added an understated `Having trouble? Open in Viewer` fallback link below the viewer.
+  7. Preserved all functionality: official PDF source from Supabase, Structured Web CV mode, fullscreen lightbox preview modal, new tab opening, and PDF downloading.
+  8. Verified across viewports (1920x1080 down to 320x568) with 0 horizontal overflow.
+  9. Validated with TypeScript (`npx tsc --noEmit`), ESLint (`npm run lint`), and Next.js Turbopack build (`npm run build`).
+

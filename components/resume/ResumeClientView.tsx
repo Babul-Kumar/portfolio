@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { Profile, Education, Project, SkillsByCategory } from '@/types'
 import { formatDate } from '@/lib/utils'
 import Link from 'next/link'
@@ -11,10 +11,8 @@ import {
   MapPin,
   Globe,
   Link2,
-  FileText,
-  Code2,
   Maximize2,
-  CheckCircle2,
+  Info,
   Sparkles,
 } from 'lucide-react'
 import PreviewModal, { type PreviewItem } from '@/components/ui/PreviewModal'
@@ -37,6 +35,26 @@ export default function ResumeClientView({
   // Default to PDF view if an official resume is uploaded, otherwise Web CV
   const [viewMode, setViewMode] = useState<'pdf' | 'web'>(resumeUrl ? 'pdf' : 'web')
   const [previewModalOpen, setPreviewModalOpen] = useState(false)
+
+  // Default the résumé page to the warm light theme matching the reference design
+  useEffect(() => {
+    const userTheme = localStorage.getItem('theme')
+    if (userTheme !== 'dark') {
+      document.documentElement.setAttribute('data-theme', 'light')
+    } else if (!sessionStorage.getItem('resume_theme_initialized')) {
+      document.documentElement.setAttribute('data-theme', 'light')
+      sessionStorage.setItem('resume_theme_initialized', 'true')
+    }
+
+    return () => {
+      if (userTheme === 'dark' && sessionStorage.getItem('resume_theme_initialized') === 'true') {
+        const currentTheme = document.documentElement.getAttribute('data-theme')
+        if (currentTheme === 'light') {
+          document.documentElement.setAttribute('data-theme', 'dark')
+        }
+      }
+    }
+  }, [])
 
   // Preview modal configuration for full-screen lightbox inspection
   const previewItem: PreviewItem | null = resumeUrl
@@ -61,120 +79,74 @@ export default function ResumeClientView({
     : null
 
   return (
-    <div style={{ maxWidth: '960px', margin: '0 auto' }}>
-      {/* Top Controls & View Mode Switcher */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '16px',
-          marginBottom: '28px',
-          paddingBottom: '20px',
-          borderBottom: '1px solid var(--color-border)',
-        }}
-      >
-        {/* View Mode Toggle */}
-        <div
-          style={{
-            display: 'inline-flex',
-            background: 'var(--color-surface)',
-            border: '1px solid var(--color-border)',
-            borderRadius: '8px',
-            padding: '4px',
-            gap: '4px',
-          }}
-        >
+    <div className="resume-container">
+      {/* 1. Page Header matching Reference Design */}
+      <div className="resume-header-row">
+        <div className="resume-title-group">
+          <h1 className="resume-heading">RÉSUMÉ</h1>
+          <div className="resume-specialty-badge">
+            Applied AI/ML &amp; Scalable Systems Engineering
+          </div>
+        </div>
+
+        {/* Live Document Status Badge */}
+        {resumeUrl && (
+          <div className="resume-status-badge" title="Live verified document stream from Supabase storage">
+            <span className="resume-status-dot" />
+            <span>LIVE_DOCUMENT_STREAM</span>
+          </div>
+        )}
+      </div>
+
+      {/* 2. Compact Document Toolbar */}
+      <div className="resume-toolbar">
+        {/* Left: Document Mode Switcher */}
+        <div className="resume-toolbar-group">
           {resumeUrl && (
             <button
               type="button"
               onClick={() => setViewMode('pdf')}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '8px 16px',
-                fontSize: '12px',
-                fontFamily: 'var(--font-mono)',
-                fontWeight: 600,
-                letterSpacing: '0.04em',
-                borderRadius: '6px',
-                border: 'none',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                background: viewMode === 'pdf' ? 'var(--color-accent)' : 'transparent',
-                color: viewMode === 'pdf' ? '#FFFFFF' : 'var(--color-text-secondary)',
-                boxShadow: viewMode === 'pdf' ? '0 2px 10px rgba(228, 93, 44, 0.35)' : 'none',
-              }}
+              className={`resume-btn ${viewMode === 'pdf' ? 'resume-btn-pdf' : 'resume-btn-neutral'}`}
+              aria-pressed={viewMode === 'pdf'}
             >
-              <FileText size={14} />
-              <span>OFFICIAL PDF RESUME</span>
+              <span>[ Preview PDF ]</span>
             </button>
           )}
 
           <button
             type="button"
             onClick={() => setViewMode('web')}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '8px 16px',
-              fontSize: '12px',
-              fontFamily: 'var(--font-mono)',
-              fontWeight: 600,
-              letterSpacing: '0.04em',
-              borderRadius: '6px',
-              border: 'none',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              background: viewMode === 'web' ? 'var(--color-accent)' : 'transparent',
-              color: viewMode === 'web' ? '#FFFFFF' : 'var(--color-text-secondary)',
-              boxShadow: viewMode === 'web' ? '0 2px 10px rgba(228, 93, 44, 0.35)' : 'none',
-            }}
+            className={`resume-btn ${viewMode === 'web' ? 'resume-btn-pdf' : 'resume-btn-neutral'}`}
+            aria-pressed={viewMode === 'web'}
           >
-            <Code2 size={14} />
-            <span>STRUCTURED WEB CV</span>
+            <span>[ Web Version ]</span>
           </button>
         </div>
 
-        {/* Global Actions */}
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+        {/* Right: Actions (Full Screen, New Tab, Download) */}
+        <div className="resume-toolbar-group">
           {resumeUrl ? (
             <>
               <button
                 type="button"
                 onClick={() => setPreviewModalOpen(true)}
-                className="btn-secondary"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  fontSize: '12px',
-                  padding: '8px 14px',
-                }}
-                title="Open Fullscreen Lightbox Preview"
+                className="resume-btn resume-btn-neutral"
+                title="Open full-screen document viewer"
               >
-                <Maximize2 size={13} />
-                <span>Fullscreen</span>
+                <span>Full Screen</span>
+                <Maximize2 size={13} style={{ strokeWidth: 2 }} />
               </button>
 
               <a
                 href={resumeUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="btn-secondary"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  fontSize: '12px',
-                  padding: '8px 14px',
-                }}
+                className="resume-btn resume-btn-neutral"
+                title="Open original PDF in a new browser tab"
+                aria-label="Open PDF in new tab"
+                style={{ padding: '7px 11px' }}
               >
                 <ExternalLink size={13} />
-                <span>New Tab</span>
               </a>
 
               <a
@@ -182,14 +154,8 @@ export default function ResumeClientView({
                 target="_blank"
                 rel="noreferrer"
                 download="Babul_Kumar_Resume.pdf"
-                className="btn-primary"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  fontSize: '12px',
-                  padding: '8px 16px',
-                }}
+                className="resume-btn resume-btn-download"
+                title="Download official PDF copy"
               >
                 <Download size={13} />
                 <span>Download PDF</span>
@@ -198,109 +164,60 @@ export default function ResumeClientView({
           ) : (
             <Link
               href="/contact"
-              className="btn-primary"
-              style={{ fontSize: '12px', padding: '8px 16px' }}
+              className="resume-btn resume-btn-pdf"
             >
-              Request PDF Copy →
+              <span>Request PDF Copy →</span>
             </Link>
           )}
         </div>
       </div>
 
-      {/* ============================================================ */}
-      {/* 1. PDF DOCUMENT EMBEDDED VIEWER */}
-      {/* ============================================================ */}
+      {/* 3. PDF Embedded Viewer (Matching Dark Frame with Centered PDF) */}
       {viewMode === 'pdf' && resumeUrl && (
-        <div
-          style={{
-            position: 'relative',
-            background: 'var(--color-surface)',
-            border: '1px solid var(--color-border)',
-            borderRadius: '12px',
-            overflow: 'hidden',
-            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(228, 93, 44, 0.1)',
-          }}
-        >
-          {/* Cyber Header Bar */}
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              padding: '12px 18px',
-              background: 'rgba(10, 12, 18, 0.95)',
-              borderBottom: '1px solid var(--color-border)',
-              fontSize: '11px',
-              fontFamily: 'var(--font-mono)',
-              letterSpacing: '0.04em',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-accent)' }}>
-              <CheckCircle2 size={13} />
-              <span>LIVE_DOCUMENT // SUPABASE_STORAGE_VERIFIED</span>
+        <>
+          <div className="resume-viewer-frame">
+            {/* Header Status Bar inside Dark Container */}
+            <div className="resume-viewer-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#D9512B', fontWeight: 500 }}>
+                <Info size={12} />
+                <span>LIVE_DOCUMENT // SUB_BASIN_STORAGE_VERIFIED</span>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#8F756C' }}>
+                <Sparkles size={11} style={{ color: '#D9512B' }} />
+                <span>Interactive Document Stream</span>
+              </div>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--color-text-muted)' }}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                <Sparkles size={11} style={{ color: 'var(--color-accent)' }} /> Interactive Document Stream
-              </span>
+            {/* Dark Viewing Area with Centered PDF Presentation */}
+            <div className="resume-viewer-body">
+              <iframe
+                src={`${resumeUrl}#toolbar=0&navpanes=0&view=FitH`}
+                title="Babul Kumar Résumé Document"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  border: 'none',
+                  display: 'block',
+                  backgroundColor: '#13151A',
+                }}
+              />
             </div>
           </div>
 
-          {/* PDF Viewer Container */}
-          <div
-            style={{
-              width: '100%',
-              height: 'clamp(620px, 82vh, 980px)',
-              background: '#0d1117',
-              position: 'relative',
-            }}
-          >
-            <iframe
-              src={`${resumeUrl}#toolbar=0&navpanes=0&view=FitH`}
-              title="Babul Kumar Resume Document"
-              style={{
-                width: '100%',
-                height: '100%',
-                border: 'none',
-                display: 'block',
-                backgroundColor: '#FFFFFF',
-              }}
-            />
-          </div>
-
-          {/* Quick Footer Action strip */}
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              padding: '12px 20px',
-              background: 'var(--color-surface)',
-              borderTop: '1px solid var(--color-border)',
-              fontSize: '12px',
-            }}
-          >
-            <span style={{ color: 'var(--color-text-secondary)' }}>
-              Having trouble rendering the preview?
-            </span>
+          {/* Understated Fallback Link */}
+          <div className="resume-fallback-bar">
+            <span>Having trouble?</span>
             <a
               href={resumeUrl}
               target="_blank"
               rel="noreferrer"
-              style={{
-                color: 'var(--color-accent)',
-                fontWeight: 600,
-                textDecoration: 'none',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '4px',
-              }}
+              className="resume-fallback-link"
             >
-              Open PDF in Dedicated Viewer <ExternalLink size={12} />
+              Open in Viewer
             </a>
           </div>
-        </div>
+        </>
       )}
 
       {/* ============================================================ */}
