@@ -2,7 +2,14 @@
 
 import React, { useState, useEffect, useCallback, useRef, useSyncExternalStore } from 'react'
 
-export type IntroPhase = 'start' | 'monogram' | 'identity' | 'emerge' | 'complete'
+export type IntroPhase =
+  | 'start'      // 0.00s: Pure quiet dark canvas (#060709)
+  | 'monogram'   // 0.15s: BK monogram smoothly emerges and settles into stillness
+  | 'identity'   // 1.05s: Smooth cross-fade to BABUL KUMAR & technical pillars
+  | 'hold'       // 1.65s: Deliberate, intentional, stationary readable hold
+  | 'dissolve'   // 2.70s: Identity text dissolves, dark canvas lifts to reveal environment
+  | 'content'    // 3.40s: Avatar, hero content, and navbar resolve as a unified composition
+  | 'complete'   // 4.55s: Sequence complete, overlay unmounts, homepage fully interactive
 
 function subscribeNoop() {
   return () => {}
@@ -11,6 +18,15 @@ function subscribeNoop() {
 function getSessionSnapshot(): boolean {
   if (typeof window === 'undefined') return false
   try {
+    const params = new URLSearchParams(window.location.search)
+    if (
+      params.get('replay') === 'true' ||
+      params.get('intro') === 'true' ||
+      params.get('force_intro') === 'true' ||
+      Boolean(params.get('intro_phase'))
+    ) {
+      return false
+    }
     return sessionStorage.getItem('bk_intro_seen') === 'true'
   } catch {
     return false
@@ -37,7 +53,9 @@ function getDebugPhaseSnapshot(): IntroPhase | null {
     if (debug) {
       if (['monogram', 'bk'].includes(debug)) return 'monogram'
       if (['identity'].includes(debug)) return 'identity'
-      if (['emerge', 'dissolve'].includes(debug)) return 'emerge'
+      if (['hold'].includes(debug)) return 'hold'
+      if (['dissolve', 'emerge'].includes(debug)) return 'dissolve'
+      if (['content'].includes(debug)) return 'content'
     }
   } catch {
     return null
@@ -62,7 +80,7 @@ export default function PortfolioIntro() {
     clearAllTimers()
     try {
       sessionStorage.setItem('bk_intro_seen', 'true')
-      document.documentElement.classList.remove('intro-active', 'intro-emerging', 'intro-dissolving')
+      document.documentElement.classList.remove('intro-active', 'intro-emerging', 'intro-content-reveal')
       document.documentElement.classList.add('intro-seen')
       document.documentElement.setAttribute('data-intro-seen', 'true')
     } catch {}
@@ -70,43 +88,91 @@ export default function PortfolioIntro() {
   }, [clearAllTimers])
 
   useEffect(() => {
-    // Immediate bypass for reduced motion, returning visitor, or active debug phase
-    if (debugPhase || sessionSeen || reducedMotion) {
+    // Immediate bypass for reduced motion or returning visitor without debug override
+    if (sessionSeen || reducedMotion) {
       try {
         document.documentElement.classList.add('intro-seen')
       } catch {}
       return
     }
 
+    // Static phase inspection override for debugging and visual verification
+    if (debugPhase) {
+      try {
+        document.documentElement.classList.add('intro-active')
+        if (debugPhase === 'dissolve') {
+          document.documentElement.classList.add('intro-emerging')
+        } else if (debugPhase === 'content') {
+          document.documentElement.classList.add('intro-content-reveal')
+        }
+      } catch {}
+      return
+    }
+
     try {
       document.documentElement.classList.add('intro-active')
+      document.documentElement.classList.remove('intro-emerging', 'intro-content-reveal')
     } catch {}
 
     // =========================================================================
-    // Redesigned Continuous Brand Reveal Timeline (~1.2s total duration)
+    // Coordinated Cinematic Brand Introduction Timeline (~4.5s total duration)
     // 0.00s (0ms)   : Pure quiet dark canvas (#060709)
-    // 0.08s (80ms)  : BK monogram mark smoothly emerges with subtle warm aura
-    // 0.42s (420ms) : Identity seamlessly unfolds: BABUL KUMAR & AI · ML · FULL-STACK
-    // 0.82s (820ms) : Environment emerges: darkness lifts, real hero grid & avatar reveal
-    // 1.20s (1200ms): Sequence complete: overlay unmounts cleanly, page interactive
+    // 0.15s (150ms) : BK monogram mark emerges and settles into stillness
+    // 1.05s (1050ms): Smooth continuous cross-fade into BABUL KUMAR & AI · ML · FULL-STACK
+    // 1.65s (1650ms): Identity fully established, enters deliberate stationary hold
+    // 2.70s (2700ms): Environment emerges from darkness as overlay begins graceful dissolve
+    // 3.40s (3400ms): Real avatar, hero content, and navbar resolve into place in unison
+    // 4.55s (4550ms): Sequence complete: overlay unmounts cleanly, page fully interactive
     // =========================================================================
-    const t1 = setTimeout(() => setPhase('monogram'), 80)
-    const t2 = setTimeout(() => setPhase('identity'), 420)
+
+    const t1 = setTimeout(() => {
+      setPhase('monogram')
+    }, 150)
+
+    const t2 = setTimeout(() => {
+      setPhase('identity')
+    }, 1050)
+
     const t3 = setTimeout(() => {
-      setPhase('emerge')
+      setPhase('hold')
+    }, 1650)
+
+    const t4 = setTimeout(() => {
+      setPhase('dissolve')
       try {
-        document.documentElement.classList.remove('intro-active')
-        document.documentElement.classList.add('intro-emerging', 'intro-dissolving')
+        document.documentElement.classList.add('intro-emerging')
       } catch {}
-    }, 820)
-    const t4 = setTimeout(() => completeIntro(), 1200)
+    }, 2700)
 
-    // Safety failsafe timeout
-    const tFailsafe = setTimeout(() => completeIntro(), 1500)
+    const t5 = setTimeout(() => {
+      setPhase('content')
+      try {
+        document.documentElement.classList.add('intro-content-reveal')
+      } catch {}
+    }, 3400)
 
-    timersRef.current = [t1, t2, t3, t4, tFailsafe]
+    const t6 = setTimeout(() => {
+      completeIntro()
+    }, 4550)
+
+    // Safety failsafe
+    const tFailsafe = setTimeout(() => {
+      completeIntro()
+    }, 5500)
+
+    timersRef.current = [t1, t2, t3, t4, t5, t6, tFailsafe]
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Replay shortcut for testing (Shift + R or Shift + I)
+      if ((e.key === 'R' || e.key === 'r' || e.key === 'I' || e.key === 'i') && e.shiftKey) {
+        try {
+          sessionStorage.removeItem('bk_intro_seen')
+          window.location.search = '?replay=true'
+        } catch {}
+        return
+      }
+
+      // Quick dismiss on Escape, Space, or Enter
       if (e.key === 'Escape' || e.key === ' ' || e.key === 'Enter') {
         completeIntro()
       }
@@ -126,13 +192,13 @@ export default function PortfolioIntro() {
   }
 
   const currentPhase = debugPhase || phase
-  const isEmerging = currentPhase === 'emerge'
   const isMonogram = currentPhase === 'monogram'
-  const isIdentity = currentPhase === 'identity' || currentPhase === 'emerge'
+  const isIdentityOrHold = currentPhase === 'identity' || currentPhase === 'hold'
+  const isDissolving = currentPhase === 'dissolve' || currentPhase === 'content'
 
   return (
     <div
-      className={`portfolio-intro-overlay ${isEmerging ? 'intro-emerging intro-dissolving' : ''}`}
+      className={`portfolio-intro-overlay ${isDissolving ? 'intro-dissolving' : ''}`}
       onClick={completeIntro}
       role="presentation"
       aria-hidden="true"
@@ -145,33 +211,14 @@ export default function PortfolioIntro() {
         alignItems: 'center',
         justifyContent: 'center',
         cursor: 'pointer',
-        pointerEvents: isEmerging ? 'none' : 'auto',
+        pointerEvents: isDissolving ? 'none' : 'auto',
         userSelect: 'none',
-        transition: 'opacity 0.38s cubic-bezier(0.16, 1, 0.3, 1)',
-        opacity: isEmerging ? 0 : 1,
+        transition: 'opacity 0.95s cubic-bezier(0.16, 1, 0.3, 1)',
+        opacity: isDissolving ? 0 : 1,
         willChange: 'opacity',
         overflow: 'hidden',
       }}
     >
-      {/* Restrained Ambient Warm Aura behind signature mark */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate3d(-50%, -50%, 0)',
-          width: 'clamp(280px, 36vw, 480px)',
-          height: 'clamp(280px, 36vw, 480px)',
-          borderRadius: '50%',
-          background:
-            'radial-gradient(circle, rgba(228, 93, 44, 0.08) 0%, rgba(20, 184, 166, 0.02) 40%, transparent 68%)',
-          pointerEvents: 'none',
-          opacity: isEmerging ? 0 : isMonogram || isIdentity ? 1 : 0,
-          transition: 'opacity 0.32s ease-out',
-          willChange: 'opacity',
-        }}
-      />
-
       {/* Central Identity Presentation Container (Anchored Focal Point) */}
       <div
         style={{
@@ -184,40 +231,38 @@ export default function PortfolioIntro() {
           padding: '24px',
           width: '100%',
           maxWidth: '720px',
-          transform: isEmerging ? 'translate3d(0, -6px, 0)' : 'translate3d(0, 0, 0)',
-          opacity: isEmerging ? 0 : 1,
-          transition: 'opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1), transform 0.32s cubic-bezier(0.16, 1, 0.3, 1)',
-          willChange: 'opacity, transform',
+          minHeight: '160px',
+          opacity: isDissolving ? 0 : 1,
+          transition: 'opacity 0.55s ease-out',
+          willChange: 'opacity',
         }}
       >
-        {/* Stage 1: BK Monogram Mark */}
+        {/* Stage 1: Stationary BK Monogram Mark */}
         <div
           className="intro-bk-mark"
           style={{
-            position: isIdentity ? 'absolute' : 'relative',
-            opacity: isMonogram ? 1 : 0,
-            transform: isMonogram
-              ? 'translate3d(0, 0, 0)'
-              : isIdentity
-                ? 'translate3d(0, -2px, 0)'
-                : 'translate3d(0, 4px, 0)',
-            transition: 'opacity 0.26s cubic-bezier(0.16, 1, 0.3, 1), transform 0.26s cubic-bezier(0.16, 1, 0.3, 1)',
+            position: 'absolute',
+            inset: 0,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '8px',
-            willChange: 'opacity, transform',
+            gap: '10px',
+            opacity: isMonogram ? 1 : 0,
+            transition: isMonogram
+              ? 'opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1)'
+              : 'opacity 0.35s ease-out',
+            willChange: 'opacity',
             pointerEvents: 'none',
           }}
         >
           <span
             style={{
               fontFamily: 'var(--font-sans)',
-              fontSize: 'clamp(44px, 5.5vw, 68px)',
+              fontSize: 'clamp(48px, 6vw, 76px)',
               fontWeight: 700,
-              letterSpacing: '0.12em',
-              color: 'var(--color-text, #F5F6F8)',
-              textShadow: '0 0 24px rgba(245, 246, 248, 0.12)',
+              letterSpacing: '0.08em',
+              color: '#F5F6F8',
+              lineHeight: 1,
             }}
           >
             BK
@@ -225,44 +270,45 @@ export default function PortfolioIntro() {
           <span
             style={{
               fontFamily: 'var(--font-sans)',
-              fontSize: 'clamp(36px, 4.5vw, 56px)',
+              fontSize: 'clamp(40px, 5vw, 64px)',
               fontWeight: 300,
-              color: 'var(--color-accent, #E45D2C)',
-              textShadow: '0 0 20px rgba(228, 93, 44, 0.3)',
+              color: '#E45D2C',
               opacity: 0.9,
+              lineHeight: 1,
             }}
           >
             /
           </span>
         </div>
 
-        {/* Stage 2: Expanded Personal Identity & Engineering Pillars */}
+        {/* Stage 2 & 3: Expanded Personal Identity & Engineering Pillars */}
         <div
           className="intro-identity-wrapper"
           style={{
+            position: 'absolute',
+            inset: 0,
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            opacity: isIdentity ? 1 : 0,
-            transform: isIdentity ? 'translate3d(0, 0, 0)' : 'translate3d(0, 4px, 0)',
-            transition: 'opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-            willChange: 'opacity, transform',
+            justifyContent: 'center',
+            opacity: isIdentityOrHold ? 1 : 0,
+            transition: isIdentityOrHold
+              ? 'opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1)'
+              : 'opacity 0.4s ease-out',
+            willChange: 'opacity',
             pointerEvents: 'none',
           }}
         >
           {/* Signature Name: BABUL KUMAR */}
           <div
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              marginBottom: '12px',
+              marginBottom: '14px',
             }}
           >
             <h1
               style={{
                 fontFamily: 'var(--font-sans)',
-                fontSize: 'clamp(30px, 4.2vw, 52px)',
+                fontSize: 'clamp(34px, 4.8vw, 56px)',
                 fontWeight: 800,
                 letterSpacing: '-0.025em',
                 lineHeight: 1.1,
@@ -272,8 +318,8 @@ export default function PortfolioIntro() {
                 gap: '12px',
               }}
             >
-              <span style={{ color: 'var(--color-text, #F5F6F8)' }}>BABUL</span>
-              <span style={{ color: 'var(--color-accent, #E45D2C)' }}>KUMAR</span>
+              <span style={{ color: '#F5F6F8' }}>BABUL</span>
+              <span style={{ color: '#E45D2C' }}>KUMAR</span>
             </h1>
           </div>
 
@@ -284,16 +330,11 @@ export default function PortfolioIntro() {
               alignItems: 'center',
               gap: '10px',
               fontFamily: 'var(--font-mono)',
-              fontSize: 'clamp(11px, 1.1vw, 13px)',
+              fontSize: 'clamp(12px, 1.2vw, 14px)',
               fontWeight: 600,
               letterSpacing: '0.22em',
               textTransform: 'uppercase',
-              color: 'var(--color-text-secondary, #9499A6)',
-              opacity: isIdentity ? 1 : 0,
-              transform: isIdentity ? 'translate3d(0, 0, 0)' : 'translate3d(0, 3px, 0)',
-              transition:
-                'opacity 0.26s cubic-bezier(0.16, 1, 0.3, 1) 0.08s, transform 0.26s cubic-bezier(0.16, 1, 0.3, 1) 0.08s',
-              willChange: 'opacity, transform',
+              color: '#9499A6',
             }}
           >
             <span>AI</span>

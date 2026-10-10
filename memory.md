@@ -127,21 +127,23 @@ Located in `lib/data.ts`:
 A personal brand opening sequence communicating:
 > *"Welcome to Babul Kumar's AI / ML / Full-Stack portfolio."*
 
-### Redesigned Continuous Motion Narrative (~1.2s total duration)
-1. **`0.00s – 0.08s` (`start`)**: Pure quiet dark obsidian canvas matching site theme (`#060709`).
-2. **`0.08s – 0.42s` (`monogram`)**: Minimal **`BK /`** monogram mark fades in smoothly (`opacity: 0 -> 1`, `cubic-bezier(0.16, 1, 0.3, 1)`) with subtle terracotta slash (`#E45D2C`) and quiet ambient radial aura (`rgba(228, 93, 44, 0.08)`).
-3. **`0.42s – 0.82s` (`identity`)**: Monogram seamlessly cross-fades into **`BABUL KUMAR`** with minute 3px rise, accompanied by **`AI • ML • FULL-STACK`** with cyan punctuation (`#14B8A6`). No scale jumping or subpixel text snapping.
-4. **`0.82s – 1.20s` (`emerge`)**: The overlay veil lifts smoothly (`opacity: 1 -> 0`), dissolving the central overlay into the live homepage. The underlying hero grid (`.hero-grid`), ambient lighting, and 3D avatar on the right emerge naturally and settle into place (`opacity: 1`, `translate3d(0, 0, 0)`).
-5. **`1.20s` (`complete`)**: Overlay unmounts completely from the DOM. Homepage is 100% interactive.
+### Motion Redesign V2 — Slow, Cinematic, Intentional Brand Flow (~4.55s total duration)
+1. **`0.00s – 0.15s` (`start`)**: Pure quiet obsidian dark canvas matching site theme (`#060709`).
+2. **`0.15s – 1.05s` (`monogram`)**: Minimal, stationary **`BK /`** monogram mark fades in smoothly (`opacity: 0 -> 1`, `cubic-bezier(0.16, 1, 0.3, 1)`) with crisp white lettering and subtle terracotta slash (`#E45D2C`). No scaling, spinning, bouncing, or displacement.
+3. **`1.05s – 1.65s` (`identity`)**: Monogram seamlessly cross-fades into **`BABUL KUMAR`** and technical subtitle **`AI · ML · FULL-STACK`** with cyan punctuation at the exact same optical center. Zero vertical displacement or font-size jumping.
+4. **`1.65s – 2.70s` (`hold`)**: Deliberate, intentional, stationary readable hold. No moving typography, no pulsing glows, no competing animation. The viewer has a calm 1.05-second window to register the name and identity.
+5. **`2.70s – 3.40s` (`dissolve`)**: The dark overlay gracefully lifts (`opacity: 1 -> 0`, 0.95s ease-out), allowing the underlying blueprint grid, ambient lighting, and environment to emerge from darkness.
+6. **`3.40s – 4.55s` (`content`)**: Avatar (right), hero narrative (left), and navbar (top) resolve synchronously via pure opacity with zero transforms (`transform: none`). Completely eliminates the side-opening/curtain effect.
+7. **`4.55s` (`complete`)**: Overlay unmounts completely from the DOM. Homepage is 100% interactive.
 
-### Zero-Lag Motion Principles
-* **No `scale()` on text**: Eliminates subpixel font rendering blurriness and glyph jitter.
-* **No `filter: blur()`**: Avoids full-screen GPU re-rasterization bottlenecks.
-* **Pure Opacity & Sub-6px Translation**: Uses only hardware-accelerated `translate3d(0, 0, 0)` with `will-change: opacity, transform`.
+### Zero-Lag Cinematic Motion Principles
+* **Stationary Typography**: Eliminates subpixel font rendering blurriness, letter-spacing jitter, and layout shifts.
+* **Unified Scene Emergence**: Navbar (`header`) and `.hero-grid` transition synchronously under `html.intro-content-reveal`, completely eliminating the optical illusion of side panels or curtains opening outward.
+* **Pure Opacity Transitions**: Uses pure GPU-composited opacity with zero `clip-path`, `scaleX`, or width animations.
 * **Coordinated Single Reveal**: Zero duplicate avatars or secondary canvases; the real hero environment simply emerges underneath.
-* **Session Storage Replay Prevention**: `sessionStorage.getItem('bk_intro_seen')` skips intro on return visits; early inline script prevents dark flashes on reload.
-* **Reduced Motion**: Immediately bypassed if `prefers-reduced-motion: reduce` is active.
-* **User Skip**: Clicking anywhere or pressing `Escape`, `Enter`, or `Space` instantly skips the sequence.
+* **Session Storage & Replay Testing**: `sessionStorage.getItem('bk_intro_seen')` prevents re-triggering for returning users. Testing overrides via URL parameters (`?replay=true`, `?intro=true`, `?intro_phase=<phase>`) or keyboard shortcuts (`Shift + R`, `Shift + I`).
+* **Instant User Skip**: Pressing `Escape`, `Space`, or `Enter`, or clicking anywhere immediately skips the intro.
+* **Reduced Motion Compliance**: Immediately bypassed if `prefers-reduced-motion: reduce` is detected.
 
 ---
 

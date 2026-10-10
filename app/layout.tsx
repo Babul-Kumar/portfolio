@@ -57,7 +57,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               try {
                 const theme = localStorage.getItem('theme') ?? 'dark';
                 document.documentElement.setAttribute('data-theme', theme);
-                if (sessionStorage.getItem('bk_intro_seen') === 'true') {
+                const search = window.location.search || '';
+                const isReplay = search.includes('intro=') || search.includes('replay=') || search.includes('intro_phase=');
+                if (!isReplay && sessionStorage.getItem('bk_intro_seen') === 'true') {
                   document.documentElement.classList.add('intro-seen');
                   document.documentElement.setAttribute('data-intro-seen', 'true');
                 }

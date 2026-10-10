@@ -216,3 +216,24 @@
   8. Verified across viewports (1920x1080 down to 320x568) with 0 horizontal overflow.
   9. Validated with TypeScript (`npx tsc --noEmit`), ESLint (`npm run lint`), and Next.js Turbopack build (`npm run build`).
 
+---
+
+## 9. Motion Redesign V2 — Slow, Cinematic, Intentional Brand Intro
+
+* **Location**: [components/intro/PortfolioIntro.tsx](file:///c:/Users/babul/Desktop/portfolio/components/intro/PortfolioIntro.tsx), [app/globals.css](file:///c:/Users/babul/Desktop/portfolio/app/globals.css), [app/layout.tsx](file:///c:/Users/babul/Desktop/portfolio/app/layout.tsx)
+* **Observed Issue**: 
+  The previous intro redesign compressed the duration into ~1.2s total (monogram lasted only 340ms, identity only 400ms), creating a rushed, fast-forwarded experience where viewers could not register or read the brand mark. Furthermore, applying an isolated vertical slide transition to `.hero-grid` while leaving the header uncoordinated produced an optical "side-opening" curtain illusion.
+* **Resolution**:
+  1. **Root-Cause Pacing Overhaul**: Redesigned the sequence into a unified 4.55s cinematic timeline with deliberate, intentional stages:
+     * **Stage 1 — Quiet Opening & Stationary Monogram (0.00s–1.05s)**: Pure obsidian `#060709` darkness. Stationary `BK /` monogram emerges smoothly via pure opacity (`cubic-bezier(0.16, 1, 0.3, 1)`). Zero scaling, bouncing, or jitter.
+     * **Stage 2 — Continuous Identity Reveal (1.05s–1.65s)**: Smooth opacity cross-fade to `BABUL KUMAR` (with signature orange `#E45D2C`) and `AI · ML · FULL-STACK` at the identical optical center.
+     * **Stage 3 — Stationary Identity Hold (1.65s–2.70s)**: A deliberate 1.05-second hold with zero motion, allowing comfortable reading and cognitive registration.
+     * **Stage 4 — Environment Emergence (2.70s–3.40s)**: Overlay gracefully dissolves (`opacity: 1 -> 0`), revealing the dark blueprint grid, ambient glow, and background atmosphere.
+     * **Stage 5 — Simultaneous Content Emergence (3.40s–4.55s)**: Avatar, hero text, and navbar fade in synchronously with zero translation (`transform: none`), eliminating the side-opening/curtain effect.
+     * **Completion (4.55s)**: Overlay unmounts cleanly, full interactivity restored.
+  2. **Elimination of the Side-Opening Artifact**: Replaced competing CSS animations and transforms with a synchronized `html.intro-content-reveal` rule covering both `header` and `.hero-grid` simultaneously.
+  3. **Inspection & Replay Ergonomics**: Added `?replay=true`, `?intro=true`, `?intro_phase=<phase>`, and keyboard shortcuts (`Shift + R`, `Shift + I`), plus fast skip (`Escape`, `Space`, `Enter`).
+  4. **Accessibility**: Immediate bypass for `prefers-reduced-motion: reduce`.
+  5. **Validation**: Zero TypeScript errors (`npx tsc --noEmit`), zero ESLint warnings (`npm run lint`), and 100% successful production build (`npm run build`).
+
+
