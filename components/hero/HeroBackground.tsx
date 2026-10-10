@@ -51,33 +51,52 @@ export default function HeroBackground({
     if (reducedMotion) return
 
     let animationFrameId: number
-    let lastX = -9999
-    let lastY = -9999
+    let isRunning = false
+    let currentX = 0
+    let currentY = 0
 
     const updateParallax = () => {
       if (mouse.current) {
-        const px = mouse.current.x * 12
-        const py = mouse.current.y * 12
+        const targetX = mouse.current.x * 12
+        const targetY = mouse.current.y * 12
 
-        if (Math.abs(px - lastX) > 0.05 || Math.abs(py - lastY) > 0.05) {
-          lastX = px
-          lastY = py
-          if (layer1Ref.current) {
-            layer1Ref.current.style.transform = `translate3d(${(px * 0.15).toFixed(2)}px, ${(py * 0.15).toFixed(2)}px, 0)`
-          }
-          if (layer2Ref.current) {
-            layer2Ref.current.style.transform = `translate3d(${(px * 0.25).toFixed(2)}px, ${(py * 0.25).toFixed(2)}px, 0)`
-          }
-          if (layer3Ref.current) {
-            layer3Ref.current.style.transform = `translate3d(${(px * 0.18).toFixed(2)}px, ${(py * 0.18).toFixed(2)}px, 0)`
-          }
+        currentX += (targetX - currentX) * 0.1
+        currentY += (targetY - currentY) * 0.1
+
+        if (layer1Ref.current) {
+          layer1Ref.current.style.transform = `translate3d(${(currentX * 0.15).toFixed(2)}px, ${(currentY * 0.15).toFixed(2)}px, 0)`
         }
+        if (layer2Ref.current) {
+          layer2Ref.current.style.transform = `translate3d(${(currentX * 0.25).toFixed(2)}px, ${(currentY * 0.25).toFixed(2)}px, 0)`
+        }
+        if (layer3Ref.current) {
+          layer3Ref.current.style.transform = `translate3d(${(currentX * 0.18).toFixed(2)}px, ${(currentY * 0.18).toFixed(2)}px, 0)`
+        }
+
+        if (Math.abs(targetX - currentX) > 0.05 || Math.abs(targetY - currentY) > 0.05) {
+          animationFrameId = requestAnimationFrame(updateParallax)
+        } else {
+          isRunning = false
+        }
+      } else {
+        isRunning = false
       }
-      animationFrameId = requestAnimationFrame(updateParallax)
     }
 
-    animationFrameId = requestAnimationFrame(updateParallax)
-    return () => cancelAnimationFrame(animationFrameId)
+    const onMove = () => {
+      if (!isRunning) {
+        isRunning = true
+        animationFrameId = requestAnimationFrame(updateParallax)
+      }
+    }
+
+    window.addEventListener('mousemove', onMove, { passive: true })
+    onMove()
+
+    return () => {
+      window.removeEventListener('mousemove', onMove)
+      cancelAnimationFrame(animationFrameId)
+    }
   }, [mouse, reducedMotion])
 
   return (

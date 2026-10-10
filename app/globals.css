@@ -114,6 +114,7 @@ html {
   background-color: var(--color-bg);
   color-scheme: dark;
   overflow-x: hidden;
+  scroll-behavior: smooth;
 }
 
 [data-theme="light"] {
@@ -128,7 +129,6 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  transition: background-color 0.35s ease, color 0.35s ease;
   overflow-x: hidden;
   position: relative;
 }
@@ -148,6 +148,26 @@ body::before {
   background-size: 100% 100%, 56px 56px, 56px 56px;
   pointer-events: none;
   z-index: 0;
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* --- Cinematic Coordinated Hero Reveal during Portfolio Intro --- */
+html.intro-active .hero-grid {
+  opacity: 0;
+  transform: translate3d(0, 20px, 0) scale(0.985);
+}
+
+html.intro-dissolving .hero-grid {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+  transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1), transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html.intro-seen .hero-grid,
+html:not(.intro-active):not(.intro-dissolving) .hero-grid {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
 }
 
 /* --- Global Container & Section Density --- */

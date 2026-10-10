@@ -49,23 +49,53 @@ export default function HeroAIEnvironment({
     if (reducedMotion) return
 
     let animId: number
+    let isRunning = false
     let lx = 0, ly = 0, rx = 0, ry = 0
 
     const tick = () => {
       if (mouse.current) {
-        lx += (mouse.current.x * -5 - lx) * 0.04
-        ly += (mouse.current.y * -4 - ly) * 0.04
-        rx += (mouse.current.x * 5 - rx) * 0.04
-        ry += (mouse.current.y * 4 - ry) * 0.04
+        const targetLx = mouse.current.x * -5
+        const targetLy = mouse.current.y * -4
+        const targetRx = mouse.current.x * 5
+        const targetRy = mouse.current.y * 4
 
-        if (leftWingRef.current) leftWingRef.current.style.transform = `translate3d(${lx}px,${ly}px,0)`
-        if (rightWingRef.current) rightWingRef.current.style.transform = `translate3d(${rx}px,${ry}px,0)`
+        lx += (targetLx - lx) * 0.08
+        ly += (targetLy - ly) * 0.08
+        rx += (targetRx - rx) * 0.08
+        ry += (targetRy - ry) * 0.08
+
+        if (leftWingRef.current) leftWingRef.current.style.transform = `translate3d(${lx.toFixed(2)}px,${ly.toFixed(2)}px,0)`
+        if (rightWingRef.current) rightWingRef.current.style.transform = `translate3d(${rx.toFixed(2)}px,${ry.toFixed(2)}px,0)`
+
+        if (
+          Math.abs(targetLx - lx) > 0.02 ||
+          Math.abs(targetLy - ly) > 0.02 ||
+          Math.abs(targetRx - rx) > 0.02 ||
+          Math.abs(targetRy - ry) > 0.02
+        ) {
+          animId = requestAnimationFrame(tick)
+        } else {
+          isRunning = false
+        }
+      } else {
+        isRunning = false
       }
-      animId = requestAnimationFrame(tick)
     }
 
-    animId = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(animId)
+    const onMove = () => {
+      if (!isRunning) {
+        isRunning = true
+        animId = requestAnimationFrame(tick)
+      }
+    }
+
+    window.addEventListener('mousemove', onMove, { passive: true })
+    onMove()
+
+    return () => {
+      window.removeEventListener('mousemove', onMove)
+      cancelAnimationFrame(animId)
+    }
   }, [mouse, reducedMotion])
 
   const accentColor = isLight ? '#d45024' : '#f97316'

@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState, useEffect, useCallback, useRef, useSyncExternalStore } from 'react'
-import { createPortal } from 'react-dom'
 
 export type IntroPhase = 'black' | 'bk' | 'identity' | 'dissolve' | 'complete'
 
@@ -45,7 +44,6 @@ function getDebugPhaseSnapshot(): IntroPhase | null {
 }
 
 export default function PortfolioIntro() {
-  const isClient = useSyncExternalStore(subscribeNoop, () => true, () => false)
   const sessionSeen = useSyncExternalStore(subscribeNoop, getSessionSnapshot, () => false)
   const reducedMotion = useSyncExternalStore(subscribeReducedMotion, getReducedMotionSnapshot, () => false)
   const debugPhase = useSyncExternalStore(subscribeNoop, getDebugPhaseSnapshot, () => null)
@@ -62,6 +60,8 @@ export default function PortfolioIntro() {
     clearAllTimers()
     try {
       sessionStorage.setItem('bk_intro_seen', 'true')
+      document.documentElement.classList.remove('intro-active', 'intro-dissolving')
+      document.documentElement.classList.add('intro-seen')
       document.documentElement.setAttribute('data-intro-seen', 'true')
     } catch {}
     setPhase('complete')
@@ -70,29 +70,37 @@ export default function PortfolioIntro() {
   useEffect(() => {
     // If debug phase is active, already seen in session, or user prefers reduced motion:
     if (debugPhase || sessionSeen || reducedMotion) {
-      if (sessionSeen || reducedMotion) {
-        try {
-          document.documentElement.setAttribute('data-intro-seen', 'true')
-        } catch {}
-      }
+      try {
+        document.documentElement.classList.add('intro-seen')
+      } catch {}
       return
     }
 
+    try {
+      document.documentElement.classList.add('intro-active')
+    } catch {}
+
     // =========================================================================
-    // Cinematic Apple-Inspired Signature Timeline
-    // 0.00s (0ms)   : Deep obsidian quiet canvas
-    // 0.40s (400ms) : BK monogram mark softly fades in with warm aura & holds
-    // 1.70s (1700ms): Identity expands: BABUL KUMAR & AI · ML · FULL-STACK holds
-    // 2.90s (2900ms): Environment & avatar reveal begins: overlay smoothly dissolves (0.9s ease)
-    // 3.80s (3800ms): Sequence fully complete, unmount overlay, enable full interactivity
+    // Cinematic Apple-Inspired Signature Timeline (Harmonious & Organic)
+    // 0.00s (0ms)   : Deep obsidian quiet canvas (frame 0)
+    // 0.40s (400ms) : BK monogram mark softly emerges with warm aura
+    // 1.50s (1500ms): Expands into full identity: BABUL KUMAR & AI · ML · FULL-STACK
+    // 2.60s (2600ms): Cohesive reveal: identity floats up softly & page blooms in
+    // 3.40s (3400ms): Sequence fully complete, unmount overlay, enable full page
     // =========================================================================
     const t1 = setTimeout(() => setPhase('bk'), 400)
-    const t2 = setTimeout(() => setPhase('identity'), 1700)
-    const t3 = setTimeout(() => setPhase('dissolve'), 2900)
-    const t4 = setTimeout(() => completeIntro(), 3800)
+    const t2 = setTimeout(() => setPhase('identity'), 1500)
+    const t3 = setTimeout(() => {
+      setPhase('dissolve')
+      try {
+        document.documentElement.classList.remove('intro-active')
+        document.documentElement.classList.add('intro-dissolving')
+      } catch {}
+    }, 2600)
+    const t4 = setTimeout(() => completeIntro(), 3400)
 
     // Safety failsafe timeout
-    const tFailsafe = setTimeout(() => completeIntro(), 4200)
+    const tFailsafe = setTimeout(() => completeIntro(), 3900)
 
     timersRef.current = [t1, t2, t3, t4, tFailsafe]
 
@@ -120,7 +128,7 @@ export default function PortfolioIntro() {
   const showBK = currentPhase === 'bk'
   const showIdentity = currentPhase === 'identity' || currentPhase === 'dissolve'
 
-  const overlayContent = (
+  return (
     <div
       className={`portfolio-intro-overlay ${isDissolving ? 'intro-dissolving' : ''}`}
       onClick={completeIntro}
@@ -137,7 +145,7 @@ export default function PortfolioIntro() {
         cursor: 'pointer',
         pointerEvents: isDissolving ? 'none' : 'auto',
         userSelect: 'none',
-        transition: 'opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1)',
+        transition: 'opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
         opacity: isDissolving ? 0 : 1,
         willChange: 'opacity',
       }}
@@ -148,15 +156,15 @@ export default function PortfolioIntro() {
           position: 'absolute',
           top: '50%',
           left: '50%',
-          transform: 'translate3d(-50%, -50%, 0)',
+          transform: isDissolving ? 'translate3d(-50%, -50%, 0) scale(1.15)' : 'translate3d(-50%, -50%, 0) scale(1)',
           width: 'clamp(320px, 48vw, 620px)',
           height: 'clamp(320px, 48vw, 620px)',
           borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(228, 93, 44, 0.12) 0%, rgba(20, 184, 166, 0.04) 42%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(228, 93, 44, 0.14) 0%, rgba(20, 184, 166, 0.04) 42%, transparent 70%)',
           pointerEvents: 'none',
           opacity: isDissolving ? 0 : 1,
-          transition: 'opacity 0.75s ease-out',
-          willChange: 'opacity',
+          transition: 'opacity 0.75s ease-out, transform 0.85s cubic-bezier(0.16, 1, 0.3, 1)',
+          willChange: 'opacity, transform',
         }}
       />
 
@@ -170,10 +178,11 @@ export default function PortfolioIntro() {
           justifyContent: 'center',
           textAlign: 'center',
           padding: '24px',
-          transform: isDissolving ? 'translate3d(0, -12px, 0)' : 'translate3d(0, 0, 0)',
+          transform: isDissolving ? 'translate3d(0, -18px, 0)' : 'translate3d(0, 0, 0)',
           opacity: isDissolving ? 0 : 1,
-          transition: 'transform 0.85s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.75s ease-out',
-          willChange: 'opacity, transform',
+          filter: isDissolving ? 'blur(3px)' : 'none',
+          transition: 'transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.7s ease-out, filter 0.7s ease-out',
+          willChange: 'opacity, transform, filter',
         }}
       >
         {/* Stage 1: BK Monogram Mark */}
@@ -198,6 +207,7 @@ export default function PortfolioIntro() {
               fontWeight: 700,
               letterSpacing: '0.14em',
               color: 'var(--color-text, #F5F6F8)',
+              textShadow: '0 0 30px rgba(245, 246, 248, 0.2)',
             }}
           >
             BK
@@ -208,6 +218,7 @@ export default function PortfolioIntro() {
               fontSize: 'clamp(42px, 5.2vw, 68px)',
               fontWeight: 300,
               color: 'var(--color-accent, #E45D2C)',
+              textShadow: '0 0 24px rgba(228, 93, 44, 0.4)',
               opacity: 0.9,
             }}
           >
@@ -222,8 +233,8 @@ export default function PortfolioIntro() {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            opacity: showIdentity ? 1 : 0,
-            transform: showIdentity ? 'translate3d(0, 0, 0) scale(1)' : 'translate3d(0, 10px, 0) scale(0.96)',
+            opacity: showIdentity && !isDissolving ? 1 : 0,
+            transform: showIdentity && !isDissolving ? 'translate3d(0, 0, 0) scale(1)' : 'translate3d(0, 8px, 0) scale(0.96)',
             transition: 'opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1)',
             willChange: 'opacity, transform',
           }}
@@ -284,6 +295,7 @@ export default function PortfolioIntro() {
 
       <style>{`
         /* Hide overlay immediately for returning visitors across SSR/SSG */
+        html.intro-seen .portfolio-intro-overlay,
         html[data-intro-seen="true"] .portfolio-intro-overlay {
           display: none !important;
         }
@@ -295,17 +307,5 @@ export default function PortfolioIntro() {
         }
       `}</style>
     </div>
-  )
-
-  return (
-    <>
-      {/* Inline early-execution script to prevent returning-visitor dark flash */}
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `try{if(sessionStorage.getItem('bk_intro_seen')==='true'){document.documentElement.setAttribute('data-intro-seen','true')}}catch(e){}`,
-        }}
-      />
-      {isClient && typeof document !== 'undefined' ? createPortal(overlayContent, document.body) : null}
-    </>
   )
 }

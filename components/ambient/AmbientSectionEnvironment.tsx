@@ -122,7 +122,7 @@ export default function AmbientSectionEnvironment({
       width = rect.width
       height = rect.height
 
-      const dpr = Math.min(window.devicePixelRatio || 1, 2)
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5)
       canvas.width = Math.floor(width * dpr)
       canvas.height = Math.floor(height * dpr)
       ctx?.scale(dpr, dpr)
@@ -270,9 +270,10 @@ export default function AmbientSectionEnvironment({
 
         const dx = p1.x - p2.x
         const dy = p1.y - p2.y
-        const dist = Math.sqrt(dx * dx + dy * dy)
         const maxDist = width < 640 ? 100 : 150
-        if (dist > maxDist) continue
+        const distSq = dx * dx + dy * dy
+        if (distSq > maxDist * maxDist) continue
+        const dist = Math.sqrt(distSq)
 
         const edgeAlpha = (1 - dist / maxDist) * 0.09 * intensity
         ctx.beginPath()

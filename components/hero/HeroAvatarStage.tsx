@@ -46,6 +46,7 @@ export default function HeroAvatarStage({ mouse, isVisible = true }: HeroAvatarS
     if (reducedMotion || !isVisible) return
 
     let animId: number
+    let isRunning = false
     let currentX = 0
     let currentY = 0
 
@@ -58,12 +59,31 @@ export default function HeroAvatarStage({ mouse, isVisible = true }: HeroAvatarS
         currentY += (targetY - currentY) * 0.08
 
         wrapperRef.current.style.transform = `rotateY(${currentX.toFixed(2)}deg) rotateX(${currentY.toFixed(2)}deg)`
+
+        if (Math.abs(targetX - currentX) > 0.02 || Math.abs(targetY - currentY) > 0.02) {
+          animId = requestAnimationFrame(tick)
+        } else {
+          isRunning = false
+        }
+      } else {
+        isRunning = false
       }
-      animId = requestAnimationFrame(tick)
     }
 
-    animId = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(animId)
+    const onMove = () => {
+      if (!isRunning) {
+        isRunning = true
+        animId = requestAnimationFrame(tick)
+      }
+    }
+
+    window.addEventListener('mousemove', onMove, { passive: true })
+    onMove()
+
+    return () => {
+      window.removeEventListener('mousemove', onMove)
+      cancelAnimationFrame(animId)
+    }
   }, [mouse, reducedMotion, isVisible])
 
   return (
