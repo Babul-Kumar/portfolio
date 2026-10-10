@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef, useSyncExternalStore } from 'react'
 
-export type IntroPhase = 'black' | 'bk' | 'identity' | 'dissolve' | 'complete'
+export type IntroPhase = 'start' | 'monogram' | 'identity' | 'emerge' | 'complete'
 
 function subscribeNoop() {
   return () => {}
@@ -33,9 +33,11 @@ function getDebugPhaseSnapshot(): IntroPhase | null {
   if (typeof window === 'undefined') return null
   try {
     const params = new URLSearchParams(window.location.search)
-    const debug = params.get('intro_phase') as IntroPhase | null
-    if (debug && ['black', 'bk', 'identity', 'dissolve'].includes(debug)) {
-      return debug
+    const debug = params.get('intro_phase')
+    if (debug) {
+      if (['monogram', 'bk'].includes(debug)) return 'monogram'
+      if (['identity'].includes(debug)) return 'identity'
+      if (['emerge', 'dissolve'].includes(debug)) return 'emerge'
     }
   } catch {
     return null
@@ -48,7 +50,7 @@ export default function PortfolioIntro() {
   const reducedMotion = useSyncExternalStore(subscribeReducedMotion, getReducedMotionSnapshot, () => false)
   const debugPhase = useSyncExternalStore(subscribeNoop, getDebugPhaseSnapshot, () => null)
 
-  const [phase, setPhase] = useState<IntroPhase>('black')
+  const [phase, setPhase] = useState<IntroPhase>('start')
   const timersRef = useRef<NodeJS.Timeout[]>([])
 
   const clearAllTimers = useCallback(() => {
@@ -60,7 +62,7 @@ export default function PortfolioIntro() {
     clearAllTimers()
     try {
       sessionStorage.setItem('bk_intro_seen', 'true')
-      document.documentElement.classList.remove('intro-active', 'intro-dissolving')
+      document.documentElement.classList.remove('intro-active', 'intro-emerging', 'intro-dissolving')
       document.documentElement.classList.add('intro-seen')
       document.documentElement.setAttribute('data-intro-seen', 'true')
     } catch {}
@@ -68,7 +70,7 @@ export default function PortfolioIntro() {
   }, [clearAllTimers])
 
   useEffect(() => {
-    // If debug phase is active, already seen in session, or user prefers reduced motion:
+    // Immediate bypass for reduced motion, returning visitor, or active debug phase
     if (debugPhase || sessionSeen || reducedMotion) {
       try {
         document.documentElement.classList.add('intro-seen')
@@ -81,26 +83,26 @@ export default function PortfolioIntro() {
     } catch {}
 
     // =========================================================================
-    // Cinematic Apple-Inspired Signature Timeline (Harmonious & Organic)
-    // 0.00s (0ms)   : Deep obsidian quiet canvas (frame 0)
-    // 0.40s (400ms) : BK monogram mark softly emerges with warm aura
-    // 1.50s (1500ms): Expands into full identity: BABUL KUMAR & AI · ML · FULL-STACK
-    // 2.60s (2600ms): Cohesive reveal: identity floats up softly & page blooms in
-    // 3.40s (3400ms): Sequence fully complete, unmount overlay, enable full page
+    // Redesigned Continuous Brand Reveal Timeline (~1.2s total duration)
+    // 0.00s (0ms)   : Pure quiet dark canvas (#060709)
+    // 0.08s (80ms)  : BK monogram mark smoothly emerges with subtle warm aura
+    // 0.42s (420ms) : Identity seamlessly unfolds: BABUL KUMAR & AI · ML · FULL-STACK
+    // 0.82s (820ms) : Environment emerges: darkness lifts, real hero grid & avatar reveal
+    // 1.20s (1200ms): Sequence complete: overlay unmounts cleanly, page interactive
     // =========================================================================
-    const t1 = setTimeout(() => setPhase('bk'), 400)
-    const t2 = setTimeout(() => setPhase('identity'), 1500)
+    const t1 = setTimeout(() => setPhase('monogram'), 80)
+    const t2 = setTimeout(() => setPhase('identity'), 420)
     const t3 = setTimeout(() => {
-      setPhase('dissolve')
+      setPhase('emerge')
       try {
         document.documentElement.classList.remove('intro-active')
-        document.documentElement.classList.add('intro-dissolving')
+        document.documentElement.classList.add('intro-emerging', 'intro-dissolving')
       } catch {}
-    }, 2600)
-    const t4 = setTimeout(() => completeIntro(), 3400)
+    }, 820)
+    const t4 = setTimeout(() => completeIntro(), 1200)
 
     // Safety failsafe timeout
-    const tFailsafe = setTimeout(() => completeIntro(), 3900)
+    const tFailsafe = setTimeout(() => completeIntro(), 1500)
 
     timersRef.current = [t1, t2, t3, t4, tFailsafe]
 
@@ -124,13 +126,13 @@ export default function PortfolioIntro() {
   }
 
   const currentPhase = debugPhase || phase
-  const isDissolving = currentPhase === 'dissolve'
-  const showBK = currentPhase === 'bk'
-  const showIdentity = currentPhase === 'identity' || currentPhase === 'dissolve'
+  const isEmerging = currentPhase === 'emerge'
+  const isMonogram = currentPhase === 'monogram'
+  const isIdentity = currentPhase === 'identity' || currentPhase === 'emerge'
 
   return (
     <div
-      className={`portfolio-intro-overlay ${isDissolving ? 'intro-dissolving' : ''}`}
+      className={`portfolio-intro-overlay ${isEmerging ? 'intro-emerging intro-dissolving' : ''}`}
       onClick={completeIntro}
       role="presentation"
       aria-hidden="true"
@@ -138,37 +140,39 @@ export default function PortfolioIntro() {
         position: 'fixed',
         inset: 0,
         zIndex: 9999,
-        backgroundColor: 'var(--color-bg, #060709)',
+        backgroundColor: '#060709',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         cursor: 'pointer',
-        pointerEvents: isDissolving ? 'none' : 'auto',
+        pointerEvents: isEmerging ? 'none' : 'auto',
         userSelect: 'none',
-        transition: 'opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
-        opacity: isDissolving ? 0 : 1,
+        transition: 'opacity 0.38s cubic-bezier(0.16, 1, 0.3, 1)',
+        opacity: isEmerging ? 0 : 1,
         willChange: 'opacity',
+        overflow: 'hidden',
       }}
     >
-      {/* Ambient Warm Radial Aura behind signature mark */}
+      {/* Restrained Ambient Warm Aura behind signature mark */}
       <div
         style={{
           position: 'absolute',
           top: '50%',
           left: '50%',
-          transform: isDissolving ? 'translate3d(-50%, -50%, 0) scale(1.15)' : 'translate3d(-50%, -50%, 0) scale(1)',
-          width: 'clamp(320px, 48vw, 620px)',
-          height: 'clamp(320px, 48vw, 620px)',
+          transform: 'translate3d(-50%, -50%, 0)',
+          width: 'clamp(280px, 36vw, 480px)',
+          height: 'clamp(280px, 36vw, 480px)',
           borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(228, 93, 44, 0.14) 0%, rgba(20, 184, 166, 0.04) 42%, transparent 70%)',
+          background:
+            'radial-gradient(circle, rgba(228, 93, 44, 0.08) 0%, rgba(20, 184, 166, 0.02) 40%, transparent 68%)',
           pointerEvents: 'none',
-          opacity: isDissolving ? 0 : 1,
-          transition: 'opacity 0.75s ease-out, transform 0.85s cubic-bezier(0.16, 1, 0.3, 1)',
-          willChange: 'opacity, transform',
+          opacity: isEmerging ? 0 : isMonogram || isIdentity ? 1 : 0,
+          transition: 'opacity 0.32s ease-out',
+          willChange: 'opacity',
         }}
       />
 
-      {/* Central Identity Presentation Container */}
+      {/* Central Identity Presentation Container (Anchored Focal Point) */}
       <div
         style={{
           position: 'relative',
@@ -178,36 +182,42 @@ export default function PortfolioIntro() {
           justifyContent: 'center',
           textAlign: 'center',
           padding: '24px',
-          transform: isDissolving ? 'translate3d(0, -18px, 0)' : 'translate3d(0, 0, 0)',
-          opacity: isDissolving ? 0 : 1,
-          filter: isDissolving ? 'blur(3px)' : 'none',
-          transition: 'transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.7s ease-out, filter 0.7s ease-out',
-          willChange: 'opacity, transform, filter',
+          width: '100%',
+          maxWidth: '720px',
+          transform: isEmerging ? 'translate3d(0, -6px, 0)' : 'translate3d(0, 0, 0)',
+          opacity: isEmerging ? 0 : 1,
+          transition: 'opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1), transform 0.32s cubic-bezier(0.16, 1, 0.3, 1)',
+          willChange: 'opacity, transform',
         }}
       >
         {/* Stage 1: BK Monogram Mark */}
         <div
           className="intro-bk-mark"
           style={{
-            position: showIdentity ? 'absolute' : 'relative',
-            opacity: showBK && !showIdentity ? 1 : 0,
-            transform: showBK && !showIdentity ? 'scale(1) translate3d(0, 0, 0)' : showIdentity ? 'scale(0.96) translate3d(0, -6px, 0)' : 'scale(0.92) translate3d(0, 8px, 0)',
-            transition: 'opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
+            position: isIdentity ? 'absolute' : 'relative',
+            opacity: isMonogram ? 1 : 0,
+            transform: isMonogram
+              ? 'translate3d(0, 0, 0)'
+              : isIdentity
+                ? 'translate3d(0, -2px, 0)'
+                : 'translate3d(0, 4px, 0)',
+            transition: 'opacity 0.26s cubic-bezier(0.16, 1, 0.3, 1), transform 0.26s cubic-bezier(0.16, 1, 0.3, 1)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '10px',
+            gap: '8px',
             willChange: 'opacity, transform',
+            pointerEvents: 'none',
           }}
         >
           <span
             style={{
               fontFamily: 'var(--font-sans)',
-              fontSize: 'clamp(52px, 6.5vw, 84px)',
+              fontSize: 'clamp(44px, 5.5vw, 68px)',
               fontWeight: 700,
-              letterSpacing: '0.14em',
+              letterSpacing: '0.12em',
               color: 'var(--color-text, #F5F6F8)',
-              textShadow: '0 0 30px rgba(245, 246, 248, 0.2)',
+              textShadow: '0 0 24px rgba(245, 246, 248, 0.12)',
             }}
           >
             BK
@@ -215,10 +225,10 @@ export default function PortfolioIntro() {
           <span
             style={{
               fontFamily: 'var(--font-sans)',
-              fontSize: 'clamp(42px, 5.2vw, 68px)',
+              fontSize: 'clamp(36px, 4.5vw, 56px)',
               fontWeight: 300,
               color: 'var(--color-accent, #E45D2C)',
-              textShadow: '0 0 24px rgba(228, 93, 44, 0.4)',
+              textShadow: '0 0 20px rgba(228, 93, 44, 0.3)',
               opacity: 0.9,
             }}
           >
@@ -233,10 +243,11 @@ export default function PortfolioIntro() {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            opacity: showIdentity && !isDissolving ? 1 : 0,
-            transform: showIdentity && !isDissolving ? 'translate3d(0, 0, 0) scale(1)' : 'translate3d(0, 8px, 0) scale(0.96)',
-            transition: 'opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1)',
+            opacity: isIdentity ? 1 : 0,
+            transform: isIdentity ? 'translate3d(0, 0, 0)' : 'translate3d(0, 4px, 0)',
+            transition: 'opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
             willChange: 'opacity, transform',
+            pointerEvents: 'none',
           }}
         >
           {/* Signature Name: BABUL KUMAR */}
@@ -244,17 +255,17 @@ export default function PortfolioIntro() {
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '14px',
-              marginBottom: '14px',
+              gap: '12px',
+              marginBottom: '12px',
             }}
           >
             <h1
               style={{
                 fontFamily: 'var(--font-sans)',
-                fontSize: 'clamp(32px, 4.6vw, 58px)',
+                fontSize: 'clamp(30px, 4.2vw, 52px)',
                 fontWeight: 800,
                 letterSpacing: '-0.025em',
-                lineHeight: 1.08,
+                lineHeight: 1.1,
                 margin: 0,
                 display: 'flex',
                 alignItems: 'center',
@@ -271,21 +282,26 @@ export default function PortfolioIntro() {
             style={{
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '12px',
+              gap: '10px',
               fontFamily: 'var(--font-mono)',
-              fontSize: 'clamp(11px, 1.2vw, 14px)',
+              fontSize: 'clamp(11px, 1.1vw, 13px)',
               fontWeight: 600,
-              letterSpacing: '0.24em',
+              letterSpacing: '0.22em',
               textTransform: 'uppercase',
               color: 'var(--color-text-secondary, #9499A6)',
+              opacity: isIdentity ? 1 : 0,
+              transform: isIdentity ? 'translate3d(0, 0, 0)' : 'translate3d(0, 3px, 0)',
+              transition:
+                'opacity 0.26s cubic-bezier(0.16, 1, 0.3, 1) 0.08s, transform 0.26s cubic-bezier(0.16, 1, 0.3, 1) 0.08s',
+              willChange: 'opacity, transform',
             }}
           >
             <span>AI</span>
-            <span style={{ color: 'var(--color-accent-teal, #14B8A6)', opacity: 0.9, fontSize: '10px' }}>
+            <span style={{ color: 'var(--color-accent-teal, #14B8A6)', opacity: 0.85, fontSize: '9px' }}>
               •
             </span>
             <span>ML</span>
-            <span style={{ color: 'var(--color-accent-teal, #14B8A6)', opacity: 0.9, fontSize: '10px' }}>
+            <span style={{ color: 'var(--color-accent-teal, #14B8A6)', opacity: 0.85, fontSize: '9px' }}>
               •
             </span>
             <span>FULL-STACK</span>
@@ -294,7 +310,7 @@ export default function PortfolioIntro() {
       </div>
 
       <style>{`
-        /* Hide overlay immediately for returning visitors across SSR/SSG */
+        /* Immediate suppression for returning visitors across SSR/SSG */
         html.intro-seen .portfolio-intro-overlay,
         html[data-intro-seen="true"] .portfolio-intro-overlay {
           display: none !important;

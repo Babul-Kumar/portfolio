@@ -127,17 +127,18 @@ Located in `lib/data.ts`:
 A personal brand opening sequence communicating:
 > *"Welcome to Babul Kumar's AI / ML / Full-Stack portfolio."*
 
-### Flow & Calibrated Timeline (~3.8s total duration)
-1. **`0.00s – 0.40s` (`black`)**: Deep obsidian dark screen matching site theme (`#060709`). Quiet anticipation.
-2. **`0.40s – 1.70s` (`bk`)**: Minimal **`BK /`** monogram mark fades in softly with subtle terracotta slash (`#E45D2C`) and ambient radial aura (`rgba(228, 93, 44, 0.12)`). Holds for 1.3s for clear visual recognition.
-3. **`1.70s – 2.90s` (`identity`)**: Monogram smoothly expands into **`BABUL KUMAR`**, followed by **`AI • ML • FULL-STACK`** with cyan dot accents (`#14B8A6`). Holds for 1.2s.
-4. **`2.90s – 3.80s` (`dissolve`)**: The overlay dissolves over 0.9s with an Apple-style cubic-bezier ease (`cubic-bezier(0.16, 1, 0.3, 1)`), seamlessly revealing the underlying blueprint grid, ambient lights, and 3D avatar on the right.
-5. **`3.80s` (`complete`)**: Overlay unmounts completely from the DOM. Homepage is 100% interactive.
+### Redesigned Continuous Motion Narrative (~1.2s total duration)
+1. **`0.00s – 0.08s` (`start`)**: Pure quiet dark obsidian canvas matching site theme (`#060709`).
+2. **`0.08s – 0.42s` (`monogram`)**: Minimal **`BK /`** monogram mark fades in smoothly (`opacity: 0 -> 1`, `cubic-bezier(0.16, 1, 0.3, 1)`) with subtle terracotta slash (`#E45D2C`) and quiet ambient radial aura (`rgba(228, 93, 44, 0.08)`).
+3. **`0.42s – 0.82s` (`identity`)**: Monogram seamlessly cross-fades into **`BABUL KUMAR`** with minute 3px rise, accompanied by **`AI • ML • FULL-STACK`** with cyan punctuation (`#14B8A6`). No scale jumping or subpixel text snapping.
+4. **`0.82s – 1.20s` (`emerge`)**: The overlay veil lifts smoothly (`opacity: 1 -> 0`), dissolving the central overlay into the live homepage. The underlying hero grid (`.hero-grid`), ambient lighting, and 3D avatar on the right emerge naturally and settle into place (`opacity: 1`, `translate3d(0, 0, 0)`).
+5. **`1.20s` (`complete`)**: Overlay unmounts completely from the DOM. Homepage is 100% interactive.
 
-### Zero-Lag Performance Principles
-* **No `backdrop-filter`**: Eliminates full-screen GPU blur re-rasterization stalls.
-* **No `document.documentElement` mutations**: Prevents global style recalculation storms.
-* **GPU Composited**: Uses only `opacity` and hardware-accelerated `translate3d(0, 0, 0)` with `will-change`.
+### Zero-Lag Motion Principles
+* **No `scale()` on text**: Eliminates subpixel font rendering blurriness and glyph jitter.
+* **No `filter: blur()`**: Avoids full-screen GPU re-rasterization bottlenecks.
+* **Pure Opacity & Sub-6px Translation**: Uses only hardware-accelerated `translate3d(0, 0, 0)` with `will-change: opacity, transform`.
+* **Coordinated Single Reveal**: Zero duplicate avatars or secondary canvases; the real hero environment simply emerges underneath.
 * **Session Storage Replay Prevention**: `sessionStorage.getItem('bk_intro_seen')` skips intro on return visits; early inline script prevents dark flashes on reload.
 * **Reduced Motion**: Immediately bypassed if `prefers-reduced-motion: reduce` is active.
 * **User Skip**: Clicking anywhere or pressing `Escape`, `Enter`, or `Space` instantly skips the sequence.

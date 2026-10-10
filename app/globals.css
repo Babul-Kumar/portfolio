@@ -152,22 +152,33 @@ body::before {
   will-change: transform;
 }
 
-/* --- Cinematic Coordinated Hero Reveal during Portfolio Intro --- */
+/* --- Organic Seamless Hero Reveal during Portfolio Intro --- */
 html.intro-active .hero-grid {
   opacity: 0;
-  transform: translate3d(0, 20px, 0) scale(0.985);
+  transform: translate3d(0, 6px, 0);
 }
 
+html.intro-emerging .hero-grid,
 html.intro-dissolving .hero-grid {
   opacity: 1;
-  transform: translate3d(0, 0, 0) scale(1);
-  transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1), transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translate3d(0, 0, 0);
+  transition: opacity 0.42s cubic-bezier(0.16, 1, 0.3, 1), transform 0.42s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 html.intro-seen .hero-grid,
-html:not(.intro-active):not(.intro-dissolving) .hero-grid {
+html:not(.intro-active):not(.intro-dissolving):not(.intro-emerging) .hero-grid {
   opacity: 1;
-  transform: translate3d(0, 0, 0) scale(1);
+  transform: translate3d(0, 0, 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.intro-active .hero-grid,
+  html.intro-emerging .hero-grid,
+  html.intro-dissolving .hero-grid {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
 }
 
 /* --- Global Container & Section Density --- */
