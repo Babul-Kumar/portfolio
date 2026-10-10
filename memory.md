@@ -129,16 +129,21 @@ A personal brand opening sequence communicating:
 
 ### Continuous Boot Experience Motion Choreography (4.40s Master Timeline)
 1. **`0.00s – 0.20s` (Dark Stillness)**: Calm, deep OLED obsidian dark canvas matching site theme (`#060709`). Zero initial flash or layout jitter.
-2. **`0.20s – 1.15s` (BK Mark Awakening)**: **`BK /`** awakens at the shared optical center with diffuse terracotta radial halo (`rgba(228, 93, 44, 0.35)` core, `rgba(20, 184, 166, 0.16)` mid), settling smoothly (`scale: 0.94 -> 1.0`, `opacity: 0 -> 1`), and holds stably for clear cognitive recognition.
-3. **`0.95s – 1.85s` (True Overlapping Morph)**: Connected transformation between persistent elements. `BK` gently expands (`scale: 1.0 -> 1.045`) as its opacity decreases (`1.0 -> 0.0`), while **`BABUL KUMAR`** simultaneously crystallizes (`scale: 0.96 -> 1.0`, `opacity: 0 -> 1`) at the exact same geometric anchor. Subtitle is positioned absolutely (`top: calc(100% + 14px)`) to eliminate any vertical center drift. Continuous overlap ensures zero empty frame and zero opaque collision.
-4. **`1.85s – 2.60s` (Stationary Reading Hold & Sheen Pass)**: Motionless reading hold on `BABUL KUMAR`. An authentic horizontal light sheen beam sweeps across the typographic signature between 1.89s and 2.45s (`introSheenSweep`).
-5. **`2.45s – 3.55s` (Radial Halo Bloom & Overlay Dissolution)**: Central radial halo blooms outward from `scale: 1.18` to `scale: 4.4`, lighting up the viewport. The dark overlay dissolves (`opacity: 1 -> 0`), revealing the authentic portfolio background and technical grid underneath. The identity softly dissolves into the light bloom.
-6. **`3.10s – 4.35s` (Progressive Content Emergence)**: The real avatar stage (`2.85s–3.75s`), hero narrative (`3.05s–3.90s`), and fixed navbar (`3.30s–4.10s`) emerge progressively and settle in unison with natural easing. Zero side curtains, zero abrupt jumps.
-7. **`4.35s` (Clean Completion)**: Overlay cleanly unmounts from the DOM (`return null`). Full interactivity restored.
+2. **`0.20s – 1.05s` (BK Monogram Visible Entrance & Hold)**: **`BK /`** emerges at the shared optical center (`translateY(10px) scale(0.92)` to `translateY(0) scale(1.0)`, `opacity: 0 -> 1` by `0.85s`) supported by the diffuse terracotta radial halo (`rgba(228, 93, 44, 0.35)` core, `rgba(20, 184, 166, 0.16)` mid), and holds stably through `1.05s` for clear cognitive recognition.
+3. **`1.05s – 1.80s` (Coordinated Overlapping Cross-Transition & Letter-by-Letter Resolution)**:
+   - **Outgoing BK**: Begins exit at `1.05s`, expanding slightly (`scale: 1.0 -> 1.045`) with subtle upward lift (`translateY(-8px)`) while fading smoothly from `opacity: 1 -> 0` through `1.70s`.
+   - **Incoming BABUL KUMAR**: Resolved through individual character spans (`aria-label="BABUL KUMAR"`, spans `aria-hidden="true"`). Letters rise 10px and scale into place with a 32ms stagger per letter from `1.08s` to `1.79s` (`@keyframes letterRiseReveal`), resolving into crisp focus without typing cursors or layout shift.
+   - **Shared Optical Anchor**: Both elements remain mounted simultaneously in `.intro-optical-stage` with identical `(50%, 50%)` geometric anchoring.
+4. **`1.52s – 2.10s` (Staggered Tagline Pillars Entrance)**: Positioned absolutely (`top: calc(100% + 14px)`), eliminating any vertical center shift of the headline. Staggered entrances for `AI` (1520ms), `•` (1620ms), `ML` (1680ms), `•` (1780ms), and `FULL-STACK` (1840ms) rising 8px into place (`@keyframes pillarRiseReveal`).
+5. **`1.82s – 2.45s` (Stationary Reading Hold & Sheen Pass)**: Typography remains completely stationary. A refined horizontal light sheen beam sweeps across the typographic signature between `1.82s` and `2.42s` (`@keyframes introSheenSweep`).
+6. **`2.45s – 3.55s` (Radial Halo Bloom & Overlay Dissolution)**: Central radial halo blooms outward from `scale: 1.18` to `scale: 4.4`, filling the viewport with ambient warmth. The dark overlay dissolves (`opacity: 1 -> 0`), revealing the authentic portfolio background and technical grid underneath. The identity softly dissolves into the light bloom.
+7. **`3.10s – 4.35s` (Progressive Content Emergence)**: The real avatar stage (`2.85s–3.75s`), hero narrative (`3.05s–3.90s`), and fixed navbar (`3.30s–4.10s`) emerge progressively and settle in unison with natural easing. Zero side curtains, zero abrupt jumps.
+8. **`4.35s` (Clean Completion)**: Overlay cleanly unmounts from the DOM (`return null`). Full interactivity restored.
 
 ### Motion Engineering Architecture
 * **Single Master CSS Timeline**: All layers run on the compositor via synchronized `@keyframes` over a shared 4.40s duration, completely eliminating React timer drift and re-render interruptions.
 * **Millimeter-Precise Optical Anchor**: Monogram and full name share the exact same `(50%, 50%)` anchor in `.intro-optical-stage`.
+* **Letter-Level Typography Choreography**: Character-level staggered rise and scale reveal with accessible semantic labeling and zero layout shifts.
 * **Persistent Overlapping Elements**: Elements stay mounted during the cross-transition, smoothly blending opacities.
 * **Controlled Light Sheen & Diffuse Bloom**: High-contrast reflection sweep on stationary text; diffuse halo expansion (`scale 4.4`) without hard circle clipping.
 * **Progressive Homepage Revealing**: Background grid, avatar stage, and narrative emerge through the dissolving overlay.

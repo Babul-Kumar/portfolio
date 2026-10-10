@@ -347,7 +347,36 @@
      * Zero layout jumps, zero side-opening curtains, full pointer interactivity.
   6. **Ergonomics & Accessibility**:
      * Supports `?replay=true`, `Shift + R` / `Shift + I`, fast skip (`Escape`, `Space`, `Enter`), click-to-dismiss, static phase inspection (`?intro_phase=<phase>`), and instant `prefers-reduced-motion` bypass.
-  7. **Validation**: Zero TypeScript errors (`npx tsc --noEmit`), zero ESLint warnings (`npm run lint`), and 100% successful production build across 65 routes (`npm run build`).
+---
+
+## 14. Visible Typography Motion & Letter-Level Reveal in Portfolio Intro
+
+* **Location**: [components/intro/PortfolioIntro.tsx](file:///c:/Users/babul/Desktop/portfolio/components/intro/PortfolioIntro.tsx), [app/globals.css](file:///c:/Users/babul/Desktop/portfolio/app/globals.css)
+* **Root-Cause Diagnosis of Static Typography**:
+  1. **Monolithic Container Transform**: Previous implementations applied subtle scale adjustments (`0.96 -> 1.0`) to the entire headline container as a single block. Without letter-level entrance or vertical trajectory, the human eye perceived the typography as static while only the background lighting changed.
+  2. **Uncoordinated Monogram Exit**: The `BK` monogram simply dissolved in place rather than having a coordinated vertical displacement and connected morph.
+  3. **Static Tagline Appearance**: The technical tagline appeared as an undivided block rather than a structured sequence of pillars resolving under the name.
+* **Resolution — Coordinated Letter-Level Choreography (4.40s Timeline)**:
+  1. **Restrained BK Monogram Entrance & Connected Morph (0.20s–1.70s)**:
+     - Begins with `opacity: 0`, `scale: 0.92`, `translateY(10px)`.
+     - Smoothly eases out to settle at `opacity: 1`, `scale: 1.0`, `translateY(0)` at `0.85s`, holding stably through `1.05s`.
+     - Exit morph begins at `1.05s`: expands slightly to `scale(1.045)` with subtle upward movement (`translateY(-8px)`) while fading smoothly from `opacity: 1 -> 0` through `1.70s`.
+  2. **Letter-by-Letter Staggered Resolution for BABUL KUMAR (1.08s–1.79s)**:
+     - Split into character spans (`FIRST_NAME = ['B', 'A', 'B', 'U', 'L']`, `LAST_NAME = ['K', 'U', 'M', 'A', 'R']`).
+     - Each letter begins slightly lower and scaled down (`translateY(10px) scale(0.92)` with `opacity: 0`).
+     - Rises smoothly into place with a 32ms stagger per letter (`1080ms` to `1790ms`), settling at `translateY(0) scale(1.0)` with `opacity: 1`.
+     - Full accessibility preserved: Parent `<h1>` carries `aria-label="BABUL KUMAR"` and individual letter spans carry `aria-hidden="true"`, preventing screen-reader fragmentation.
+     - Zero optical drift: Enclosed in `white-space: nowrap` inline-block containers to eliminate layout shift or center jumps.
+  3. **Staggered Technical Tagline Pillars (1.52s–2.00s)**:
+     - Positioned absolutely at `top: calc(100% + 14px)`, guaranteeing zero vertical displacement of the headline's geometric anchor.
+     - Staggered entrances for `AI` (1520ms), `•` (1620ms), `ML` (1680ms), `•` (1780ms), and `FULL-STACK` (1840ms).
+     - Rises from `translateY(8px)` with `opacity: 0 -> 1` using `@keyframes pillarRiseReveal`.
+  4. **Synchronized Sheen Reflection & Stationary Hold (1.82s–2.42s)**:
+     - As letters and tagline settle into full legibility, a refined light sheen reflection sweeps across the typography (`@keyframes introSheenSweep`).
+  5. **Background Halo Bloom & Progressive Homepage Emergence (2.45s–4.35s)**:
+     - Preserves the existing diffused terracotta radial halo bloom and progressive homepage revelation in `app/globals.css`.
+  6. **Validation**: Zero TypeScript errors (`npx tsc --noEmit`), zero ESLint warnings (`npm run lint`), and 100% successful production build across 65 routes (`npm run build`).
+
 
 
 

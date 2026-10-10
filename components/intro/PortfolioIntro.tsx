@@ -10,6 +10,9 @@ export type IntroPhase =
   | 'content'    // Real homepage elements emerge and settle
   | 'complete'   // Unmounted and 100% interactive
 
+const FIRST_NAME = ['B', 'A', 'B', 'U', 'L']
+const LAST_NAME = ['K', 'U', 'M', 'A', 'R']
+
 function subscribeNoop() {
   return () => {}
 }
@@ -238,15 +241,16 @@ export default function PortfolioIntro() {
             pointerEvents: 'none',
             willChange: 'opacity, transform, letter-spacing',
             ...(isDebugging && debugPhase === 'monogram'
-              ? { opacity: 1, transform: 'scale(1.0)', letterSpacing: '0.06em' }
+              ? { opacity: 1, transform: 'translateY(0) scale(1.0)', letterSpacing: '0.06em' }
               : isDebugging && debugPhase === 'transform'
-                ? { opacity: 0.60, transform: 'scale(1.02)', letterSpacing: '0.08em' }
+                ? { opacity: 0.45, transform: 'translateY(-4px) scale(1.025)', letterSpacing: '0.08em' }
                 : isDebugging && (debugPhase === 'hold' || debugPhase === 'wake' || debugPhase === 'content')
                   ? { opacity: 0 }
                   : {}),
           }}
         >
           <span
+            className="intro-bk-text"
             style={{
               fontFamily: 'var(--font-sans)',
               fontSize: 'clamp(48px, 6vw, 76px)',
@@ -259,6 +263,7 @@ export default function PortfolioIntro() {
             BK
           </span>
           <span
+            className="intro-bk-slash"
             style={{
               fontFamily: 'var(--font-sans)',
               fontSize: 'clamp(40px, 5vw, 64px)',
@@ -286,7 +291,7 @@ export default function PortfolioIntro() {
             ...(isDebugging && debugPhase === 'monogram'
               ? { opacity: 0 }
               : isDebugging && debugPhase === 'transform'
-                ? { opacity: 0.50, transform: 'scale(0.98)' }
+                ? { opacity: 1, transform: 'scale(1.0)' }
                 : isDebugging && debugPhase === 'hold'
                   ? { opacity: 1, transform: 'scale(1.0)' }
                   : isDebugging && debugPhase === 'wake'
@@ -306,7 +311,7 @@ export default function PortfolioIntro() {
               justifyContent: 'center',
             }}
           >
-            {/* Signature Name: BABUL KUMAR */}
+            {/* Signature Name: BABUL KUMAR with Letter-Level Staggered Reveal */}
             <div
               style={{
                 position: 'relative',
@@ -315,6 +320,7 @@ export default function PortfolioIntro() {
               }}
             >
               <h1
+                aria-label="BABUL KUMAR"
                 style={{
                   fontFamily: 'var(--font-sans)',
                   fontSize: 'clamp(34px, 4.8vw, 56px)',
@@ -326,10 +332,53 @@ export default function PortfolioIntro() {
                   alignItems: 'center',
                   gap: '12px',
                   textShadow: '0 2px 24px rgba(0, 0, 0, 0.7)',
+                  whiteSpace: 'nowrap',
                 }}
               >
-                <span style={{ color: '#F5F6F8' }}>BABUL</span>
-                <span style={{ color: '#E45D2C' }}>KUMAR</span>
+                <span
+                  style={{ color: '#F5F6F8', display: 'inline-flex' }}
+                  aria-hidden="true"
+                >
+                  {FIRST_NAME.map((char, index) => (
+                    <span
+                      key={index}
+                      className={`intro-letter ${!isDebugging ? 'intro-running' : ''}`}
+                      style={{
+                        display: 'inline-block',
+                        animationDelay: `${1080 + index * 32}ms`,
+                        ...(isDebugging && (debugPhase === 'hold' || debugPhase === 'wake')
+                          ? { opacity: 1, transform: 'translateY(0) scale(1)' }
+                          : isDebugging && debugPhase === 'transform'
+                            ? { opacity: 0.75, transform: 'translateY(0) scale(1)' }
+                            : {}),
+                      }}
+                    >
+                      {char}
+                    </span>
+                  ))}
+                </span>
+                <span
+                  style={{ color: '#E45D2C', display: 'inline-flex' }}
+                  aria-hidden="true"
+                >
+                  {LAST_NAME.map((char, index) => (
+                    <span
+                      key={index}
+                      className={`intro-letter ${!isDebugging ? 'intro-running' : ''}`}
+                      style={{
+                        display: 'inline-block',
+                        animationDelay: `${1080 + (index + 5) * 32}ms`,
+                        ...(isDebugging && (debugPhase === 'hold' || debugPhase === 'wake')
+                          ? { opacity: 1, transform: 'translateY(0) scale(1)' }
+                          : isDebugging && debugPhase === 'transform'
+                            ? { opacity: 0.75, transform: 'translateY(0) scale(1)' }
+                            : {}),
+                      }}
+                    >
+                      {char}
+                    </span>
+                  ))}
+                </span>
               </h1>
 
               {/* Light Sheen Beam Sweep */}
@@ -350,7 +399,7 @@ export default function PortfolioIntro() {
 
             {/* Technical Subtitle: AI · ML · FULL-STACK (Absolute positioning preserves optical center of h1) */}
             <div
-              className={`intro-subtitle ${!isDebugging ? 'intro-running' : ''}`}
+              className="intro-subtitle"
               style={{
                 position: 'absolute',
                 top: 'calc(100% + 14px)',
@@ -368,34 +417,86 @@ export default function PortfolioIntro() {
                 color: '#9499A6',
                 whiteSpace: 'nowrap',
                 willChange: 'opacity, transform',
-                ...(isDebugging && debugPhase === 'hold'
-                  ? { opacity: 1, transform: 'translateY(0)' }
-                  : {}),
               }}
             >
-              <span>AI</span>
               <span
+                className={`intro-pillar ${!isDebugging ? 'intro-running' : ''}`}
                 style={{
+                  display: 'inline-block',
+                  animationDelay: '1520ms',
+                  ...(isDebugging && (debugPhase === 'hold' || debugPhase === 'wake')
+                    ? { opacity: 1, transform: 'translateY(0)' }
+                    : isDebugging && debugPhase === 'transform'
+                      ? { opacity: 0.5, transform: 'translateY(0)' }
+                      : {}),
+                }}
+              >
+                AI
+              </span>
+              <span
+                className={`intro-dot ${!isDebugging ? 'intro-running' : ''}`}
+                style={{
+                  display: 'inline-block',
                   color: '#14B8A6',
                   opacity: 0.9,
                   fontSize: '9px',
                   textShadow: '0 0 6px rgba(20, 184, 166, 0.6)',
+                  animationDelay: '1620ms',
+                  ...(isDebugging && (debugPhase === 'hold' || debugPhase === 'wake')
+                    ? { opacity: 1, transform: 'translateY(0)' }
+                    : isDebugging && debugPhase === 'transform'
+                      ? { opacity: 0.5, transform: 'translateY(0)' }
+                      : {}),
                 }}
               >
                 •
               </span>
-              <span>ML</span>
               <span
+                className={`intro-pillar ${!isDebugging ? 'intro-running' : ''}`}
                 style={{
+                  display: 'inline-block',
+                  animationDelay: '1680ms',
+                  ...(isDebugging && (debugPhase === 'hold' || debugPhase === 'wake')
+                    ? { opacity: 1, transform: 'translateY(0)' }
+                    : isDebugging && debugPhase === 'transform'
+                      ? { opacity: 0.5, transform: 'translateY(0)' }
+                      : {}),
+                }}
+              >
+                ML
+              </span>
+              <span
+                className={`intro-dot ${!isDebugging ? 'intro-running' : ''}`}
+                style={{
+                  display: 'inline-block',
                   color: '#14B8A6',
                   opacity: 0.9,
                   fontSize: '9px',
                   textShadow: '0 0 6px rgba(20, 184, 166, 0.6)',
+                  animationDelay: '1780ms',
+                  ...(isDebugging && (debugPhase === 'hold' || debugPhase === 'wake')
+                    ? { opacity: 1, transform: 'translateY(0)' }
+                    : isDebugging && debugPhase === 'transform'
+                      ? { opacity: 0.5, transform: 'translateY(0)' }
+                      : {}),
                 }}
               >
                 •
               </span>
-              <span>FULL-STACK</span>
+              <span
+                className={`intro-pillar ${!isDebugging ? 'intro-running' : ''}`}
+                style={{
+                  display: 'inline-block',
+                  animationDelay: '1840ms',
+                  ...(isDebugging && (debugPhase === 'hold' || debugPhase === 'wake')
+                    ? { opacity: 1, transform: 'translateY(0)' }
+                    : isDebugging && debugPhase === 'transform'
+                      ? { opacity: 0.5, transform: 'translateY(0)' }
+                      : {}),
+                }}
+              >
+                FULL-STACK
+              </span>
             </div>
           </div>
         </div>
@@ -453,49 +554,46 @@ export default function PortfolioIntro() {
           }
         }
 
+        /* Visible, restrained BK Monogram entrance & connected morph */
         @keyframes introBkMorph {
           0%, 4.5% {
             opacity: 0;
-            transform: scale(0.94);
+            transform: translateY(10px) scale(0.92);
             letter-spacing: 0.09em;
           }
           18% {
             opacity: 1;
-            transform: scale(1.0);
+            transform: translateY(0) scale(1.0);
             letter-spacing: 0.06em;
           }
           24% {
             opacity: 1;
-            transform: scale(1.0);
+            transform: translateY(0) scale(1.0);
             letter-spacing: 0.06em;
           }
           30% {
-            opacity: 0.65;
-            transform: scale(1.02);
+            opacity: 0.50;
+            transform: translateY(-4px) scale(1.025);
             letter-spacing: 0.08em;
           }
-          37.5% {
+          38% {
             opacity: 0;
-            transform: scale(1.045);
+            transform: translateY(-8px) scale(1.045);
             letter-spacing: 0.10em;
           }
           100% {
             opacity: 0;
-            transform: scale(1.045);
+            transform: translateY(-8px) scale(1.045);
             letter-spacing: 0.10em;
           }
         }
 
+        /* Identity Wrapper Entrance, Hold, and Dissolution into bloom */
         @keyframes introIdentityCrystallize {
-          0%, 24% {
+          0%, 23.5% {
             opacity: 0;
-            transform: scale(0.96);
           }
-          30% {
-            opacity: 0.50;
-            transform: scale(0.98);
-          }
-          37.5% {
+          24% {
             opacity: 1;
             transform: scale(1.0);
           }
@@ -517,51 +615,53 @@ export default function PortfolioIntro() {
           }
         }
 
+        /* Letter-by-Letter Resolution Entrance */
+        @keyframes letterRiseReveal {
+          0% {
+            opacity: 0;
+            transform: translateY(10px) scale(0.92);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0) scale(1.0);
+          }
+        }
+
+        /* Technical Tagline Pillar Staggered Entrance */
+        @keyframes pillarRiseReveal {
+          0% {
+            opacity: 0;
+            transform: translateY(8px);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        /* Refined Light Sheen Reflection Sweep */
         @keyframes introSheenSweep {
-          0%, 42% {
+          0%, 41.5% {
             transform: translateX(-140%);
             opacity: 0;
           }
-          43% {
-            opacity: 0.65;
-          }
-          52% {
-            opacity: 0.55;
-          }
-          56% {
-            transform: translateX(240%);
-            opacity: 0;
-          }
-          100% {
-            transform: translateX(240%);
-            opacity: 0;
-          }
-        }
-
-        @keyframes introSubtitleReveal {
-          0%, 35% {
-            opacity: 0;
-            transform: translateY(6px);
-          }
           42% {
-            opacity: 1;
-            transform: translateY(0);
+            opacity: 0.70;
           }
-          56% {
-            opacity: 1;
-            transform: translateY(0);
+          51% {
+            opacity: 0.60;
           }
-          72% {
+          55% {
+            transform: translateX(240%);
             opacity: 0;
-            transform: translateY(2px);
           }
           100% {
+            transform: translateX(240%);
             opacity: 0;
-            transform: translateY(2px);
           }
         }
 
-        /* Applied via .intro-running for hardware-accelerated compositor execution */
+        /* Master Classes applied via .intro-running */
         .portfolio-intro-overlay.intro-running {
           animation: introOverlayDissolve 4.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
@@ -578,12 +678,20 @@ export default function PortfolioIntro() {
           animation: introIdentityCrystallize 4.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
-        .android-sheen-beam.intro-running {
-          animation: introSheenSweep 4.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        .intro-letter.intro-running {
+          animation: letterRiseReveal 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
         }
 
-        .intro-subtitle.intro-running {
-          animation: introSubtitleReveal 4.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        .intro-pillar.intro-running {
+          animation: pillarRiseReveal 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        .intro-dot.intro-running {
+          animation: pillarRiseReveal 0.34s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        .android-sheen-beam.intro-running {
+          animation: introSheenSweep 4.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
         /* Suppression for returning visitors */
