@@ -13,8 +13,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Allow the login page without a session
-  if (pathname === '/admin/login') {
+  // Allow the login page without a session (handles both trailing slash and non-trailing slash)
+  if (pathname === '/admin/login' || pathname === '/admin/login/') {
     return NextResponse.next()
   }
 
@@ -31,7 +31,7 @@ export async function middleware(request: NextRequest) {
   )
 
   if (!hasAuthCookie) {
-    const loginUrl = new URL('/admin/login', request.url)
+    const loginUrl = new URL('/admin/login/', request.url)
     loginUrl.searchParams.set('redirectedFrom', pathname)
     return NextResponse.redirect(loginUrl)
   }
@@ -77,12 +77,12 @@ export async function middleware(request: NextRequest) {
     } = await Promise.race([getUserPromise, timeoutPromise])
 
     if (!user) {
-      const loginUrl = new URL('/admin/login', request.url)
+      const loginUrl = new URL('/admin/login/', request.url)
       loginUrl.searchParams.set('redirectedFrom', pathname)
       return NextResponse.redirect(loginUrl)
     }
   } catch {
-    const loginUrl = new URL('/admin/login', request.url)
+    const loginUrl = new URL('/admin/login/', request.url)
     loginUrl.searchParams.set('redirectedFrom', pathname)
     return NextResponse.redirect(loginUrl)
   }

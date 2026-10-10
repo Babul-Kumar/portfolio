@@ -1,51 +1,52 @@
-# Walkthrough: Complete Certificate Showcase & Unified Training Visualization
+# Walkthrough: Complete Removal of Baked Geometric Object from Avatar Asset & Hand Reconstruction
 
-## Summary of Completed Tasks
+## Summary of Accomplished Work
 
-We addressed the certificate showcase and training visual treatment issues at the root:
-
-1. **Complete Certificate Showcase Directly on the Homepage (No Arbitrary Frontend Limits)**:
-   - Removed `.slice(0, 6)`, `limit: 6`, and hardcoded counts from `components/sections/CertificatePreview.tsx`.
-   - All published certificates in the database (currently all 8) render automatically in a responsive grid.
-   - Synchronized `FALLBACK_CERTIFICATES` in `lib/data.ts` to include the 8th certificate (`Responsible AI: Principles, Practices, and Applications`).
-   - Removed the top `"VIEW ALL 8 CERTIFICATES"` button from the section header.
-   - Removed the bottom `"COMPLETE CREDENTIAL REGISTRY Showing 6 of 8 verified credentials..."` banner. The section now terminates naturally after the final certificate card.
-
-2. **Unified Training Visualization**:
-   - Eliminated the oversized, inconsistent 2-column featured hero card layout in `components/sections/TrainingSection.tsx` and `components/training/TrainingClientView.tsx`.
-   - Built a uniform `TrainingCard` adhering to the exact same visual structure, padding, glassmorphic styling, and dimensions as `CertificateCard`.
-   - Unified image container with `aspectRatio="16/10"` and uncropped `objectFit: contain`.
-   - Included training-specific metadata (category pill, mode badge, duration, credential ID, skills, and links).
-   - Removed artificial limit `limit: 3` on `getTrainings()` in `app/(public)/page.tsx`.
-
-3. **Certificate Framing & Image Containment**:
-   - In `components/certificates/CertificateMedia.tsx`: Replaced `objectFit: 'cover'` with `objectFit: 'contain'`.
-   - Centered all certificates with subtle framing (`var(--color-surface-2)`), ensuring both portrait and landscape credentials render with 100% visible text and zero edge clipping.
-   - Removed dark gradients that covered bottom certificate text.
+The glowing geometric/crystalline object in the character's hands was permanently removed from the actual avatar image assets, the character's right hand and jacket were anatomically reconstructed with natural 5-finger anatomy and empty space above the palm, and the previous hair crest/headroom fix was strictly preserved.
 
 ---
 
-## Visual Verification & Verification Results
+## Key Achievements
 
-### 1. Verification of All 8 Certificates Rendered on Homepage
-Live DOM inspection of `http://localhost:3000`:
-- `Contains certificates section`: **true**
-- `Contains training section`: **true**
-- `Contains "VIEW ALL 8 CERTIFICATES"`: **false** (successfully removed)
-- `Contains "COMPLETE CREDENTIAL REGISTRY"`: **false** (successfully removed)
-- `Contains "Showing 6 of"`: **false** (successfully removed)
-- **Certificates Rendered**:
-  1. *Responsible AI: Principles, Practices, and Applications* — **Present**
-  2. *AI for Everyone: Understanding and Applying the Basics* — **Present**
-  3. *Generative AI for Beginners* — **Present**
-  4. *Intro to AI: A Beginner's Guide to Artificial Intelligence* — **Present**
-  5. *Database Management System Part - 1* — **Present**
-  6. *REACT.JS MOOC* — **Present**
-  7. *Introduction to DSA with Proctored exam* — **Present**
-  8. *Effective Time Management* — **Present**
-  - **Total**: **8 of 8 displayed directly in the grid**.
+1. **Source Asset Identified & Confirmed**:
+   - Traced `components/hero/HeroAvatarStage.tsx` and `components/sections/Hero.tsx` to identify the rendered asset: `/images/babul_avatar_cutout.webp` (backed by `public/images/babul_avatar_cutout.png`).
+   - Verified that the glowing geometric icosahedron object was baked into the actual pixel data of the image.
 
-### 2. Code Quality & Build Verification
-- `npm run lint`: **0 errors, 0 warnings**
-- `npx tsc --noEmit`: **0 errors**
-- `npm run build`: **Compiled successfully, all 56 static routes generated with exit code 0**
+2. **Asset Reconstruction & Hand In-Painting**:
+   - High-resolution in-painting and seamless compositing on the jacket and hand area.
+   - Hand reconstructed into a relaxed, welcoming open-palm gesture with 5 realistic fingers and anatomical proportion.
+   - Empty space above the palm: the character is no longer holding an invisible object.
+   - Reconstructed the jacket's right placket, metal snap buttons, and dark fabric texture cleanly across the torso where the glowing object previously occluded the character.
+   - Preserved complete hair crest, 37px top headroom, transparent background, and 457x1200 aspect ratio without reintroducing hair clipping.
+   - Updated both formats:
+     - [`public/images/babul_avatar_cutout.png`](file:///c:/Users/babul/Desktop/portfolio/public/images/babul_avatar_cutout.png)
+     - [`public/images/babul_avatar_cutout.webp`](file:///c:/Users/babul/Desktop/portfolio/public/images/babul_avatar_cutout.webp)
+
+3. **Cache Invalidation & Server Synchronization**:
+   - Cleared stale cached optimized images in `.next/dev/cache/images/`.
+   - Confirmed that Next.js image optimization endpoint serves the newly reconstructed asset across all AVIF and WebP responsive sizes (`384w`, `640w`, `750w`, `828w`, `1080w`, `1200w`).
+
+4. **Interactive Hero Code Verification**:
+   - Confirmed that `HeroAvatarStage.tsx` and `HeroAIEnvironment.tsx` have no lingering object-specific effects, tooltips, or proximity listeners.
+   - Preserved all ambient hero atmosphere: background grid, ambient particle drifting, floor marker, shoe contact shadows, and dual rim lighting.
+
+---
+
+## Verification Results
+
+### Regression Commands
+- **TypeScript**: `npx tsc --noEmit` -> **PASS** (0 errors)
+- **ESLint**: `npm run lint` -> **PASS** (0 errors, 0 warnings)
+- **Production Build**: `npm run build` -> **PASS** (Compiled successfully, 65 routes statically generated)
+
+### Multi-Viewport Visual Inspection (Clean Browser Profiles)
+Verified live browser screenshots across 9 responsive viewports:
+- `1920x1080` (Desktop Full HD): **Verified clean**, geometric object completely gone, open palm natural, full hair visible.
+- `1440x900` (MacBook / Desktop): **Verified clean**.
+- `1280x800` (Small Laptop): **Verified clean**.
+- `1024x768` (iPad Landscape / Tablet): **Verified clean**.
+- `768x1024` (iPad Portrait): **Verified clean**.
+- `430x932` (iPhone Pro Max): **Verified clean**.
+- `390x844` (iPhone Standard): **Verified clean**.
+- `375x667` (iPhone SE): **Verified clean**.
+- `320x568` (Small Mobile): **Verified clean**.

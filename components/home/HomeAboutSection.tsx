@@ -137,7 +137,7 @@ export default function HomeAboutSection() {
                   marginBottom: '14px',
                 }}
               >
-                Lovely Professional University · 2023 — 2027
+                Lovely Professional University · 2024 — 2028
               </div>
 
               <p

@@ -5,6 +5,8 @@ import HomeAboutSection from '@/components/home/HomeAboutSection'
 import HomeTechStackSection from '@/components/home/HomeTechStackSection'
 import HomeModuleRadarSection from '@/components/home/HomeModuleRadarSection'
 
+import PortfolioIntro from '@/components/intro/PortfolioIntro'
+
 export const revalidate = 60 // Revalidate every 60 seconds
  
 export const metadata: Metadata = {
@@ -18,6 +20,9 @@ export default async function HomePage() {
 
   return (
     <>
+      {/* 00: Apple-Inspired Brand Intro & Personal Digital Signature */}
+      <PortfolioIntro />
+
       {/* 01: Hero Section with 3D Avatar & Core Focus */}
       <HeroSection profile={profile} />
 

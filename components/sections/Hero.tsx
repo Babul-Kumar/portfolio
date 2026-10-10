@@ -289,7 +289,7 @@ export default function HeroSection({ profile }: HeroProps) {
               alignItems: 'center',
               justifyContent: 'center',
               pointerEvents: 'auto',
-              transform: 'translateY(-24px)',
+              transform: 'translateY(0)',
             }}
             className="hero-visual"
           >

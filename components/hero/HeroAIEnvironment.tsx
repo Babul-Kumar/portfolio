@@ -6,7 +6,6 @@ interface HeroAIEnvironmentProps {
   mouse: React.RefObject<{ x: number; y: number }>
   isLight: boolean
   reducedMotion: boolean
-  coreProximity: number
 }
 
 // 4 minimal nodes on the left — purely decorative, no labels, peripheral only
@@ -41,7 +40,6 @@ export default function HeroAIEnvironment({
   mouse,
   isLight,
   reducedMotion,
-  coreProximity,
 }: HeroAIEnvironmentProps) {
   const leftWingRef = useRef<HTMLDivElement>(null)
   const rightWingRef = useRef<HTMLDivElement>(null)
@@ -73,8 +71,8 @@ export default function HeroAIEnvironment({
   const accentColor = isLight ? '#d45024' : '#f97316'
   const tealColor = isLight ? '#0f766e' : '#06b6d4'
 
-  // Extremely low opacity by default, slightly more when near core
-  const baseOpacity = coreProximity > 0.4 ? 0.28 : 0.12
+  // Ambient baseline opacity for peripheral nodes
+  const baseOpacity = 0.12
 
   return (
     <div
