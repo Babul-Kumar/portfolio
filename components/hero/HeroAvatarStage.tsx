@@ -95,7 +95,7 @@ export default function HeroAvatarStage({ mouse, isVisible = true }: HeroAvatarS
         width: '100%',
         height: '100%',
         display: 'flex',
-        alignItems: 'center',
+        alignItems: 'flex-end',
         justifyContent: 'center',
         perspective: '1200px',
         userSelect: 'none',
@@ -118,15 +118,15 @@ export default function HeroAvatarStage({ mouse, isVisible = true }: HeroAvatarS
         className={`avatar-perspective-wrapper ${!reducedMotion ? 'animate-idle-breathing' : ''}`}
         style={{
           position: 'relative',
-          height: '96%',
-          maxHeight: '96%',
+          height: '100%',
+          maxHeight: '100%',
           maxWidth: '100%',
           aspectRatio: '457 / 1200',
           transform: 'none',
           transformStyle: 'preserve-3d',
           transition: 'transform 0.1s cubic-bezier(0.2, 0, 0.2, 1)',
           display: 'flex',
-          alignItems: 'center',
+          alignItems: 'flex-end',
           justifyContent: 'center',
         }}
       >

@@ -176,28 +176,7 @@ export default function HeroBackground({
         }}
       />
 
-      {/* =========================================================================
-          Layer 3: Technical Telemetry HUD HUD Data Tickers
-          ========================================================================= */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '104px',
-          left: 'max(24px, 4vw)',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '6px',
-          fontFamily: 'var(--font-mono)',
-          fontSize: '10px',
-          letterSpacing: '0.12em',
-          color: 'var(--color-text-muted)',
-          opacity: 0.6,
-        }}
-      >
-        <span>{'// AI_SYSTEM_INITIALIZED'}</span>
-        <span>{'// TENSOR_GRAPH: ACTIVE'}</span>
-        <span>{'// LATENCY: 12MS'}</span>
-      </div>
+      {/* Layer 3: telemetry tickers removed — overlapped primary heading */}
 
       {/* =========================================================================
           Layer 4: Deterministic Micro Floating Particles
