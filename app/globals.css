@@ -121,6 +121,10 @@ html {
   color-scheme: light;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   background-color: var(--color-bg);
   color: var(--color-text);
@@ -129,6 +133,7 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
   overflow-x: hidden;
   position: relative;
 }
@@ -149,80 +154,24 @@ body::before {
   pointer-events: none;
   z-index: 0;
   transform: translateZ(0);
-  will-change: transform;
 }
 
 /* --- Progressive Homepage Awakening during Intro --- */
-html.intro-active .hero-grid > div:nth-child(2) /* Avatar stage */ {
+html.intro-active:not(.intro-emerging) .hero-grid > div:nth-child(1),
+html.intro-active:not(.intro-emerging) .hero-grid > div:nth-child(2),
+html.intro-active:not(.intro-emerging) header {
   opacity: 0;
-  transform: translateY(8px);
-  animation: heroAvatarAwaken 4.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  pointer-events: none;
+  transform: translate3d(0, 8px, 0);
 }
 
-html.intro-active .hero-grid > div:nth-child(1) /* Narrative & Headline */ {
-  opacity: 0;
-  transform: translateY(6px);
-  animation: heroNarrativeAwaken 4.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-html.intro-active header /* Fixed Navbar */ {
-  opacity: 0;
-  transform: translateY(-6px);
-  animation: heroHeaderAwaken 4.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-@keyframes heroAvatarAwaken {
-  0%, 64% {
-    opacity: 0;
-    transform: translateY(8px);
-    pointer-events: none;
-  }
-  85% {
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: auto;
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: auto;
-  }
-}
-
-@keyframes heroNarrativeAwaken {
-  0%, 68% {
-    opacity: 0;
-    transform: translateY(6px);
-    pointer-events: none;
-  }
-  88% {
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: auto;
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: auto;
-  }
-}
-
-@keyframes heroHeaderAwaken {
-  0%, 73% {
-    opacity: 0;
-    transform: translateY(-6px);
-    pointer-events: none;
-  }
-  92% {
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: auto;
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: auto;
-  }
+html.intro-emerging .hero-grid > div:nth-child(1),
+html.intro-emerging .hero-grid > div:nth-child(2),
+html.intro-emerging header {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate3d(0, 0, 0);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 html.intro-seen .hero-grid > div:nth-child(1),
@@ -488,11 +437,12 @@ div.container {
   background: var(--color-card-bg);
   border: 1px solid var(--color-card-border);
   border-radius: var(--radius-md);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  transition: border-color 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out), transform 0.3s var(--ease-out);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: border-color 0.25s var(--ease-out), box-shadow 0.25s var(--ease-out), transform 0.25s var(--ease-out);
   position: relative;
   overflow: hidden;
+  contain: layout style;
 }
 
 [data-theme="light"] .glass-card {
@@ -587,7 +537,6 @@ div.container {
 /* Section Continuous Background Transition */
 .section {
   position: relative;
-  overflow: hidden;
 }
 
 .section::after {

@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect, useSyncExternalStore } from 'react'
-import { motion } from 'framer-motion'
 
 // Multi-Page Dedicated Navigation Routes
 const NAV_ITEMS = [
@@ -113,7 +112,7 @@ export default function Navbar() {
               : '1px solid rgba(255, 255, 255, 0.04)',
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
-          transition: 'all 0.3s var(--ease-out)',
+          transition: 'background-color 0.3s var(--ease-out), border-color 0.3s var(--ease-out)',
         }}
       >
         <div
@@ -193,22 +192,21 @@ export default function Navbar() {
                   className="nav-link"
                 >
                   {item.label}
-                  {isActive && (
-                    <motion.span
-                      layoutId="activeNavIndicator"
-                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                      style={{
-                        position: 'absolute',
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        height: '2px',
-                        background: 'var(--color-accent)',
-                        borderRadius: '1px',
-                        boxShadow: '0 0 10px var(--color-accent), 0 0 20px rgba(228, 93, 44, 0.4)',
-                      }}
-                    />
-                  )}
+                  <span
+                    style={{
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      height: '2px',
+                      background: 'var(--color-accent)',
+                      borderRadius: '1px',
+                      boxShadow: '0 0 10px var(--color-accent), 0 0 20px rgba(228, 93, 44, 0.4)',
+                      transform: isActive ? 'scaleX(1)' : 'scaleX(0)',
+                      transformOrigin: 'left center',
+                      transition: 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+                    }}
+                  />
                 </Link>
               )
             })}

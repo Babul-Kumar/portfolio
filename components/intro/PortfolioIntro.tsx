@@ -3,11 +3,11 @@
 import React, { useState, useEffect, useCallback, useRef, useSyncExternalStore } from 'react'
 
 export type IntroPhase =
-  | 'monogram'   // BK SVG draws itself
-  | 'transform'  // BK collapses to a point
-  | 'hold'       // BABUL KUMAR rotates out, holds
-  | 'wake'       // Overlay dissolves, portfolio revealed
-  | 'content'    // Homepage visible
+  | 'monogram'   // Stage 1: BK Monogram draws, nodes glow, shimmer
+  | 'transform'  // Transition: BK implodes into center singularity
+  | 'hold'       // Stage 2: BABUL KUMAR identity expands & holds
+  | 'wake'       // Stage 3: Overlay dissolves, portfolio reveals
+  | 'content'    // Stage 4: Homepage awake & interactive
   | 'complete'   // Unmounted
 
 const FIRST_NAME = ['B', 'A', 'B', 'U', 'L']
@@ -89,6 +89,7 @@ export default function PortfolioIntro() {
     setIsMounted(false)
   }, [clearAllTimers])
 
+  // Master Intro Timeline
   useEffect(() => {
     if (sessionSeen || reducedMotion) {
       try {
@@ -115,10 +116,17 @@ export default function PortfolioIntro() {
       document.documentElement.classList.remove('intro-seen')
     } catch {}
 
-    // Total animation: 5.2s + 200ms buffer
-    const masterTimer = setTimeout(() => { completeIntro() }, 5400)
-    const failsafeTimer = setTimeout(() => { completeIntro() }, 7000)
-    timersRef.current = [masterTimer, failsafeTimer]
+    // Wake homepage elements smoothly at 3.2s as overlay dissolves
+    const emergeTimer = setTimeout(() => {
+      try {
+        document.documentElement.classList.add('intro-emerging')
+      } catch {}
+    }, 3200)
+
+    // Complete intro at 4.2s (clean, snappy, 0 overlap)
+    const masterTimer = setTimeout(() => { completeIntro() }, 4200)
+    const failsafeTimer = setTimeout(() => { completeIntro() }, 5500)
+    timersRef.current = [emergeTimer, masterTimer, failsafeTimer]
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.key === 'R' || e.key === 'r' || e.key === 'I' || e.key === 'i') && e.shiftKey) {
@@ -146,7 +154,7 @@ export default function PortfolioIntro() {
 
   const isDebugging = debugPhase !== null
 
-  // Static states for visual QA via ?intro_phase=
+  // Static overrides for manual visual inspection via ?intro_phase=
   const overlayDebug = isDebugging && debugPhase === 'content'
     ? { opacity: 0, pointerEvents: 'none' as const }
     : isDebugging && debugPhase === 'wake'
@@ -155,22 +163,20 @@ export default function PortfolioIntro() {
 
   const bkDebug = isDebugging
     ? debugPhase === 'monogram'
-      ? { opacity: 1, transform: 'scale(1)' }
-      : { opacity: 0, transform: 'scale(0)' }
+      ? { opacity: 1, transform: 'scale(1)', visibility: 'visible' as const }
+      : debugPhase === 'transform'
+        ? { opacity: 0.5, transform: 'scale(0.3)', visibility: 'visible' as const }
+        : { opacity: 0, visibility: 'hidden' as const }
     : {}
 
   const nameDebug = isDebugging
     ? (debugPhase === 'hold' || debugPhase === 'wake')
-      ? { opacity: 1, transform: 'rotateX(0deg) scale(1) translateY(0)' }
-      : { opacity: 0, transform: 'rotateX(24deg) scale(0.72) translateY(16px)' }
-    : {}
-
-  const letterDebug = isDebugging && (debugPhase === 'hold' || debugPhase === 'wake')
-    ? { opacity: 1, transform: 'translateY(0) scale(1)' }
+      ? { opacity: 1, transform: 'scale(1) translate3d(0, 0, 0)', visibility: 'visible' as const }
+      : { opacity: 0, visibility: 'hidden' as const }
     : {}
 
   const taglineDebug = isDebugging && (debugPhase === 'hold' || debugPhase === 'wake')
-    ? { opacity: 1, transform: 'translateY(0)' }
+    ? { opacity: 1, transform: 'translate3d(0, 0, 0)', visibility: 'visible' as const }
     : {}
 
   return (
@@ -190,23 +196,23 @@ export default function PortfolioIntro() {
         cursor: 'pointer',
         userSelect: 'none',
         overflow: 'hidden',
-        perspective: '800px',
         ...overlayDebug,
       }}
     >
-      {/* Ambient radial halo */}
+      {/* Ambient radial halo — GPU composited */}
       <div
         className={`intro-radial-halo${!isDebugging ? ' intro-running' : ''}`}
         style={{
           position: 'absolute',
           top: '50%',
           left: '50%',
-          width: 'clamp(320px, 42vw, 580px)',
-          height: 'clamp(320px, 42vw, 580px)',
+          width: 'clamp(320px, 42vw, 560px)',
+          height: 'clamp(320px, 42vw, 560px)',
           borderRadius: '50%',
           background:
-            'radial-gradient(circle, rgba(228,93,44,0.28) 0%, rgba(20,184,166,0.12) 40%, rgba(228,93,44,0.04) 68%, transparent 78%)',
+            'radial-gradient(circle, rgba(228,93,44,0.24) 0%, rgba(20,184,166,0.10) 42%, transparent 72%)',
           pointerEvents: 'none',
+          transform: 'translate3d(-50%, -50%, 0)',
           willChange: 'transform, opacity',
         }}
       />
@@ -220,10 +226,10 @@ export default function PortfolioIntro() {
           justifyContent: 'center',
           width: '100%',
           maxWidth: '800px',
-          height: '200px',
+          height: '220px',
         }}
       >
-        {/* ── Layer 1: BK SVG Monogram ── */}
+        {/* ── STAGE 1: BK Monogram (0.0s – 1.65s) — completely disappears before Stage 2 ── */}
         <div
           className={`intro-bk-mark${!isDebugging ? ' intro-running' : ''}`}
           style={{
@@ -233,50 +239,99 @@ export default function PortfolioIntro() {
             alignItems: 'center',
             justifyContent: 'center',
             pointerEvents: 'none',
-            willChange: 'opacity, transform',
             transformOrigin: 'center center',
+            willChange: 'opacity, transform',
             ...bkDebug,
           }}
         >
           <svg
             viewBox="0 0 160 100"
-            width="clamp(96px, 12vw, 152px)"
-            height="auto"
+            width="clamp(110px, 14vw, 160px)"
+            height="100%"
             fill="none"
             aria-hidden="true"
             style={{ overflow: 'visible' }}
           >
-            {/* B — vertical spine + two bumps */}
+            {/* Ambient shimmer wave */}
+            <circle
+              className={`bk-shimmer-ring${!isDebugging ? ' intro-running' : ''}`}
+              cx="76"
+              cy="50"
+              r="10"
+              stroke="rgba(255,255,255,0.6)"
+              strokeWidth="1.8"
+              fill="none"
+            />
+
+            {/* B — discrete strokes for flawless drawing animation */}
             <path
-              className={`bk-stroke-b${!isDebugging ? ' intro-running' : ''}`}
-              d="M14,10 L14,90 M14,10 Q52,10 52,32 Q52,50 14,50 M14,50 Q58,50 58,70 Q58,90 14,90"
+              className={`bk-b-spine${!isDebugging ? ' intro-running' : ''}`}
+              d="M14,10 L14,90"
               stroke="#F5F6F8"
               strokeWidth="6"
               strokeLinecap="round"
-              strokeLinejoin="round"
             />
-            {/* K — vertical spine + diagonal arms */}
             <path
-              className={`bk-stroke-k${!isDebugging ? ' intro-running' : ''}`}
-              d="M88,10 L88,90 M88,50 L138,10 M88,50 L138,90"
+              className={`bk-b-top${!isDebugging ? ' intro-running' : ''}`}
+              d="M14,10 C50,10 50,50 14,50"
+              stroke="#F5F6F8"
+              strokeWidth="6"
+              strokeLinecap="round"
+            />
+            <path
+              className={`bk-b-bot${!isDebugging ? ' intro-running' : ''}`}
+              d="M14,50 C56,50 56,90 14,90"
+              stroke="#F5F6F8"
+              strokeWidth="6"
+              strokeLinecap="round"
+            />
+
+            {/* K — discrete strokes for flawless drawing animation */}
+            <path
+              className={`bk-k-spine${!isDebugging ? ' intro-running' : ''}`}
+              d="M88,10 L88,90"
               stroke="#E45D2C"
               strokeWidth="6"
               strokeLinecap="round"
-              strokeLinejoin="round"
             />
+            <path
+              className={`bk-k-top${!isDebugging ? ' intro-running' : ''}`}
+              d="M88,50 L138,10"
+              stroke="#E45D2C"
+              strokeWidth="6"
+              strokeLinecap="round"
+            />
+            <path
+              className={`bk-k-bot${!isDebugging ? ' intro-running' : ''}`}
+              d="M88,50 L138,90"
+              stroke="#E45D2C"
+              strokeWidth="6"
+              strokeLinecap="round"
+            />
+
             {/* Accent slash */}
-            <line
-              className={`bk-stroke-slash${!isDebugging ? ' intro-running' : ''}`}
-              x1="68" y1="18" x2="76" y2="82"
+            <path
+              className={`bk-slash${!isDebugging ? ' intro-running' : ''}`}
+              d="M68,18 L76,82"
               stroke="#E45D2C"
               strokeWidth="2.5"
               strokeLinecap="round"
-              opacity="0.7"
+              opacity="0.8"
             />
+
+            {/* Luminous vertex nodes (ignite at stroke intersections) */}
+            <circle className={`bk-node bk-node-1${!isDebugging ? ' intro-running' : ''}`} cx="14" cy="10" r="3.2" fill="#F5F6F8" />
+            <circle className={`bk-node bk-node-2${!isDebugging ? ' intro-running' : ''}`} cx="14" cy="90" r="3.2" fill="#F5F6F8" />
+            <circle className={`bk-node bk-node-3${!isDebugging ? ' intro-running' : ''}`} cx="14" cy="50" r="3.0" fill="#F5F6F8" />
+            <circle className={`bk-node bk-node-4${!isDebugging ? ' intro-running' : ''}`} cx="88" cy="10" r="3.2" fill="#E45D2C" />
+            <circle className={`bk-node bk-node-5${!isDebugging ? ' intro-running' : ''}`} cx="88" cy="90" r="3.2" fill="#E45D2C" />
+            <circle className={`bk-node bk-node-6${!isDebugging ? ' intro-running' : ''}`} cx="88" cy="50" r="3.2" fill="#E45D2C" />
+            <circle className={`bk-node bk-node-7${!isDebugging ? ' intro-running' : ''}`} cx="138" cy="10" r="3.2" fill="#FF8A3D" />
+            <circle className={`bk-node bk-node-8${!isDebugging ? ' intro-running' : ''}`} cx="138" cy="90" r="3.2" fill="#FF8A3D" />
           </svg>
         </div>
 
-        {/* ── Layer 2: BABUL KUMAR — rotates out from center ── */}
+        {/* ── STAGE 2: BABUL KUMAR (1.75s – 3.2s) — strictly emerges AFTER BK has vanished ── */}
         <div
           className={`intro-identity-wrapper${!isDebugging ? ' intro-running' : ''}`}
           style={{
@@ -286,9 +341,8 @@ export default function PortfolioIntro() {
             alignItems: 'center',
             justifyContent: 'center',
             pointerEvents: 'none',
-            willChange: 'opacity, transform',
             transformOrigin: 'center center',
-            transformStyle: 'preserve-3d',
+            willChange: 'opacity, transform',
             ...nameDebug,
           }}
         >
@@ -320,55 +374,40 @@ export default function PortfolioIntro() {
               >
                 <span style={{ color: '#F5F6F8', display: 'inline-flex' }} aria-hidden="true">
                   {FIRST_NAME.map((char, index) => (
-                    <span
-                      key={index}
-                      className={`intro-letter${!isDebugging ? ' intro-running' : ''}`}
-                      style={{
-                        display: 'inline-block',
-                        animationDelay: `${2000 + index * 40}ms`,
-                        ...letterDebug,
-                      }}
-                    >
+                    <span key={index} style={{ display: 'inline-block' }}>
                       {char}
                     </span>
                   ))}
                 </span>
                 <span style={{ color: '#E45D2C', display: 'inline-flex' }} aria-hidden="true">
                   {LAST_NAME.map((char, index) => (
-                    <span
-                      key={index}
-                      className={`intro-letter${!isDebugging ? ' intro-running' : ''}`}
-                      style={{
-                        display: 'inline-block',
-                        animationDelay: `${2000 + (index + 5) * 40}ms`,
-                        ...letterDebug,
-                      }}
-                    >
+                    <span key={index} style={{ display: 'inline-block' }}>
                       {char}
                     </span>
                   ))}
                 </span>
               </h1>
 
-              {/* Light sheen sweep */}
+              {/* Luminous light sheen sweep */}
               <div
                 className={`android-sheen-beam${!isDebugging ? ' intro-running' : ''}`}
                 style={{
                   position: 'absolute',
                   top: 0,
                   left: 0,
-                  width: '50%',
+                  width: '45%',
                   height: '100%',
                   background:
-                    'linear-gradient(105deg, transparent 10%, rgba(255,255,255,0.30) 50%, transparent 90%)',
+                    'linear-gradient(105deg, transparent 15%, rgba(255,255,255,0.35) 50%, transparent 85%)',
                   pointerEvents: 'none',
+                  transform: 'translate3d(-150%, 0, 0)',
                 }}
               />
             </div>
 
             {/* AI · ML · FULL-STACK tagline */}
             <div
-              className="intro-subtitle"
+              className={`intro-subtitle${!isDebugging ? ' intro-running' : ''}`}
               style={{
                 position: 'absolute',
                 top: 'calc(100% + 14px)',
@@ -386,20 +425,17 @@ export default function PortfolioIntro() {
                 color: '#9499A6',
                 whiteSpace: 'nowrap',
                 willChange: 'opacity, transform',
+                ...taglineDebug,
               }}
             >
               {(['AI', '•', 'ML', '•', 'FULL-STACK'] as const).map((label, i) => {
                 const isDot = label === '•'
-                const delays = [2560, 2640, 2700, 2780, 2840]
                 return (
                   <span
                     key={i}
-                    className={`${isDot ? 'intro-dot' : 'intro-pillar'}${!isDebugging ? ' intro-running' : ''}`}
                     style={{
                       display: 'inline-block',
-                      animationDelay: `${delays[i]}ms`,
                       ...(isDot ? { color: '#14B8A6', fontSize: '9px', textShadow: '0 0 6px rgba(20,184,166,0.6)' } : {}),
-                      ...taglineDebug,
                     }}
                   >
                     {label}
@@ -413,153 +449,279 @@ export default function PortfolioIntro() {
 
       <style>{`
         /*
-         * ─────────────────────────────────────────────────────────────
-         * PORTFOLIO INTRO — 5.2s CONTINUOUS ANIMATION
+         * PORTFOLIO INTRO — STRICT NON-OVERLAPPING MASTER TIMELINE (4.2s)
          *
-         * Timeline:
-         *   0.0s  Start; dark canvas
-         *   0.2s  B begins drawing
-         *   0.38s K begins drawing
-         *   0.55s Slash draws
-         *   1.35s BK fully drawn, halo settled
-         *   1.4s  BK starts collapsing (scale 1→0)
-         *   1.9s  BK at scale(0) — collapsed to a point
-         *   2.0s  BABUL KUMAR rotates out (rotateX 24°→0°)
-         *   2.2s  Letters resolve staggered
-         *   3.0s  Name fully settled, reading hold begins
-         *   4.05s Light sheen fires
-         *   4.4s  Overlay begins dissolving
-         *   5.2s  Fully transparent → unmount
-         * ─────────────────────────────────────────────────────────────
+         * [STAGE 1]  0.00s – 1.35s: BK Monogram draws in, luminous nodes ignite, shimmer wave
+         * [COLLAPSE] 1.35s – 1.65s: BK collapses into central singularity (scale 1 -> 0, opacity 0)
+         * [BARRIER]  1.65s – 1.75s: BK is COMPLETELY HIDDEN (visibility: hidden). Zero overlap possible.
+         * [STAGE 2]  1.75s – 3.20s: BABUL KUMAR expands forward from singularity, holds, sheen sweeps
+         * [STAGE 3]  3.20s – 4.20s: Overlay dissolves smoothly into the fully awake portfolio
          */
 
+        /* Overlay Dissolve */
         @keyframes introOverlayDissolve {
-          0%, 84% { opacity: 1; pointer-events: auto; }
-          98%     { opacity: 0; pointer-events: none; }
-          100%    { opacity: 0; pointer-events: none; }
+          0%, 75%   { opacity: 1; pointer-events: auto; }
+          95%, 100% { opacity: 0; pointer-events: none; }
         }
 
+        /* Ambient Halo */
         @keyframes introHaloFlow {
-          0%   { transform: translate(-50%,-50%) scale(0.7);  opacity: 0; }
-          8%   { transform: translate(-50%,-50%) scale(0.92); opacity: 0.38; }
-          36%  { transform: translate(-50%,-50%) scale(1.0);  opacity: 0.62; }
-          58%  { transform: translate(-50%,-50%) scale(1.14); opacity: 0.86; }
-          82%  { transform: translate(-50%,-50%) scale(1.20); opacity: 0.90; }
-          92%  { transform: translate(-50%,-50%) scale(4.0);  opacity: 0.28; }
-          100% { transform: translate(-50%,-50%) scale(4.6);  opacity: 0; }
+          0%   { transform: translate3d(-50%, -50%, 0) scale(0.85); opacity: 0; }
+          12%  { transform: translate3d(-50%, -50%, 0) scale(1.0);  opacity: 0.45; }
+          36%  { transform: translate3d(-50%, -50%, 0) scale(1.08); opacity: 0.65; }
+          75%  { transform: translate3d(-50%, -50%, 0) scale(1.18); opacity: 0.70; }
+          92%  { transform: translate3d(-50%, -50%, 0) scale(1.24); opacity: 0.15; }
+          100% { transform: translate3d(-50%, -50%, 0) scale(1.28); opacity: 0; }
         }
 
-        /* BK container: appear → hold → collapse to center */
-        @keyframes introBkMorph {
-          0%    { opacity: 0;   transform: scale(0.78); }
-          5%    { opacity: 0;   transform: scale(0.78); }
-          22%   { opacity: 1;   transform: scale(1.0);  }
-          27%   { opacity: 1;   transform: scale(1.0);  }
-          36%   { opacity: 0.9; transform: scale(0.22); }
-          38.5% { opacity: 0;   transform: scale(0);    }
-          100%  { opacity: 0;   transform: scale(0);    }
+        /* ── STAGE 1: BK Monogram Sequence (Strictly finishes at 38% = 1.60s) ── */
+        @keyframes bkMonogramSequence {
+          0% {
+            opacity: 0;
+            transform: scale(0.88) translate3d(0, 0, 0);
+            visibility: visible;
+          }
+          6% {
+            opacity: 1;
+            transform: scale(1.0) translate3d(0, 0, 0);
+            visibility: visible;
+          }
+          30% {
+            opacity: 1;
+            transform: scale(1.0) translate3d(0, 0, 0);
+            visibility: visible;
+          }
+          37% {
+            opacity: 0;
+            transform: scale(0) translate3d(0, 0, 0);
+            visibility: hidden;
+          }
+          100% {
+            opacity: 0;
+            transform: scale(0) translate3d(0, 0, 0);
+            visibility: hidden;
+          }
         }
 
-        /* SVG stroke draws */
-        @keyframes strokeDrawB {
-          from { stroke-dashoffset: 320; opacity: 0.05; }
-          6%   { opacity: 1; }
-          to   { stroke-dashoffset: 0; }
+        /* Explicit pixel stroke drawing animations */
+        @keyframes drawBSpine {
+          0%   { stroke-dashoffset: 84; opacity: 0; }
+          2%   { opacity: 1; }
+          100% { stroke-dashoffset: 0;  opacity: 1; }
+        }
+        @keyframes drawBTop {
+          0%   { stroke-dashoffset: 80; opacity: 0; }
+          2%   { opacity: 1; }
+          100% { stroke-dashoffset: 0;  opacity: 1; }
+        }
+        @keyframes drawBBot {
+          0%   { stroke-dashoffset: 88; opacity: 0; }
+          2%   { opacity: 1; }
+          100% { stroke-dashoffset: 0;  opacity: 1; }
+        }
+        @keyframes drawKSpine {
+          0%   { stroke-dashoffset: 84; opacity: 0; }
+          2%   { opacity: 1; }
+          100% { stroke-dashoffset: 0;  opacity: 1; }
+        }
+        @keyframes drawKTop {
+          0%   { stroke-dashoffset: 68; opacity: 0; }
+          2%   { opacity: 1; }
+          100% { stroke-dashoffset: 0;  opacity: 1; }
+        }
+        @keyframes drawKBot {
+          0%   { stroke-dashoffset: 68; opacity: 0; }
+          2%   { opacity: 1; }
+          100% { stroke-dashoffset: 0;  opacity: 1; }
+        }
+        @keyframes drawSlash {
+          0%   { stroke-dashoffset: 68; opacity: 0; }
+          2%   { opacity: 1; }
+          100% { stroke-dashoffset: 0;  opacity: 1; }
         }
 
-        @keyframes strokeDrawK {
-          from { stroke-dashoffset: 280; opacity: 0.05; }
-          6%   { opacity: 1; }
-          to   { stroke-dashoffset: 0; }
+        /* Shimmer ring pulse */
+        @keyframes bkShimmerRing {
+          0%, 20%  { r: 8; opacity: 0; }
+          22%      { r: 12; opacity: 0.85; }
+          29%      { r: 90; opacity: 0; }
+          100%     { r: 90; opacity: 0; }
         }
 
-        @keyframes strokeDrawSlash {
-          from { stroke-dashoffset: 70; opacity: 0; }
-          to   { stroke-dashoffset: 0; opacity: 0.7; }
+        /* Nodes ignite cleanly without origin distortion */
+        @keyframes nodeIgnite {
+          0%, 10%  { opacity: 0; }
+          20%      { opacity: 1; }
+          30%      { opacity: 1; }
+          36%, 100%{ opacity: 0; }
         }
 
-        /* BABUL KUMAR rotates out from the collapsed point */
-        @keyframes introIdentityCrystallize {
-          0%, 36%  { opacity: 0;    transform: rotateX(24deg)  scale(0.72) translateY(16px); }
-          38%      { opacity: 0;    transform: rotateX(24deg)  scale(0.72) translateY(16px); }
-          52%      { opacity: 1;    transform: rotateX(0deg)   scale(1.0)  translateY(0);    }
-          80%      { opacity: 1;    transform: rotateX(0deg)   scale(1.0)  translateY(0);    }
-          90%      { opacity: 0.22; transform: rotateX(-8deg)  scale(1.02) translateY(-6px); }
-          96%      { opacity: 0;    transform: rotateX(-12deg) scale(1.04) translateY(-10px);}
-          100%     { opacity: 0;    transform: rotateX(-12deg) scale(1.04) translateY(-10px);}
+        /* ── STAGE 2: BABUL KUMAR Sequence (Strictly starts AFTER 39% = 1.64s) ── */
+        @keyframes introIdentityReveal {
+          0%, 39% {
+            opacity: 0;
+            transform: translate3d(0, 8px, 0) scale(0.86);
+            visibility: hidden;
+          }
+          41% {
+            visibility: visible;
+            opacity: 0;
+            transform: translate3d(0, 8px, 0) scale(0.88);
+          }
+          48% {
+            opacity: 1;
+            transform: translate3d(0, 0, 0) scale(1.0);
+            visibility: visible;
+          }
+          75% {
+            opacity: 1;
+            transform: translate3d(0, 0, 0) scale(1.0);
+            visibility: visible;
+          }
+          90% {
+            opacity: 0.2;
+            transform: translate3d(0, -6px, 0) scale(1.02);
+            visibility: visible;
+          }
+          96%, 100% {
+            opacity: 0;
+            transform: translate3d(0, -10px, 0) scale(1.04);
+            visibility: hidden;
+          }
         }
 
-        @keyframes letterRiseReveal {
-          from { opacity: 0; transform: translateY(12px) scale(0.9); }
-          to   { opacity: 1; transform: translateY(0)    scale(1.0); }
+        /* Subtitle */
+        @keyframes introSubtitleReveal {
+          0%, 48% {
+            opacity: 0;
+            transform: translate3d(0, 8px, 0);
+            visibility: hidden;
+          }
+          50% {
+            visibility: visible;
+            opacity: 0;
+            transform: translate3d(0, 8px, 0);
+          }
+          57%, 75% {
+            opacity: 1;
+            transform: translate3d(0, 0, 0);
+            visibility: visible;
+          }
+          90%, 100% {
+            opacity: 0;
+            transform: translate3d(0, -4px, 0);
+            visibility: hidden;
+          }
         }
 
-        @keyframes pillarRiseReveal {
-          from { opacity: 0; transform: translateY(8px); }
-          to   { opacity: 1; transform: translateY(0);   }
-        }
-
+        /* Light sheen sweep across typography */
         @keyframes introSheenSweep {
-          0%, 77% { transform: translateX(-150%); opacity: 0;    }
-          78%     { opacity: 0.65; }
-          87%     { transform: translateX(260%);  opacity: 0.55; }
-          88%     { opacity: 0; }
-          100%    { transform: translateX(260%);  opacity: 0; }
+          0%, 54% {
+            transform: translate3d(-150%, 0, 0);
+            opacity: 0;
+          }
+          56% {
+            opacity: 0.75;
+          }
+          69% {
+            transform: translate3d(260%, 0, 0);
+            opacity: 0.65;
+          }
+          71%, 100% {
+            transform: translate3d(260%, 0, 0);
+            opacity: 0;
+          }
         }
 
-        /* ── Master bindings ── */
-
+        /* Master Bindings */
         .portfolio-intro-overlay.intro-running {
-          animation: introOverlayDissolve 5.2s cubic-bezier(0.16,1,0.3,1) forwards;
+          animation: introOverlayDissolve 4.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
         .intro-radial-halo.intro-running {
-          animation: introHaloFlow 5.2s cubic-bezier(0.16,1,0.3,1) forwards;
+          animation: introHaloFlow 4.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
         .intro-bk-mark.intro-running {
-          animation: introBkMorph 5.2s cubic-bezier(0.16,1,0.3,1) forwards;
+          animation: bkMonogramSequence 4.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
-        .bk-stroke-b.intro-running {
-          stroke-dasharray: 320;
-          stroke-dashoffset: 320;
-          animation: strokeDrawB 1.1s cubic-bezier(0.4,0,0.2,1) 0.2s forwards;
+        /* B Strokes */
+        .bk-b-spine.intro-running {
+          stroke-dasharray: 84;
+          stroke-dashoffset: 84;
+          opacity: 0;
+          animation: drawBSpine 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.08s forwards;
+        }
+        .bk-b-top.intro-running {
+          stroke-dasharray: 80;
+          stroke-dashoffset: 80;
+          opacity: 0;
+          animation: drawBTop 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.22s forwards;
+        }
+        .bk-b-bot.intro-running {
+          stroke-dasharray: 88;
+          stroke-dashoffset: 88;
+          opacity: 0;
+          animation: drawBBot 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.36s forwards;
         }
 
-        .bk-stroke-k.intro-running {
-          stroke-dasharray: 280;
-          stroke-dashoffset: 280;
-          animation: strokeDrawK 1.0s cubic-bezier(0.4,0,0.2,1) 0.38s forwards;
+        /* K Strokes */
+        .bk-k-spine.intro-running {
+          stroke-dasharray: 84;
+          stroke-dashoffset: 84;
+          opacity: 0;
+          animation: drawKSpine 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.16s forwards;
+        }
+        .bk-k-top.intro-running {
+          stroke-dasharray: 68;
+          stroke-dashoffset: 68;
+          opacity: 0;
+          animation: drawKTop 0.50s cubic-bezier(0.16, 1, 0.3, 1) 0.34s forwards;
+        }
+        .bk-k-bot.intro-running {
+          stroke-dasharray: 68;
+          stroke-dashoffset: 68;
+          opacity: 0;
+          animation: drawKBot 0.50s cubic-bezier(0.16, 1, 0.3, 1) 0.46s forwards;
         }
 
-        .bk-stroke-slash.intro-running {
-          stroke-dasharray: 70;
-          stroke-dashoffset: 70;
-          animation: strokeDrawSlash 0.7s cubic-bezier(0.4,0,0.2,1) 0.55s forwards;
+        /* Accent Slash */
+        .bk-slash.intro-running {
+          stroke-dasharray: 68;
+          stroke-dashoffset: 68;
+          opacity: 0;
+          animation: drawSlash 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.28s forwards;
+        }
+
+        /* Static / Debug Fallback when not running */
+        .intro-bk-mark:not(.intro-running) path {
+          stroke-dashoffset: 0 !important;
+          opacity: 1 !important;
+        }
+        .intro-bk-mark:not(.intro-running) .bk-node {
+          opacity: 1 !important;
+        }
+
+        .bk-shimmer-ring.intro-running {
+          animation: bkShimmerRing 4.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .bk-node.intro-running {
+          opacity: 0;
+          animation: nodeIgnite 4.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
         .intro-identity-wrapper.intro-running {
-          animation: introIdentityCrystallize 5.2s cubic-bezier(0.16,1,0.3,1) forwards;
+          animation: introIdentityReveal 4.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
-        .intro-letter.intro-running {
-          opacity: 0;
-          animation: letterRiseReveal 0.44s cubic-bezier(0.16,1,0.3,1) both;
-        }
-
-        .intro-pillar.intro-running {
-          opacity: 0;
-          animation: pillarRiseReveal 0.38s cubic-bezier(0.16,1,0.3,1) both;
-        }
-
-        .intro-dot.intro-running {
-          opacity: 0;
-          animation: pillarRiseReveal 0.34s cubic-bezier(0.16,1,0.3,1) both;
+        .intro-subtitle.intro-running {
+          animation: introSubtitleReveal 4.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
         .android-sheen-beam.intro-running {
-          animation: introSheenSweep 5.2s cubic-bezier(0.16,1,0.3,1) forwards;
+          animation: introSheenSweep 4.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
         /* Suppression */
