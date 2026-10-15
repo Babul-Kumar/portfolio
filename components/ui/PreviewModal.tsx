@@ -33,6 +33,7 @@ import {
 } from 'lucide-react'
 import { isPdfDocument } from '@/lib/supabase/storage'
 import { downloadCertificateFile } from '@/lib/download'
+import PdfDocumentRenderer from '@/components/resume/PdfDocumentRenderer'
 
 export interface PreviewMedia {
   url: string
@@ -559,60 +560,35 @@ export default function PreviewModal({ isOpen, onClose, item }: PreviewModalProp
                     </>
                   )}
                 </div>
-              ) : isPdf ? (
-                /* 2. PDF Document Preview */
+              ) : isPdf && activeMedia?.url ? (
+                /* 2. Responsive Interactive PDF Document Preview */
                 <div
                   style={{
                     background: 'var(--color-surface)',
                     border: '1px solid var(--color-border)',
                     borderRadius: '12px',
-                    padding: '40px 32px',
-                    textAlign: 'center',
+                    width: 'min(94vw, 840px)',
+                    height: 'min(78vh, 720px)',
+                    maxHeight: 'min(78vh, 720px)',
+                    overflow: 'hidden',
                     display: 'flex',
                     flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: '14px',
                     boxShadow: '0 24px 60px rgba(0, 0, 0, 0.8)',
-                    maxWidth: '480px',
-                    width: '90vw',
                   }}
                 >
-                  <div
-                    style={{
-                      width: '64px',
-                      height: '64px',
-                      borderRadius: '50%',
-                      background: 'rgba(228, 93, 44, 0.12)',
-                      border: '1px solid var(--color-accent-border)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'var(--color-accent)',
-                    }}
-                  >
-                    <FileText size={32} />
-                  </div>
-                  <div>
-                    <h4 style={{ fontSize: '17px', fontWeight: 600, color: 'var(--color-text)', margin: '0 0 6px' }}>
-                      {item.title}
-                    </h4>
-                    {item.organizationOrIssuer && (
-                      <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', margin: 0 }}>
-                        Issued by {item.organizationOrIssuer}
-                      </p>
-                    )}
-                  </div>
-                  {activeMedia?.url && (
-                    <a
-                      href={activeMedia.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="btn-primary"
-                      style={{ fontSize: '12px', padding: '9px 20px', textDecoration: 'none', marginTop: '6px' }}
-                    >
-                      <span>OPEN FULL PDF DOCUMENT ↗</span>
-                    </a>
-                  )}
+                  <PdfDocumentRenderer
+                    pdfUrl={activeMedia.url}
+                    title={item.title}
+                    onDownload={
+                      effectiveDownloadUrl
+                        ? () => {
+                            const ext = effectiveDownloadUrl.toLowerCase().includes('.pdf') ? '.pdf' : '.png'
+                            const baseName = (item.title || 'Document').replace(/[<>:"/\\|?*\x00-\x1F]/g, '').trim().replace(/\s+/g, '_')
+                            downloadCertificateFile(effectiveDownloadUrl, `${baseName}${ext}`)
+                          }
+                        : undefined
+                    }
+                  />
                 </div>
               ) : (
                 /* 3. Fallback Credential Card */

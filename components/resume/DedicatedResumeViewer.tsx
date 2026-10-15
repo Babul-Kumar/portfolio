@@ -11,6 +11,7 @@ import {
   FileText,
   CheckCircle2,
 } from 'lucide-react'
+import PdfDocumentRenderer from '@/components/resume/PdfDocumentRenderer'
 
 interface DedicatedResumeViewerProps {
   resumeUrl: string | null
@@ -215,18 +216,12 @@ export default function DedicatedResumeViewer({
             </div>
           )}
 
-          <div style={{ flex: 1, width: '100%', height: '100%', background: '#13151A' }}>
+          <div style={{ flex: 1, width: '100%', height: '100%', background: '#13151A', display: 'flex', flexDirection: 'column' }}>
             {resumeUrl ? (
-              <iframe
-                src={`${resumeUrl}#toolbar=1&navpanes=0&view=FitH`}
-                title={`${candidateName} Dedicated Résumé Document`}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  border: 'none',
-                  display: 'block',
-                  backgroundColor: '#13151A',
-                }}
+              <PdfDocumentRenderer
+                pdfUrl={resumeUrl}
+                title={`${candidateName} — Official Curriculum Vitae`}
+                onDownload={handleDownload}
               />
             ) : (
               <div

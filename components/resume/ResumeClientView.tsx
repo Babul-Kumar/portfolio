@@ -17,6 +17,7 @@ import {
   BookOpen,
 } from 'lucide-react'
 import PreviewModal, { type PreviewItem } from '@/components/ui/PreviewModal'
+import PdfDocumentRenderer from '@/components/resume/PdfDocumentRenderer'
 
 interface ResumeClientViewProps {
   profile: Profile | null
@@ -289,18 +290,12 @@ export default function ResumeClientView({
               </div>
             </div>
 
-            {/* Viewing Area with Centered PDF Presentation */}
-            <div className="resume-viewer-body">
-              <iframe
-                src={`${resumeUrl}#toolbar=0&navpanes=0&view=FitH`}
-                title="Babul Kumar Résumé Document"
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  border: 'none',
-                  display: 'block',
-                  backgroundColor: 'transparent',
-                }}
+            {/* Viewing Area with Centered Responsive PDF Presentation */}
+            <div className="resume-viewer-body" style={{ height: 'auto', minHeight: 'clamp(520px, 75vh, 880px)', alignItems: 'stretch' }}>
+              <PdfDocumentRenderer
+                pdfUrl={resumeUrl}
+                title="Babul Kumar — Official Curriculum Vitae"
+                onDownload={handleDownload}
               />
             </div>
           </div>
