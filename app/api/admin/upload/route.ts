@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
-import { generateFilePath, normalizeBucketName, BUCKETS } from '@/lib/supabase/storage'
+import { generateFilePath, normalizeBucketName, BUCKETS, validateFileMagicBytes } from '@/lib/supabase/storage'
 
 const ALLOWED_TYPES = [
   'image/jpeg', 'image/png', 'image/webp', 'image/avif',
@@ -77,6 +77,14 @@ export async function POST(request: NextRequest) {
     const filePath = generateFilePath(file.name, prefix ?? undefined)
     const arrayBuffer = await file.arrayBuffer()
     const fileBuffer = new Uint8Array(arrayBuffer)
+
+    // Strict magic-byte header validation
+    if (!validateFileMagicBytes(fileBuffer, file.type)) {
+      return NextResponse.json(
+        { error: `File content does not match the declared MIME type (${file.type}).` },
+        { status: 400 }
+      )
+    }
 
     // Build authenticated storage client
     let storageClient = supabase

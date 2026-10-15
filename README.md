@@ -24,7 +24,7 @@ The implementation is notable for its resilient data layer, explicit Row Level S
 - Zod validation for contact forms, CMS forms, GitHub analysis input, and untrusted AI output.
 - IP-based rate limiting for the public contact endpoint: three submissions per minute per observed IP.
 - Responsive dark/light themes, reduced-motion handling, page transitions, cursor interactions, ambient grid/glow layers, and animated telemetry-style visual elements.
-- React Three Fiber scenes for the certificate stack, plus an interactive technology constellation built with HTML/CSS/SVG.
+- Interactive technology radar and authentic brand logo cards built with lightweight CSS/SVG.
 
 ## Tech Stack
 
@@ -35,7 +35,7 @@ The implementation is notable for its resilient data layer, explicit Row Level S
 | UI | React 19.2.8 |
 | Styling | CSS custom properties, inline component styles, Tailwind CSS 4 via PostCSS |
 | Motion | Framer Motion, CSS keyframes, `requestAnimationFrame` loops |
-| 3D/WebGL | Three.js, React Three Fiber, `@react-three/drei` |
+| Avatar & Stage | High-performance composited WebP 2.5D/3D avatar cutout, deterministic micro-particles |
 | Icons | Lucide React |
 | Forms and validation | React Hook Form, Zod, `@hookform/resolvers` |
 | Backend | Next.js Server Components and Route Handlers |

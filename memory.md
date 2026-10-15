@@ -7,7 +7,7 @@
 ## 1. System Identity & Technical Overview
 
 * **Developer & Owner**: Babul Kumar (AI / ML & Full-Stack Software Engineer)
-* **Education**: Computer Science & Engineering, Lovely Professional University (2022 – 2026)
+* **Education**: Computer Science & Engineering, Lovely Professional University (2024 – 2028)
 * **Framework**: Next.js 16.3.1 (App Router, Turbopack, React 19.2.8)
 * **Language & Typing**: TypeScript 5.x (Strict mode, zero compilation warnings)
 * **Styling**: Tailwind CSS v4 (`@tailwindcss/postcss`), Curated CSS Design Token System (`globals.css`)

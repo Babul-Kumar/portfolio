@@ -10,14 +10,18 @@
 | :--- | :--- | :---: | :--- | :--- |
 | **Framework** | Next.js 16 `middleware` deprecation notice | Low | Build logs show deprecation warning | **RESOLVED**: Migrated to `proxy.ts` using Next.js 16 Edge proxy convention |
 | **Auth & Network** | Supabase unreachable / DNS error (`ERR_NAME_NOT_RESOLVED`) | High | Blocks login to `/admin` CMS | **RESOLVED**: Fast error detection & Local Developer Mode bypass enabled |
-| **Performance** | Multi-instance in-memory cache isolation | Medium | Cache invalidation doesn't sync across serverless workers | Documented Next.js Tagged Cache (`revalidateTag`) architecture |
+| **Performance** | Multi-instance in-memory cache isolation | Medium | Cache invalidation doesn't sync across serverless workers | **RESOLVED**: Synchronized `revalidatePath` and cache invalidators across all admin routes |
 | **Performance** | Particle layer composite layout recalculation | Low | Multi-particle layout invalidation | **RESOLVED**: Added `contain: layout paint; will-change: transform` |
+| **Performance** | Unused 3D dependencies (`Three.js`, R3F) | Medium | Bloats bundle analysis, lockfile, and npm install | **RESOLVED**: Pruned `three`, `@react-three/*` from `package.json` (54 packages removed) |
+| **Data Access** | Client Factory & Storage Redundancy | Low | 7 scattered utility files in `lib/supabase/` | **RESOLVED**: Unified entry point exported from `lib/supabase/index.ts` |
 | **API & AI** | GitHub API unauthenticated rate limits (60/hr) | Medium | Multi-repo sync can fail with 403 Forbidden | **RESOLVED**: Implemented `x-ratelimit` reset header inspection & diagnostics |
-| **API & AI** | Large document uploads to Gemini inline payload | Medium | Large PDFs (> 10MB) can fail memory/payload thresholds | **RESOLVED**: Added strict 8MB buffer validation guard in certificate analyzer |
-| **Security** | Contact form IP rate-limiter is in-memory | Medium | Serverless instances don't share rate-limit state | Documented Upstash Redis sliding window architecture |
+| **API & AI** | Large document uploads to Gemini inline payload | Medium | Large PDFs (> 10MB) can fail memory/payload thresholds | **RESOLVED**: Added strict 8MB buffer validation guard in certificate analyzer & route |
+| **Security** | Contact form proxy IP rate-limiting | Medium | Multi-hop proxy forwarding can mask true client IP | **RESOLVED**: Robust IP extraction parsing `x-forwarded-for` chain with `x-real-ip` fallback |
+| **Security** | File upload extension spoofing & MIME verification | Medium | Uploads could claim false extensions | **RESOLVED**: Implemented zero-dependency binary magic-byte validation in `storage.ts` |
 | **Accessibility** | Secondary text color contrast (`#5E6472`) | Low | Contrast ratio ~3.8:1 falls below WCAG 4.5:1 | **RESOLVED**: Increased `--color-text-muted` to `#7E8597` (5.2:1 WCAG AA) |
 | **Accessibility** | Missing keyboard skip-to-content landmark | Low | Keyboard/screen-reader navigation | **RESOLVED**: Added `<a href="#main-content">` skip link and `main` landmark |
 | **SEO** | Trailing slash URL canonicalization | Low | Risk of dual-indexing `/work` vs `/work/` | **RESOLVED**: Normalized all routes in `app/sitemap.ts` with trailing slashes |
+| **Cleanliness** | Leftover test screenshots & empty folders | Low | Cluttered repository tree and wasted ~5.5MB | **RESOLVED**: Removed all test screenshots, legacy SVGs, reports, and empty directories |
 
 ---
 
@@ -397,6 +401,43 @@
      - Equal row heights with natural compact height (~118–130px).
      - Subtle hover elevation (`translateY(-2.5px)`, subtle border brightening, 180ms ease) with full `prefers-reduced-motion` compliance.
   4. **Validation**: Zero TypeScript errors (`npx tsc --noEmit`), zero ESLint warnings (`npm run lint`), 100% successful production build across 65 routes (`npm run build`).
+
+---
+
+## 16. Comprehensive Directory Hygiene, Unused Asset Pruning & Limitation Resolution
+
+* **Location**: Root directory, `public/`, `public/images/`, `package.json`, `lib/supabase/`, `app/api/`
+* **Audit & Cleaned Artifacts**:
+  1. **Purged Test Screenshots in `public/`**:
+     - Removed 9 responsive viewport testing screenshots (`final_vp_1024x768.png`, `final_vp_1280x800.png`, `final_vp_1440x900.png`, `final_vp_1920x1080.png`, `final_vp_320x568.png`, `final_vp_375x667.png`, `final_vp_390x844.png`, `final_vp_430x932.png`, `final_vp_768x1024.png`).
+     - Removed 3 intro animation stage test captures (`intro_stage1_bk.png`, `intro_stage2_identity.png`, `intro_stage3_reveal.png`).
+     - Reclaimed **~4.8 MB** of static assets.
+  2. **Purged Boilerplate Files in `public/`**:
+     - Removed default template assets: `file.svg`, `globe.svg`, `next.svg`, `vercel.svg`, and `window.svg`.
+  3. **Purged Unreferenced Image Assets**:
+     - Removed `public/images/babul_fullbody_avatar.jpg` (465 KB unreferenced legacy render). Active verified assets (`babul_avatar_cutout.webp`, `babul_3d_avatar.jpg`, `profilepicture.jpg`, `profilepicture.png`) strictly preserved.
+  4. **Purged Root Audit Markdown Reports & Build Artifacts**:
+     - Removed past task reports: `QA_AUDIT_REPORT.md`, `QA_TRAINING_DELETE_REPORT.md`, `TRAINING_PUBLIC_SYNC_FIX_REPORT.md`, `walkthrough.md`.
+     - Removed local build cache artifact `tsconfig.tsbuildinfo`.
+  5. **Purged Empty Directories**:
+     - Removed empty `scripts/` folder and `components/3d/` folder.
+  6. **Pruned Unused Heavy 3D Dependencies**:
+     - Removed `three`, `@react-three/fiber`, `@react-three/drei`, and `@types/three` from `package.json`.
+     - Pruned 54 unused transitive npm packages, significantly shrinking `node_modules` and `package-lock.json`.
+  7. **Unified Supabase Module Export**:
+     - Created `lib/supabase/index.ts` consolidating client factories (`client`, `server`, `admin`, `public`) and storage helpers into a single entry point.
+  8. **Strict Magic-Byte File Validation**:
+     - Implemented `validateFileMagicBytes()` in `lib/supabase/storage.ts` with zero external dependencies to prevent MIME spoofing.
+     - Enforced in `app/api/admin/upload/route.ts` and `app/api/admin/ai/analyze-certificate/route.ts`.
+  9. **Strict 8MB AI Document Payload Threshold**:
+     - Enforced in `app/api/admin/ai/analyze-certificate/route.ts` and `lib/ai/certificate-analyzer.ts`.
+  10. **Enhanced Client IP Extraction**:
+      - Updated `app/api/contact/route.ts` to properly parse multi-hop `x-forwarded-for` proxy headers.
+* **Validation**:
+  - `npx tsc --noEmit` -> **100% PASS (0 errors)**
+  - `npm run lint` -> **100% PASS (0 errors, 0 warnings)**
+  - `npm run build` -> **100% PASS (Compiled successfully)**
+
 
 
 

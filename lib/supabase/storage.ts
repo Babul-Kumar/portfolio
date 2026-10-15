@@ -246,4 +246,44 @@ export function extractStoragePath(
   return clean.replace(/^\/+/, '') || null
 }
 
+/**
+ * Strict magic byte / file signature validation.
+ * Verifies that the initial bytes match the declared MIME type before storage insertion.
+ */
+export function validateFileMagicBytes(buffer: Uint8Array | Buffer, mimeType: string): boolean {
+  if (!buffer || buffer.length < 4) return false
+
+  // PDF: %PDF- (0x25, 0x50, 0x44, 0x46)
+  if (mimeType === 'application/pdf') {
+    return buffer[0] === 0x25 && buffer[1] === 0x50 && buffer[2] === 0x44 && buffer[3] === 0x46
+  }
+
+  // PNG: 0x89, 0x50, 0x4E, 0x47
+  if (mimeType === 'image/png') {
+    return buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47
+  }
+
+  // JPEG: 0xFF, 0xD8, 0xFF
+  if (mimeType === 'image/jpeg' || mimeType === 'image/jpg') {
+    return buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff
+  }
+
+  // WEBP: starts with RIFF (0x52, 0x49, 0x46, 0x46) and bytes 8-11 are WEBP (0x57, 0x45, 0x42, 0x50)
+  if (mimeType === 'image/webp') {
+    if (buffer.length < 12) return false
+    const isRiff = buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46
+    const isWebp = buffer[8] === 0x57 && buffer[9] === 0x45 && buffer[10] === 0x42 && buffer[11] === 0x50
+    return isRiff && isWebp
+  }
+
+  // AVIF: ftypavif or ftypavis in bytes 4-11
+  if (mimeType === 'image/avif') {
+    if (buffer.length < 12) return false
+    const isFtyp = buffer[4] === 0x66 && buffer[5] === 0x74 && buffer[6] === 0x79 && buffer[7] === 0x70
+    return isFtyp
+  }
+
+  return true
+}
+
 

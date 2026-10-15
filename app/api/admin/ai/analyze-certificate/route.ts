@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { generateFilePath, BUCKETS, ALLOWED_CERT_TYPES } from '@/lib/supabase/storage'
+import { generateFilePath, BUCKETS, ALLOWED_CERT_TYPES, validateFileMagicBytes } from '@/lib/supabase/storage'
 import { uploadFile } from '@/lib/supabase/storage-server'
 import { analyzeDocumentWithGemini } from '@/lib/ai/certificate-analyzer'
 import type { CertificateAnalysisType } from '@/types'
 import { FALLBACK_TRAININGS, FALLBACK_CO_CURRICULAR, FALLBACK_CERTIFICATES, FALLBACK_PROFILE } from '@/lib/data'
-
-const MAX_FILE_SIZE = 20 * 1024 * 1024 // 20 MB
 
 export async function POST(request: NextRequest) {
   // 1. Verify admin authentication
@@ -43,10 +41,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 3. Validate file size
-    if (file.size > MAX_FILE_SIZE) {
+    // 3. Validate file size (strict 8MB threshold for inline AI document analysis)
+    const MAX_AI_FILE_SIZE = 8 * 1024 * 1024 // 8 MB
+    if (file.size > MAX_AI_FILE_SIZE) {
       return NextResponse.json(
-        { error: 'File size exceeds 20MB limit. Please upload a smaller file.' },
+        { error: 'File size exceeds 8MB limit for AI analysis. Please compress or optimize the file.' },
         { status: 400 }
       )
     }
@@ -65,6 +64,14 @@ export async function POST(request: NextRequest) {
 
     const arrayBuffer = await file.arrayBuffer()
     const fileBuffer = Buffer.from(arrayBuffer)
+
+    // Strict magic-byte header validation
+    if (!validateFileMagicBytes(fileBuffer, file.type)) {
+      return NextResponse.json(
+        { error: `File content does not match the declared MIME type (${file.type}).` },
+        { status: 400 }
+      )
+    }
 
     // 5. Upload document asset to Supabase Storage
     let publicFileUrl: string | null = null
