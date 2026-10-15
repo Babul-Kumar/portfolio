@@ -1,11 +1,23 @@
 'use client'
 
-import { useRef, useEffect, useState } from 'react'
+import { useRef, useEffect, useState, useSyncExternalStore } from 'react'
 import type { Profile } from '@/types'
 import Link from 'next/link'
-import { ArrowDown, ArrowUpRight, Sparkles, Terminal, Cpu, Database, Network } from 'lucide-react'
-import HeroBackground from '@/components/hero/HeroBackground'
+import { ArrowDown, ArrowUpRight, Sparkles, Terminal, Cpu, Database, Network, Search } from 'lucide-react'
 import HeroAvatarStage from '@/components/hero/HeroAvatarStage'
+import { playMechanicalClick, playHoverTick } from '@/lib/audio'
+
+function getThemeSnapshot(): 'light' | 'dark' {
+  if (typeof window === 'undefined') return 'dark'
+  return (document.documentElement.getAttribute('data-theme') as 'light' | 'dark') || 'dark'
+}
+
+function subscribeTheme(callback: () => void) {
+  if (typeof window === 'undefined') return () => {}
+  const observer = new MutationObserver(callback)
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+  return () => observer.disconnect()
+}
 
 const TECHNICAL_PILLARS = [
   { num: '01', title: 'AST-Aware AI Agents', icon: Terminal },
@@ -56,6 +68,9 @@ export default function HeroSection({ profile }: HeroProps) {
     }
   }, [])
 
+  const theme = useSyncExternalStore(subscribeTheme, getThemeSnapshot, () => 'dark' as const)
+  const isLight = theme === 'light'
+
   const name = profile?.display_name ?? 'BABUL KUMAR'
   const [firstName, lastName] = name.split(' ')
 
@@ -74,8 +89,6 @@ export default function HeroSection({ profile }: HeroProps) {
         overflow: 'hidden',
       }}
     >
-      <HeroBackground mouse={mouse} />
-
       <div className="container" style={{ position: 'relative', zIndex: 2 }}>
         {/* Main Hero Two-Column Composition */}
         <div
@@ -106,28 +119,28 @@ export default function HeroSection({ profile }: HeroProps) {
               <span className="status-pulse" />
               <span
                 style={{
-                  fontSize: '11px',
-                  fontFamily: 'var(--font-mono)',
-                  letterSpacing: '0.12em',
-                  textTransform: 'uppercase',
+                  fontSize: '11.5px',
+                  fontFamily: 'var(--font-sans)',
+                  letterSpacing: '0.01em',
                   color: 'var(--color-text)',
                   fontWeight: 600,
                 }}
               >
-                AVAILABLE FOR SDE & AI / ML ROLES
+                Available for SDE &amp; AI / ML Roles
               </span>
               <span
                 style={{
-                  fontSize: '10px',
+                  fontSize: '10.5px',
                   fontFamily: 'var(--font-mono)',
                   color: 'var(--color-accent)',
                   background: 'var(--color-accent-bg)',
                   border: '1px solid var(--color-accent-border)',
-                  padding: '1px 6px',
-                  borderRadius: '3px',
+                  padding: '1px 7px',
+                  borderRadius: '4px',
+                  fontWeight: 600,
                 }}
               >
-                2026
+                2028
               </span>
             </div>
 
@@ -140,14 +153,33 @@ export default function HeroSection({ profile }: HeroProps) {
               <h1
                 className="text-display"
                 style={{
-                  fontSize: 'clamp(34px, 4.6vw, 60px)',
-                  letterSpacing: '-0.03em',
-                  lineHeight: 1.02,
+                  fontSize: 'clamp(38px, 5.4vw, 68px)',
+                  letterSpacing: '-0.035em',
+                  lineHeight: 1.04,
                   margin: 0,
+                  fontWeight: 800,
                 }}
               >
-                <span style={{ color: 'var(--color-text)', display: 'block' }}>{firstName || 'BABUL'}</span>
-                <span style={{ color: 'var(--color-accent)', display: 'block' }}>{lastName || 'KUMAR'}</span>
+                <span
+                  style={{
+                    display: 'block',
+                    color: isLight ? '#121110' : '#F5F6F8',
+                    textShadow: isLight ? 'none' : '0 0 35px rgba(255, 255, 255, 0.1)',
+                  }}
+                >
+                  {firstName || 'Babul'}
+                </span>
+                <span
+                  style={{
+                    display: 'block',
+                    color: isLight ? '#D4481C' : '#E45D2C',
+                    filter: isLight
+                      ? 'drop-shadow(0 4px 14px rgba(212, 72, 28, 0.25))'
+                      : 'drop-shadow(0 0 25px rgba(228, 93, 44, 0.35))',
+                  }}
+                >
+                  {lastName || 'Kumar'}
+                </span>
               </h1>
             </div>
 
@@ -180,7 +212,7 @@ export default function HeroSection({ profile }: HeroProps) {
               Creator of <em>BotBro</em> (AST-aware developer agents), predictive ML gradient-boosted systems, and resilient cloud software.
             </p>
 
-            {/* CTA Buttons */}
+            {/* CTA Buttons & Interactive Control Deck Launchers */}
             <div
               style={{
                 display: 'flex',
@@ -193,26 +225,34 @@ export default function HeroSection({ profile }: HeroProps) {
               <Link
                 href="/work"
                 className="btn-primary"
+                style={{
+                  boxShadow: isLight ? '0 4px 14px rgba(212, 72, 28, 0.22)' : '0 0 24px rgba(228, 93, 44, 0.35)',
+                  transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+                }}
+                onClick={() => playMechanicalClick()}
               >
-                <span>EXPLORE WORK</span>
+                <span>Explore Work</span>
                 <ArrowDown size={14} />
               </Link>
 
               <Link
                 href="/contact"
                 className="btn-secondary"
+                style={{
+                  transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+                }}
+                onClick={() => playMechanicalClick()}
               >
-                <span>GET IN TOUCH</span>
+                <span>Get in Touch</span>
                 <span>→</span>
               </Link>
 
               <Link
                 href="/resume"
                 style={{
-                  fontSize: '12px',
-                  fontFamily: 'var(--font-mono)',
-                  letterSpacing: '0.08em',
-                  textTransform: 'uppercase',
+                  fontSize: '12.5px',
+                  fontFamily: 'var(--font-sans)',
+                  letterSpacing: '0.01em',
                   color: 'var(--color-accent)',
                   padding: '10px 14px',
                   textDecoration: 'none',
@@ -222,10 +262,86 @@ export default function HeroSection({ profile }: HeroProps) {
                   fontWeight: 600,
                 }}
                 className="hover-accent-text"
+                onClick={() => playMechanicalClick()}
               >
-                <span>RÉSUMÉ</span>
+                <span>Résumé</span>
                 <ArrowUpRight size={13} />
               </Link>
+
+              {/* Instant Interactive Launchers */}
+              <div style={{ display: 'inline-flex', gap: '8px', alignItems: 'center' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    playMechanicalClick()
+                    window.dispatchEvent(new CustomEvent('open-command-palette'))
+                  }}
+                  onMouseEnter={() => playHoverTick()}
+                  style={{
+                    background: 'var(--color-surface)',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: 'var(--radius-sm)',
+                    padding: '8px 12px',
+                    color: 'var(--color-text-secondary)',
+                    fontSize: '11px',
+                    fontFamily: 'var(--font-mono)',
+                    letterSpacing: '0.02em',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    transition: 'all 0.2s ease',
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.borderColor = 'var(--color-accent-border)'
+                    e.currentTarget.style.color = 'var(--color-accent)'
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.borderColor = 'var(--color-border)'
+                    e.currentTarget.style.color = 'var(--color-text-secondary)'
+                  }}
+                  title="Search Portfolio"
+                >
+                  <Search size={12} style={{ color: 'var(--color-accent)' }} />
+                  <span>Search</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    playMechanicalClick()
+                    window.dispatchEvent(new CustomEvent('open-cyber-terminal'))
+                  }}
+                  onMouseEnter={() => playHoverTick()}
+                  style={{
+                    background: 'var(--color-surface)',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: 'var(--radius-sm)',
+                    padding: '8px 12px',
+                    color: 'var(--color-accent-teal, #14B8A6)',
+                    fontSize: '11px',
+                    fontFamily: 'var(--font-mono)',
+                    letterSpacing: '0.02em',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    transition: 'all 0.2s ease',
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.borderColor = 'rgba(20, 184, 166, 0.4)'
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.borderColor = 'var(--color-border)'
+                  }}
+                  title="Open Interactive Cyber Shell (`)"
+                >
+                  <Terminal size={12} />
+                  <span>Terminal</span>
+                </button>
+              </div>
             </div>
 
             {/* Technical Pillars Interactive Strip */}
@@ -233,16 +349,16 @@ export default function HeroSection({ profile }: HeroProps) {
               <span
                 style={{
                   display: 'block',
-                  fontSize: '10px',
+                  fontSize: '11px',
                   fontFamily: 'var(--font-mono)',
-                  letterSpacing: '0.12em',
+                  letterSpacing: '0.06em',
                   textTransform: 'uppercase',
                   color: 'var(--color-text-muted)',
                   fontWeight: 600,
                   marginBottom: '8px',
                 }}
               >
-                CORE FOCUS:
+                Core Focus Areas:
               </span>
 
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -255,26 +371,70 @@ export default function HeroSection({ profile }: HeroProps) {
                       type="button"
                       onClick={() => setActivePillar(idx)}
                       style={{
-                        fontSize: '11px',
-                        fontFamily: 'var(--font-mono)',
-                        padding: '4px 10px',
+                        fontSize: '11.5px',
+                        fontFamily: 'var(--font-sans)',
+                        padding: '6px 12px',
                         borderRadius: 'var(--radius-sm)',
                         background: isActive ? 'var(--color-accent-bg)' : 'var(--color-surface)',
                         border: `1px solid ${isActive ? 'var(--color-accent)' : 'var(--color-border)'}`,
                         color: isActive ? 'var(--color-accent)' : 'var(--color-text-secondary)',
-                        boxShadow: isActive ? 'var(--shadow-sm)' : 'none',
+                        boxShadow: isActive ? '0 0 16px rgba(228, 93, 44, 0.25)' : 'none',
                         cursor: 'pointer',
                         display: 'inline-flex',
                         alignItems: 'center',
-                        gap: '5px',
+                        gap: '6px',
                         transition: 'all 0.25s ease',
+                        fontWeight: 500,
                       }}
                     >
-                      <Icon size={12} style={{ opacity: isActive ? 1 : 0.6 }} />
+                      <Icon size={13} style={{ opacity: isActive ? 1 : 0.6 }} />
                       <span>{pillar.title}</span>
                     </button>
                   )
                 })}
+              </div>
+
+              {/* Live Telemetry Focus HUD Card */}
+              <div
+                style={{
+                  marginTop: '12px',
+                  padding: '8px 14px',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--color-accent-border)',
+                  background: 'rgba(228, 93, 44, 0.05)',
+                  backdropFilter: 'blur(8px)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '12px',
+                  maxWidth: '560px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span
+                    style={{
+                      width: '6px',
+                      height: '6px',
+                      borderRadius: '50%',
+                      background: 'var(--color-accent)',
+                      boxShadow: '0 0 8px var(--color-accent)',
+                    }}
+                  />
+                  <span style={{ fontSize: '12px', color: 'var(--color-text)', fontWeight: 600 }}>
+                    {TECHNICAL_PILLARS[activePillar].title}
+                  </span>
+                </div>
+                <span
+                  style={{
+                    fontSize: '10px',
+                    fontFamily: 'var(--font-mono)',
+                    color: 'var(--color-accent-teal)',
+                    letterSpacing: '0.04em',
+                    fontWeight: 600,
+                  }}
+                >
+                  Active Specialization #{TECHNICAL_PILLARS[activePillar].num}
+                </span>
               </div>
             </div>
           </div>

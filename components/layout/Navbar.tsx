@@ -3,15 +3,19 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect, useSyncExternalStore } from 'react'
+import { Search, Terminal as TerminalIcon, Volume2, VolumeX } from 'lucide-react'
+import CommandPalette from '@/components/ui/CommandPalette'
+import CyberTerminalModal from '@/components/ui/CyberTerminalModal'
+import { isSfxEnabled, setSfxEnabled, playMechanicalClick, playHoverTick } from '@/lib/audio'
 
 // Multi-Page Dedicated Navigation Routes
 const NAV_ITEMS = [
-  { label: 'ABOUT', href: '/about' },
-  { label: 'TRAINING', href: '/training' },
-  { label: 'CERTIFICATES', href: '/certificates' },
-  { label: 'CO-CURRICULAR', href: '/co-curricular' },
-  { label: 'WORK', href: '/work' },
-  { label: 'CONTACT', href: '/contact' },
+  { label: 'About', href: '/about' },
+  { label: 'Training', href: '/training' },
+  { label: 'Certificates', href: '/certificates' },
+  { label: 'Co-Curricular', href: '/co-curricular' },
+  { label: 'Work', href: '/work' },
+  { label: 'Contact', href: '/contact' },
 ]
 
 function getThemeSnapshot(): 'light' | 'dark' {
@@ -32,12 +36,22 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
   const theme = useSyncExternalStore(subscribeTheme, getThemeSnapshot, () => 'dark' as const)
 
-  // Scroll background effect
+  const [scrollProgress, setScrollProgress] = useState(0)
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
+  const [terminalOpen, setTerminalOpen] = useState(false)
+  const [sfxActive, setSfxActive] = useState(false)
+
+  // Scroll background and reading telemetry progress effect
   useEffect(() => {
     const handleScroll = () => {
+      const totalHeight = document.documentElement.scrollHeight - window.innerHeight
+      if (totalHeight > 0) {
+        setScrollProgress(Math.min(100, Math.max(0, (window.scrollY / totalHeight) * 100)))
+      }
       setScrolled(window.scrollY > 20)
     }
     window.addEventListener('scroll', handleScroll, { passive: true })
+    handleScroll()
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
@@ -59,16 +73,53 @@ export default function Navbar() {
     }
   }, [menuOpen])
 
-  // Close mobile menu on Escape key
+  // Global keydown listeners: Cmd+K / Ctrl+K, Backtick for terminal, Escape
   useEffect(() => {
+    setSfxActive(isSfxEnabled())
+
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setMenuOpen(false)
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        playMechanicalClick()
+        setCommandPaletteOpen((prev) => !prev)
+        return
+      }
+
+      if (e.key === '`' && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
+        e.preventDefault()
+        playMechanicalClick()
+        setTerminalOpen((prev) => !prev)
+        return
+      }
+
+      if (e.key === 'Escape') {
+        setMenuOpen(false)
+      }
     }
+
+    const handleOpenPalette = () => {
+      playMechanicalClick()
+      setCommandPaletteOpen(true)
+    }
+
+    const handleOpenTerminal = () => {
+      playMechanicalClick()
+      setTerminalOpen(true)
+    }
+
     window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
+    window.addEventListener('open-command-palette', handleOpenPalette)
+    window.addEventListener('open-cyber-terminal', handleOpenTerminal)
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('open-command-palette', handleOpenPalette)
+      window.removeEventListener('open-cyber-terminal', handleOpenTerminal)
+    }
   }, [])
 
   function toggleTheme() {
+    playMechanicalClick()
     const next = theme === 'light' ? 'dark' : 'light'
     localStorage.setItem('theme', next)
     document.documentElement.setAttribute('data-theme', next)
@@ -115,6 +166,22 @@ export default function Navbar() {
           transition: 'background-color 0.3s var(--ease-out), border-color 0.3s var(--ease-out)',
         }}
       >
+        {/* Top Cyber Telemetry Laser Scroll-Progress Indicator */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: `${scrollProgress.toFixed(1)}%`,
+            height: '2.5px',
+            background: 'linear-gradient(90deg, var(--color-accent) 0%, var(--color-accent-teal) 50%, var(--color-accent-cyan) 100%)',
+            boxShadow: '0 0 10px var(--color-accent), 0 0 20px var(--color-accent-teal)',
+            zIndex: 105,
+            transition: 'width 0.08s linear',
+          }}
+        />
+
         <div
           className="container"
           style={{
@@ -124,49 +191,87 @@ export default function Navbar() {
           }}
         >
           {/* Brand Logo (Left) */}
-          <Link
-            href="/"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              textDecoration: 'none',
-              color: 'var(--color-text)',
-            }}
-            aria-label="Babul Kumar Home"
-          >
-            <span
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <Link
+              href="/"
               style={{
-                fontSize: '14px',
-                fontWeight: 700,
-                letterSpacing: '0.08em',
-                fontFamily: 'var(--font-sans)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                textDecoration: 'none',
+                color: 'var(--color-text)',
               }}
+              aria-label="Babul Kumar Home"
             >
-              BK
-            </span>
-            <span style={{ color: 'var(--color-accent)', opacity: 0.8, fontSize: '13px' }}>/</span>
-            <span
-              style={{
-                fontSize: '11px',
-                color: 'var(--color-text-secondary)',
-                letterSpacing: '0.12em',
-                fontFamily: 'var(--font-mono)',
-                textTransform: 'uppercase',
-                fontWeight: 500,
-              }}
-            >
-              Babul Kumar
-            </span>
-          </Link>
+              <span
+                style={{
+                  fontSize: '14px',
+                  fontWeight: 700,
+                  letterSpacing: '0.08em',
+                  fontFamily: 'var(--font-sans)',
+                }}
+              >
+                BK
+              </span>
+              <span style={{ color: 'var(--color-accent)', opacity: 0.8, fontSize: '13px' }}>/</span>
+              <span
+                style={{
+                  fontSize: '11px',
+                  color: 'var(--color-text-secondary)',
+                  letterSpacing: '0.12em',
+                  fontFamily: 'var(--font-mono)',
+                  textTransform: 'uppercase',
+                  fontWeight: 500,
+                }}
+              >
+                Babul Kumar
+              </span>
+            </Link>
 
-          {/* Center Navigation in exact order: ABOUT, TRAINING, CERTIFICATES, CO-CURRICULAR, WORK, CONTACT */}
+            {/* Live System Status HUD Badge */}
+            <div
+              className="desktop-nav"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '3px 8px',
+                borderRadius: 'var(--radius-full)',
+                background: 'rgba(16, 185, 129, 0.08)',
+                border: '1px solid rgba(16, 185, 129, 0.25)',
+              }}
+            >
+              <span
+                style={{
+                  width: '5px',
+                  height: '5px',
+                  borderRadius: '50%',
+                  background: '#10B981',
+                  boxShadow: '0 0 8px #10B981',
+                  display: 'inline-block',
+                }}
+              />
+              <span
+                style={{
+                  fontSize: '10.5px',
+                  fontFamily: 'var(--font-sans)',
+                  letterSpacing: '0.02em',
+                  color: '#10B981',
+                  fontWeight: 600,
+                }}
+              >
+                Available
+              </span>
+            </div>
+          </div>
+
+          {/* Center Navigation in exact order: About, Training, Certificates, Co-Curricular, Work, Contact */}
           <nav
             className="desktop-nav"
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '28px',
+              gap: '26px',
             }}
             aria-label="Main Navigation"
           >
@@ -178,16 +283,15 @@ export default function Navbar() {
                   key={item.label}
                   href={item.href}
                   style={{
-                    fontSize: '12px',
-                    fontWeight: 500,
-                    letterSpacing: '0.08em',
-                    textTransform: 'uppercase',
+                    fontSize: '13.5px',
+                    fontWeight: isActive ? 600 : 500,
+                    letterSpacing: '-0.01em',
                     color: isActive ? 'var(--color-accent)' : 'var(--color-text-secondary)',
                     textDecoration: 'none',
                     position: 'relative',
                     padding: '6px 0',
                     transition: 'color 0.2s ease',
-                    fontFamily: 'var(--font-mono)',
+                    fontFamily: 'var(--font-sans)',
                   }}
                   className="nav-link"
                 >
@@ -212,8 +316,104 @@ export default function Navbar() {
             })}
           </nav>
 
-          {/* Right Actions: Theme Switcher & Resume */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          {/* Right Actions: Command Palette, Terminal, SFX, Theme & Resume */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {/* Quick Command Palette Launcher */}
+            <button
+              type="button"
+              onClick={() => {
+                playMechanicalClick()
+                setCommandPaletteOpen(true)
+              }}
+              onMouseEnter={() => playHoverTick()}
+              aria-label="Open Command Palette (Ctrl+K or Cmd+K)"
+              className="desktop-nav"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '7px',
+                background: theme === 'light' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.04)',
+                border: '1px solid var(--color-border)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '6px 11px',
+                cursor: 'pointer',
+                color: 'var(--color-text)',
+                boxShadow: theme === 'light' ? 'var(--shadow-sm)' : 'none',
+                transition: 'all 0.2s var(--ease-out)',
+              }}
+            >
+              <Search size={12} style={{ color: 'var(--color-accent)' }} />
+              <span
+                style={{
+                  fontSize: '11px',
+                  fontFamily: 'var(--font-sans)',
+                  letterSpacing: '0.01em',
+                  fontWeight: 500,
+                  color: 'var(--color-text-secondary)',
+                }}
+              >
+                Search
+              </span>
+            </button>
+
+            {/* Interactive Shell Terminal Button */}
+            <button
+              type="button"
+              onClick={() => {
+                playMechanicalClick()
+                setTerminalOpen(true)
+              }}
+              onMouseEnter={() => playHoverTick()}
+              aria-label="Open Developer Shell Terminal (`)"
+              title="Interactive Terminal Shell (`)"
+              className="desktop-nav"
+              style={{
+                background: theme === 'light' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.04)',
+                border: '1px solid var(--color-border)',
+                borderRadius: 'var(--radius-sm)',
+                width: '34px',
+                height: '34px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: 'var(--color-text)',
+                boxShadow: theme === 'light' ? 'var(--shadow-sm)' : 'none',
+                transition: 'all 0.2s var(--ease-out)',
+              }}
+            >
+              <TerminalIcon size={14} style={{ color: 'var(--color-accent-teal, #14B8A6)' }} />
+            </button>
+
+            {/* UI Audio SFX Toggle */}
+            <button
+              type="button"
+              onClick={() => {
+                const next = !sfxActive
+                setSfxActive(next)
+                setSfxEnabled(next)
+                if (next) playMechanicalClick()
+              }}
+              aria-label={sfxActive ? 'Mute UI audio haptics' : 'Enable UI audio haptics'}
+              title={sfxActive ? 'Sound FX: ACTIVE (Click to mute)' : 'Sound FX: MUTED (Click to activate)'}
+              style={{
+                background: theme === 'light' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.04)',
+                border: sfxActive ? '1px solid var(--color-accent-border)' : '1px solid var(--color-border)',
+                borderRadius: 'var(--radius-full)',
+                width: '34px',
+                height: '34px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: sfxActive ? 'var(--color-accent)' : 'var(--color-text-secondary)',
+                boxShadow: theme === 'light' ? 'var(--shadow-sm)' : 'none',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              {sfxActive ? <Volume2 size={14} /> : <VolumeX size={14} />}
+            </button>
+
             {/* Theme Toggle */}
             <button
               type="button"
@@ -223,8 +423,8 @@ export default function Navbar() {
                 background: theme === 'light' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.04)',
                 border: '1px solid var(--color-border)',
                 borderRadius: 'var(--radius-full)',
-                width: '36px',
-                height: '36px',
+                width: '34px',
+                height: '34px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -235,7 +435,7 @@ export default function Navbar() {
               }}
               className="theme-btn"
             >
-              <span style={{ fontSize: '14px', lineHeight: 1 }}>
+              <span style={{ fontSize: '13px', lineHeight: 1 }}>
                 {theme === 'light' ? '◐' : '○'}
               </span>
             </button>
@@ -252,12 +452,12 @@ export default function Navbar() {
                 color: 'var(--color-text)',
                 background: theme === 'light' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.04)',
                 border: '1px solid var(--color-border)',
-                padding: '8px 16px',
+                padding: '7px 14px',
                 borderRadius: 'var(--radius-sm)',
                 textDecoration: 'none',
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '6px',
+                gap: '5px',
                 boxShadow: theme === 'light' ? 'var(--shadow-sm)' : 'none',
                 transition: 'all 0.2s var(--ease-out)',
                 fontFamily: 'var(--font-mono)',
@@ -272,7 +472,7 @@ export default function Navbar() {
               }}
             >
               <span>RESUME</span>
-              <span style={{ fontSize: '12px' }}>↗</span>
+              <span style={{ fontSize: '11px' }}>↗</span>
             </Link>
 
             {/* Mobile Menu Hamburger */}
@@ -343,7 +543,7 @@ export default function Navbar() {
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: '18px',
+          gap: '16px',
           opacity: menuOpen ? 1 : 0,
           pointerEvents: menuOpen ? 'all' : 'none',
           transition: 'opacity 0.25s ease, transform 0.25s ease',
@@ -363,12 +563,12 @@ export default function Navbar() {
               href={item.href}
               onClick={() => setMenuOpen(false)}
               style={{
-                fontSize: '18px',
-                fontWeight: 600,
-                letterSpacing: '0.08em',
+                fontSize: '19px',
+                fontWeight: isActive ? 600 : 500,
+                letterSpacing: '-0.015em',
                 color: isActive ? 'var(--color-accent)' : 'var(--color-text)',
                 textDecoration: 'none',
-                fontFamily: 'var(--font-mono)',
+                fontFamily: 'var(--font-sans)',
                 padding: '8px 24px',
                 borderRadius: 'var(--radius-sm)',
                 background: isActive ? 'var(--color-accent-bg)' : 'transparent',
@@ -380,11 +580,65 @@ export default function Navbar() {
             </Link>
           )
         })}
+
+        {/* Mobile Quick Action Buttons: Search & Terminal */}
+        <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+          <button
+            type="button"
+            onClick={() => {
+              setMenuOpen(false)
+              setCommandPaletteOpen(true)
+            }}
+            style={{
+              padding: '9px 16px',
+              borderRadius: 'var(--radius-sm)',
+              border: '1px solid var(--color-border)',
+              background: 'var(--color-surface)',
+              color: 'var(--color-text)',
+              fontSize: '12px',
+              fontFamily: 'var(--font-sans)',
+              fontWeight: 500,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              cursor: 'pointer',
+            }}
+          >
+            <Search size={13} style={{ color: 'var(--color-accent)' }} />
+            <span>Search</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setMenuOpen(false)
+              setTerminalOpen(true)
+            }}
+            style={{
+              padding: '9px 16px',
+              borderRadius: 'var(--radius-sm)',
+              border: '1px solid var(--color-border)',
+              background: 'var(--color-surface)',
+              color: 'var(--color-accent-teal, #14B8A6)',
+              fontSize: '12px',
+              fontFamily: 'var(--font-sans)',
+              fontWeight: 500,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              cursor: 'pointer',
+            }}
+          >
+            <TerminalIcon size={13} />
+            <span>Terminal (~)</span>
+          </button>
+        </div>
+
         <Link
           href="/resume"
           onClick={() => setMenuOpen(false)}
           style={{
-            marginTop: '12px',
+            marginTop: '8px',
             fontSize: '12px',
             color: 'var(--color-accent)',
             textDecoration: 'none',
@@ -401,6 +655,17 @@ export default function Navbar() {
           VIEW RÉSUMÉ ↗
         </Link>
       </div>
+
+      {/* Global Interactive Modals */}
+      <CommandPalette
+        isOpen={commandPaletteOpen}
+        onClose={() => setCommandPaletteOpen(false)}
+        onOpenTerminal={() => setTerminalOpen(true)}
+      />
+      <CyberTerminalModal
+        isOpen={terminalOpen}
+        onClose={() => setTerminalOpen(false)}
+      />
 
       <style>{`
         .nav-link:hover {

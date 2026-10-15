@@ -425,9 +425,7 @@ export default async function CoCurricularDetailPage({
                 </div>
 
                 <a
-                  href={docUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href={`/api/certificates/download?url=${encodeURIComponent(docUrl)}&filename=${encodeURIComponent(activity.title.replace(/[<>:"/\\|?*\x00-\x1F]/g, '').trim().replace(/\s+/g, '_') + (docUrl.toLowerCase().includes('.pdf') ? '.pdf' : '.png'))}`}
                   download
                   style={{
                     fontSize: '12px',
@@ -442,6 +440,8 @@ export default async function CoCurricularDetailPage({
                     background: 'var(--color-accent-bg)',
                     border: '1px solid var(--color-accent-border)',
                   }}
+                  title="Download co-curricular supporting document"
+                  aria-label="Download co-curricular supporting document"
                 >
                   <Download size={13} />
                   <span>Download Document</span>

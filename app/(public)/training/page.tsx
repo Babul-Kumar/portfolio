@@ -21,16 +21,16 @@ export default async function TrainingPage() {
       <div style={{ position: 'relative', zIndex: 1, maxWidth: 'var(--container-max)', margin: '0 auto' }}>
         {/* Futuristic Module Page Header */}
         <PageHeader
-          moduleTag="// TRAINING_MODULE_01"
+          moduleTag="Training &amp; Programs"
           title={
             <>
-              TECHNICAL TRAINING &amp;<br />
-              FOUNDATIONAL PROGRAMS
+              Technical Training &amp;<br />
+              Foundational Programs
             </>
           }
           quote="Learning systems, building systems."
           description="Curated industrial training, specialized bootcamps, and engineering programs focused on applied artificial intelligence, scalable distributed backends, and algorithmic system design."
-          statusBadge="CURRICULUM_VERIFIED"
+          statusBadge="Verified Programs"
         />
 
         {/* Dynamic Database-Driven Training View */}

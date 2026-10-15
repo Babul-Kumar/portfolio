@@ -29,16 +29,16 @@ export default async function WorkPage() {
       <div style={{ position: 'relative', zIndex: 1, maxWidth: 'var(--container-max)', margin: '0 auto' }}>
         {/* Futuristic Page Header */}
         <PageHeader
-          moduleTag="// PROJECT_ARCHIVE"
+          moduleTag="Project Archive"
           title={
             <>
-              PRODUCTION WORK &amp;<br />
-              SYSTEMS ARCHITECTURE
+              Production Work &amp;<br />
+              Systems Architecture
             </>
           }
           quote="Code, systems, and intelligence in production."
           description="A curated showcase of autonomous AI agents, gradient-boosted predictive models, telemetry monitors, and modern full-stack developer systems."
-          statusBadge="REPOSITORIES_SYNCHRONIZED"
+          statusBadge="Production Projects"
         />
 
         {/* Work Showcase View with Category Tabs and Featured Hierarchy */}

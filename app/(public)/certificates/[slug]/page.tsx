@@ -256,9 +256,7 @@ export default async function CertificateDetailPage({
 
               {publicFileUrl && (
                 <a
-                  href={publicFileUrl}
-                  target="_blank"
-                  rel="noreferrer"
+                  href={`/api/certificates/download?url=${encodeURIComponent(publicFileUrl)}&filename=${encodeURIComponent(cert.title.replace(/[<>:"/\\|?*\x00-\x1F]/g, '').trim().replace(/\s+/g, '_') + (publicFileUrl.toLowerCase().includes('.pdf') ? '.pdf' : '.png'))}`}
                   download
                   style={{
                     display: 'inline-flex',
@@ -272,7 +270,10 @@ export default async function CertificateDetailPage({
                     fontSize: '13px',
                     fontWeight: 500,
                     textDecoration: 'none',
+                    transition: 'background 0.2s, border-color 0.2s',
                   }}
+                  title="Download certificate document"
+                  aria-label="Download certificate document"
                 >
                   <Download size={13} />
                   <span>Download Document</span>

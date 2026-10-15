@@ -21,16 +21,16 @@ export default async function CertificatesPage() {
       <div style={{ position: 'relative', zIndex: 1, maxWidth: 'var(--container-max)', margin: '0 auto' }}>
         {/* Futuristic Module Page Header */}
         <PageHeader
-          moduleTag="// CERTIFICATION_DATABASE"
+          moduleTag="Verified Credentials"
           title={
             <>
-              VERIFIED CREDENTIALS &amp;<br />
-              TECHNICAL CERTIFICATIONS
+              Verified Credentials &amp;<br />
+              Technical Certifications
             </>
           }
           quote="Proof of continuous learning."
           description="Verified credentials and technical specializations across Artificial Intelligence, Machine Learning, Systems Engineering, and Modern Full-Stack Development."
-          statusBadge="AUTHENTICITY_VERIFIED"
+          statusBadge="Official Credentials"
         />
 
         {/* Dynamic Database-Driven Certificates View */}

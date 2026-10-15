@@ -29,6 +29,19 @@ function getSessionSnapshot(): boolean {
     ) {
       return false
     }
+
+    const navEntries = (window.performance && typeof window.performance.getEntriesByType === 'function')
+      ? (window.performance.getEntriesByType('navigation') as PerformanceNavigationTiming[])
+      : []
+    const isReload =
+      (navEntries.length > 0 && navEntries[0].type === 'reload') ||
+      (window.performance && (window.performance as unknown as { navigation?: { type: number } }).navigation?.type === 1)
+
+    if (isReload) {
+      sessionStorage.removeItem('bk_intro_seen')
+      return false
+    }
+
     return sessionStorage.getItem('bk_intro_seen') === 'true'
   } catch {
     return false
@@ -65,10 +78,24 @@ function getDebugPhaseSnapshot(): IntroPhase | null {
   return null
 }
 
+function getThemeSnapshot(): 'light' | 'dark' {
+  if (typeof window === 'undefined') return 'dark'
+  return (document.documentElement.getAttribute('data-theme') as 'light' | 'dark') || 'dark'
+}
+
+function subscribeTheme(callback: () => void) {
+  if (typeof window === 'undefined') return () => {}
+  const observer = new MutationObserver(callback)
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+  return () => observer.disconnect()
+}
+
 export default function PortfolioIntro() {
   const sessionSeen = useSyncExternalStore(subscribeNoop, getSessionSnapshot, () => false)
   const reducedMotion = useSyncExternalStore(subscribeReducedMotion, getReducedMotionSnapshot, () => false)
   const debugPhase = useSyncExternalStore(subscribeNoop, getDebugPhaseSnapshot, () => null)
+  const theme = useSyncExternalStore(subscribeTheme, getThemeSnapshot, () => 'dark' as const)
+  const isLight = theme === 'light'
 
   const [isMounted, setIsMounted] = useState(true)
   const timersRef = useRef<NodeJS.Timeout[]>([])
@@ -189,7 +216,7 @@ export default function PortfolioIntro() {
         position: 'fixed',
         inset: 0,
         zIndex: 9999,
-        backgroundColor: '#060709',
+        backgroundColor: isLight ? '#FAF9F6' : '#060709',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -209,8 +236,9 @@ export default function PortfolioIntro() {
           width: 'clamp(320px, 42vw, 560px)',
           height: 'clamp(320px, 42vw, 560px)',
           borderRadius: '50%',
-          background:
-            'radial-gradient(circle, rgba(228,93,44,0.24) 0%, rgba(20,184,166,0.10) 42%, transparent 72%)',
+          background: isLight
+            ? 'radial-gradient(circle, rgba(212,72,28,0.16) 0%, rgba(13,122,112,0.08) 42%, transparent 72%)'
+            : 'radial-gradient(circle, rgba(228,93,44,0.24) 0%, rgba(20,184,166,0.10) 42%, transparent 72%)',
           pointerEvents: 'none',
           transform: 'translate3d(-50%, -50%, 0)',
           willChange: 'transform, opacity',
@@ -258,7 +286,7 @@ export default function PortfolioIntro() {
               cx="76"
               cy="50"
               r="10"
-              stroke="rgba(255,255,255,0.6)"
+              stroke={isLight ? 'rgba(18,17,16,0.3)' : 'rgba(255,255,255,0.6)'}
               strokeWidth="1.8"
               fill="none"
             />
@@ -267,21 +295,21 @@ export default function PortfolioIntro() {
             <path
               className={`bk-b-spine${!isDebugging ? ' intro-running' : ''}`}
               d="M14,10 L14,90"
-              stroke="#F5F6F8"
+              stroke={isLight ? '#121110' : '#F5F6F8'}
               strokeWidth="6"
               strokeLinecap="round"
             />
             <path
               className={`bk-b-top${!isDebugging ? ' intro-running' : ''}`}
               d="M14,10 C50,10 50,50 14,50"
-              stroke="#F5F6F8"
+              stroke={isLight ? '#121110' : '#F5F6F8'}
               strokeWidth="6"
               strokeLinecap="round"
             />
             <path
               className={`bk-b-bot${!isDebugging ? ' intro-running' : ''}`}
               d="M14,50 C56,50 56,90 14,90"
-              stroke="#F5F6F8"
+              stroke={isLight ? '#121110' : '#F5F6F8'}
               strokeWidth="6"
               strokeLinecap="round"
             />
@@ -290,21 +318,21 @@ export default function PortfolioIntro() {
             <path
               className={`bk-k-spine${!isDebugging ? ' intro-running' : ''}`}
               d="M88,10 L88,90"
-              stroke="#E45D2C"
+              stroke={isLight ? '#D4481C' : '#E45D2C'}
               strokeWidth="6"
               strokeLinecap="round"
             />
             <path
               className={`bk-k-top${!isDebugging ? ' intro-running' : ''}`}
               d="M88,50 L138,10"
-              stroke="#E45D2C"
+              stroke={isLight ? '#D4481C' : '#E45D2C'}
               strokeWidth="6"
               strokeLinecap="round"
             />
             <path
               className={`bk-k-bot${!isDebugging ? ' intro-running' : ''}`}
               d="M88,50 L138,90"
-              stroke="#E45D2C"
+              stroke={isLight ? '#D4481C' : '#E45D2C'}
               strokeWidth="6"
               strokeLinecap="round"
             />
@@ -313,21 +341,21 @@ export default function PortfolioIntro() {
             <path
               className={`bk-slash${!isDebugging ? ' intro-running' : ''}`}
               d="M68,18 L76,82"
-              stroke="#E45D2C"
+              stroke={isLight ? '#D4481C' : '#E45D2C'}
               strokeWidth="2.5"
               strokeLinecap="round"
               opacity="0.8"
             />
 
             {/* Luminous vertex nodes (ignite at stroke intersections) */}
-            <circle className={`bk-node bk-node-1${!isDebugging ? ' intro-running' : ''}`} cx="14" cy="10" r="3.2" fill="#F5F6F8" />
-            <circle className={`bk-node bk-node-2${!isDebugging ? ' intro-running' : ''}`} cx="14" cy="90" r="3.2" fill="#F5F6F8" />
-            <circle className={`bk-node bk-node-3${!isDebugging ? ' intro-running' : ''}`} cx="14" cy="50" r="3.0" fill="#F5F6F8" />
-            <circle className={`bk-node bk-node-4${!isDebugging ? ' intro-running' : ''}`} cx="88" cy="10" r="3.2" fill="#E45D2C" />
-            <circle className={`bk-node bk-node-5${!isDebugging ? ' intro-running' : ''}`} cx="88" cy="90" r="3.2" fill="#E45D2C" />
-            <circle className={`bk-node bk-node-6${!isDebugging ? ' intro-running' : ''}`} cx="88" cy="50" r="3.2" fill="#E45D2C" />
-            <circle className={`bk-node bk-node-7${!isDebugging ? ' intro-running' : ''}`} cx="138" cy="10" r="3.2" fill="#FF8A3D" />
-            <circle className={`bk-node bk-node-8${!isDebugging ? ' intro-running' : ''}`} cx="138" cy="90" r="3.2" fill="#FF8A3D" />
+            <circle className={`bk-node bk-node-1${!isDebugging ? ' intro-running' : ''}`} cx="14" cy="10" r="3.2" fill={isLight ? '#121110' : '#F5F6F8'} />
+            <circle className={`bk-node bk-node-2${!isDebugging ? ' intro-running' : ''}`} cx="14" cy="90" r="3.2" fill={isLight ? '#121110' : '#F5F6F8'} />
+            <circle className={`bk-node bk-node-3${!isDebugging ? ' intro-running' : ''}`} cx="14" cy="50" r="3.0" fill={isLight ? '#121110' : '#F5F6F8'} />
+            <circle className={`bk-node bk-node-4${!isDebugging ? ' intro-running' : ''}`} cx="88" cy="10" r="3.2" fill={isLight ? '#D4481C' : '#E45D2C'} />
+            <circle className={`bk-node bk-node-5${!isDebugging ? ' intro-running' : ''}`} cx="88" cy="90" r="3.2" fill={isLight ? '#D4481C' : '#E45D2C'} />
+            <circle className={`bk-node bk-node-6${!isDebugging ? ' intro-running' : ''}`} cx="88" cy="50" r="3.2" fill={isLight ? '#D4481C' : '#E45D2C'} />
+            <circle className={`bk-node bk-node-7${!isDebugging ? ' intro-running' : ''}`} cx="138" cy="10" r="3.2" fill={isLight ? '#EA580C' : '#FF8A3D'} />
+            <circle className={`bk-node bk-node-8${!isDebugging ? ' intro-running' : ''}`} cx="138" cy="90" r="3.2" fill={isLight ? '#EA580C' : '#FF8A3D'} />
           </svg>
         </div>
 
@@ -368,18 +396,18 @@ export default function PortfolioIntro() {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '12px',
-                  textShadow: '0 2px 24px rgba(0,0,0,0.7)',
+                  textShadow: isLight ? '0 2px 20px rgba(18,17,16,0.08)' : '0 2px 24px rgba(0,0,0,0.7)',
                   whiteSpace: 'nowrap',
                 }}
               >
-                <span style={{ color: '#F5F6F8', display: 'inline-flex' }} aria-hidden="true">
+                <span style={{ color: isLight ? '#121110' : '#F5F6F8', display: 'inline-flex' }} aria-hidden="true">
                   {FIRST_NAME.map((char, index) => (
                     <span key={index} style={{ display: 'inline-block' }}>
                       {char}
                     </span>
                   ))}
                 </span>
-                <span style={{ color: '#E45D2C', display: 'inline-flex' }} aria-hidden="true">
+                <span style={{ color: isLight ? '#D4481C' : '#E45D2C', display: 'inline-flex' }} aria-hidden="true">
                   {LAST_NAME.map((char, index) => (
                     <span key={index} style={{ display: 'inline-block' }}>
                       {char}
@@ -422,7 +450,7 @@ export default function PortfolioIntro() {
                 fontWeight: 600,
                 letterSpacing: '0.22em',
                 textTransform: 'uppercase',
-                color: '#9499A6',
+                color: isLight ? '#4B5563' : '#9499A6',
                 whiteSpace: 'nowrap',
                 willChange: 'opacity, transform',
                 ...taglineDebug,
@@ -435,7 +463,7 @@ export default function PortfolioIntro() {
                     key={i}
                     style={{
                       display: 'inline-block',
-                      ...(isDot ? { color: '#14B8A6', fontSize: '9px', textShadow: '0 0 6px rgba(20,184,166,0.6)' } : {}),
+                      ...(isDot ? { color: isLight ? '#0D7A70' : '#14B8A6', fontSize: '9px', textShadow: isLight ? 'none' : '0 0 6px rgba(20,184,166,0.6)' } : {}),
                     }}
                   >
                     {label}

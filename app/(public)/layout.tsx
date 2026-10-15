@@ -2,6 +2,7 @@ import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import PageTransition from '@/components/layout/PageTransition'
 import AmbientBackground from '@/components/layout/AmbientBackground'
+import FluidCursor from '@/components/ui/FluidCursor'
 import { getProfile } from '@/lib/data'
 
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
@@ -21,6 +22,7 @@ export default async function PublicLayout({ children }: { children: React.React
       >
         Skip to main content
       </a>
+      <FluidCursor />
       <AmbientBackground />
       <Navbar />
       <main id="main-content" tabIndex={-1} style={{ position: 'relative', zIndex: 1, outline: 'none' }}>

@@ -1,6 +1,18 @@
 'use client'
 
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useSyncExternalStore } from 'react'
+
+function getThemeSnapshot(): 'light' | 'dark' {
+  if (typeof window === 'undefined') return 'dark'
+  return (document.documentElement.getAttribute('data-theme') as 'light' | 'dark') || 'dark'
+}
+
+function subscribeTheme(callback: () => void) {
+  if (typeof window === 'undefined') return () => {}
+  const observer = new MutationObserver(callback)
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+  return () => observer.disconnect()
+}
 
 export type AmbientVariant =
   | 'architecture'
@@ -42,28 +54,6 @@ interface Edge {
   color: string
 }
 
-interface TelemetryLabel {
-  text: string
-  x: number
-  y: number
-  vx: number
-  vy: number
-  alpha: number
-  color: string
-}
-
-// Telemetry words per variant
-const VARIANT_LABELS: Record<AmbientVariant, string[]> = {
-  architecture: ['GRAPH_V3', 'MICRO_KERNEL', 'AST_DISPATCH', 'EVENT_BUS', 'LATENCY_9MS'],
-  education: ['d/dx f(x)', '∑ (w·x + b)', '∇L(θ)', 'λ_REG', 'MATRIX_T', 'CONV_2D'],
-  learning: ['LEARNING', 'MODEL', 'DATASET', 'PYTORCH', 'ATTENTION', 'TENSOR', 'EPOCH_42'],
-  verification: ['SHA_256', 'VERIFIED', 'CREDENTIAL', 'ACCREDITED', 'SIG_VALID', 'INDEXED'],
-  network: ['COLLABORATION', 'CONSENSUS', 'HACKATHON', 'PEER_SYNC', 'AGENT_SWARM', 'DISTRIBUTED'],
-  engineering: ['BUILD', 'DEPLOY', 'INFERENCE', 'API_V2', 'VECTOR_EMBED', 'PIPELINE', 'REDIS_CACHE'],
-  communication: ['SIGNAL_OK', 'CARRIER_ACTIVE', 'TLS_1.3', 'WEBSOCKET', 'TRANSMIT'],
-  minimal: ['SYS_IDLE', 'STANDBY', 'HEARTBEAT'],
-}
-
 export default function AmbientSectionEnvironment({
   variant,
   intensity = 0.5,
@@ -72,6 +62,8 @@ export default function AmbientSectionEnvironment({
 }: AmbientSectionEnvironmentProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const theme = useSyncExternalStore(subscribeTheme, getThemeSnapshot, () => 'dark' as const)
+  const isLight = theme === 'light'
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -90,9 +82,9 @@ export default function AmbientSectionEnvironment({
     let height = 0
     const mouse = { x: -1000, y: -1000, active: false }
 
-    // Color definitions based on accentMode
-    const orangeRgb = '249, 115, 22' // var(--color-accent) #f97316
-    const cyanRgb = '6, 182, 212' // teal/cyan AI accent #06b6d4
+    // Color definitions based on accentMode and active theme
+    const orangeRgb = isLight ? '212, 72, 28' : '249, 115, 22' // terracotta in light mode, bright orange in dark
+    const cyanRgb = isLight ? '13, 122, 112' : '6, 182, 212' // deep teal in light mode, cyan in dark
 
     function pickColor(isOrangePrefer = false): string {
       if (accentMode === 'orange') return orangeRgb
@@ -100,19 +92,18 @@ export default function AmbientSectionEnvironment({
       return isOrangePrefer ? orangeRgb : cyanRgb
     }
 
-    // Determine particle count based on screen width & variant
+    // Determine subtle particle count based on screen width & variant (toned down to prevent visual clutter)
     function getParticleCount(w: number): number {
       const isMobile = w < 640
       const isTablet = w >= 640 && w < 1024
-      const base = variant === 'engineering' ? 36 : variant === 'architecture' ? 32 : 24
-      if (isMobile) return Math.floor(base * 0.35)
-      if (isTablet) return Math.floor(base * 0.65)
+      const base = 12
+      if (isMobile) return 5
+      if (isTablet) return 8
       return base
     }
 
     let particles: Particle[] = []
     let edges: Edge[] = []
-    let labels: TelemetryLabel[] = []
     let scanLineY = 0
 
     function initScene() {
@@ -130,27 +121,26 @@ export default function AmbientSectionEnvironment({
       const count = getParticleCount(width)
       particles = []
       edges = []
-      labels = []
 
-      // Generate particles
+      // Generate subtle, minimal particles
       for (let i = 0; i < count; i++) {
         const isOrange = i % 3 === 0
         const color = pickColor(isOrange)
         particles.push({
           x: Math.random() * width,
           y: Math.random() * height,
-          vx: (Math.random() - 0.5) * 0.28 * intensity,
-          vy: (Math.random() - 0.5) * 0.28 * intensity,
-          radius: 0.9 + Math.random() * 1.5,
+          vx: (Math.random() - 0.5) * 0.16 * intensity,
+          vy: (Math.random() - 0.5) * 0.16 * intensity,
+          radius: 0.7 + Math.random() * 0.6,
           color,
-          baseAlpha: 0.12 + Math.random() * 0.25 * intensity,
+          baseAlpha: 0.03 + Math.random() * 0.06 * intensity,
           pulsePhase: Math.random() * Math.PI * 2,
-          layer: Math.random() > 0.6 ? 2 : 1,
+          layer: 1,
         })
       }
 
       // Generate edges between nearest neighbors (sparse graph)
-      const maxDistance = width < 640 ? 90 : 140
+      const maxDistance = width < 640 ? 80 : 120
       for (let i = 0; i < particles.length; i++) {
         let connected = 0
         for (let j = i + 1; j < particles.length; j++) {
@@ -162,28 +152,13 @@ export default function AmbientSectionEnvironment({
               p1: i,
               p2: j,
               pulseProgress: Math.random(),
-              pulseSpeed: 0.003 + Math.random() * 0.005,
-              pulseActive: Math.random() > 0.4,
+              pulseSpeed: 0.002 + Math.random() * 0.003,
+              pulseActive: Math.random() > 0.5,
               color: particles[i].color,
             })
             connected++
           }
         }
-      }
-
-      // Generate ambient telemetry labels
-      const wordList = VARIANT_LABELS[variant] || []
-      const labelCount = width < 640 ? 2 : Math.min(wordList.length, 4)
-      for (let i = 0; i < labelCount; i++) {
-        labels.push({
-          text: wordList[i % wordList.length],
-          x: 40 + Math.random() * (width - 120),
-          y: 40 + Math.random() * (height - 80),
-          vx: (Math.random() - 0.5) * 0.08,
-          vy: (Math.random() - 0.5) * 0.08,
-          alpha: 0.08 + Math.random() * 0.08 * intensity,
-          color: i % 2 === 0 ? orangeRgb : cyanRgb,
-        })
       }
     }
 
@@ -247,22 +222,7 @@ export default function AmbientSectionEnvironment({
       drawVariantBackground(ctx, variant, width, height, intensity, orangeRgb, cyanRgb, scanLineY)
       scanLineY = (scanLineY + 0.4) % (height + 100)
 
-      // B. Draw telemetry labels
-      ctx.font = '10px "JetBrains Mono", var(--font-mono), monospace'
-      ctx.letterSpacing = '0.14em'
-      for (const label of labels) {
-        label.x += label.vx
-        label.y += label.vy
-        if (label.x < 10) label.x = width - 80
-        if (label.x > width - 60) label.x = 20
-        if (label.y < 20) label.y = height - 30
-        if (label.y > height - 20) label.y = 30
-
-        ctx.fillStyle = `rgba(${label.color}, ${label.alpha})`
-        ctx.fillText(label.text, label.x, label.y)
-      }
-
-      // C. Draw network edges and traveling packet pulses
+      // B. Draw network edges and traveling packet pulses (soft and subtle)
       for (const edge of edges) {
         const p1 = particles[edge.p1]
         const p2 = particles[edge.p2]
@@ -270,17 +230,17 @@ export default function AmbientSectionEnvironment({
 
         const dx = p1.x - p2.x
         const dy = p1.y - p2.y
-        const maxDist = width < 640 ? 100 : 150
+        const maxDist = width < 640 ? 80 : 120
         const distSq = dx * dx + dy * dy
         if (distSq > maxDist * maxDist) continue
         const dist = Math.sqrt(distSq)
 
-        const edgeAlpha = (1 - dist / maxDist) * 0.09 * intensity
+        const edgeAlpha = (1 - dist / maxDist) * 0.035 * intensity
         ctx.beginPath()
         ctx.moveTo(p1.x, p1.y)
         ctx.lineTo(p2.x, p2.y)
         ctx.strokeStyle = `rgba(${edge.color}, ${edgeAlpha})`
-        ctx.lineWidth = 0.75
+        ctx.lineWidth = 0.5
         ctx.stroke()
 
         // Traveling data packet pulse
@@ -288,18 +248,18 @@ export default function AmbientSectionEnvironment({
           edge.pulseProgress += edge.pulseSpeed
           if (edge.pulseProgress > 1) {
             edge.pulseProgress = 0
-            edge.pulseActive = Math.random() > 0.3
+            edge.pulseActive = Math.random() > 0.4
           }
           const px = p1.x + (p2.x - p1.x) * edge.pulseProgress
           const py = p1.y + (p2.y - p1.y) * edge.pulseProgress
           ctx.beginPath()
-          ctx.arc(px, py, 1.4, 0, Math.PI * 2)
-          ctx.fillStyle = `rgba(${edge.color}, ${0.45 * intensity})`
+          ctx.arc(px, py, 1.0, 0, Math.PI * 2)
+          ctx.fillStyle = `rgba(${edge.color}, ${0.25 * intensity})`
           ctx.fill()
         }
       }
 
-      // D. Draw particles
+      // C. Draw subtle particles
       const now = Date.now() * 0.001
       for (const p of particles) {
         p.x += p.vx
@@ -311,34 +271,25 @@ export default function AmbientSectionEnvironment({
         if (p.y < 0) p.y = height
         if (p.y > height) p.y = 0
 
-        // Gentle cursor interaction (max 150px influence)
+        // Gentle cursor interaction (max 120px influence)
         if (mouse.active) {
           const mdx = p.x - mouse.x
           const mdy = p.y - mouse.y
           const mdist = Math.sqrt(mdx * mdx + mdy * mdy)
-          if (mdist < 140 && mdist > 1) {
-            const force = (1 - mdist / 140) * 0.6
+          if (mdist < 120 && mdist > 1) {
+            const force = (1 - mdist / 120) * 0.4
             p.x += (mdx / mdist) * force
             p.y += (mdy / mdist) * force
           }
         }
 
-        const pulse = Math.sin(now * 1.5 + p.pulsePhase) * 0.08
-        const alpha = Math.max(0.04, p.baseAlpha + pulse)
+        const pulse = Math.sin(now * 1.5 + p.pulsePhase) * 0.03
+        const alpha = Math.max(0.02, p.baseAlpha + pulse)
 
         ctx.beginPath()
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2)
         ctx.fillStyle = `rgba(${p.color}, ${alpha})`
         ctx.fill()
-
-        // Subtle glow ring around larger particles
-        if (p.radius > 1.8 && p.layer === 2) {
-          ctx.beginPath()
-          ctx.arc(p.x, p.y, p.radius * 2.2, 0, Math.PI * 2)
-          ctx.strokeStyle = `rgba(${p.color}, ${alpha * 0.3})`
-          ctx.lineWidth = 0.5
-          ctx.stroke()
-        }
       }
 
       animId = requestAnimationFrame(render)
@@ -358,7 +309,7 @@ export default function AmbientSectionEnvironment({
       window.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseleave', handleMouseLeave)
     }
-  }, [variant, intensity, accentMode])
+  }, [variant, intensity, accentMode, isLight])
 
   return (
     <div
@@ -403,14 +354,14 @@ function drawVariantBackground(
       // Slow horizontal scan line & subtle orthogonal bus lines
       const scanY = scanLineY % height
       const grad = ctx.createLinearGradient(0, scanY - 30, 0, scanY + 30)
-      grad.addColorStop(0, 'rgba(6, 182, 212, 0)')
-      grad.addColorStop(0.5, `rgba(6, 182, 212, ${0.04 * intensity})`)
-      grad.addColorStop(1, 'rgba(6, 182, 212, 0)')
+      grad.addColorStop(0, `rgba(${cyanRgb}, 0)`)
+      grad.addColorStop(0.5, `rgba(${cyanRgb}, ${0.04 * intensity})`)
+      grad.addColorStop(1, `rgba(${cyanRgb}, 0)`)
       ctx.fillStyle = grad
       ctx.fillRect(0, scanY - 30, width, 60)
 
       // 2 faint circuit horizontal lines
-      ctx.strokeStyle = `rgba(249, 115, 22, ${0.05 * intensity})`
+      ctx.strokeStyle = `rgba(${orangeRgb}, ${0.05 * intensity})`
       ctx.lineWidth = 0.5
       ctx.setLineDash([8, 16])
       ctx.beginPath()
@@ -426,7 +377,7 @@ function drawVariantBackground(
     case 'education': {
       // Subtle vertical data spine representing academic progression
       const spineX = width < 900 ? 32 : width * 0.2
-      ctx.strokeStyle = `rgba(249, 115, 22, ${0.07 * intensity})`
+      ctx.strokeStyle = `rgba(${orangeRgb}, ${0.07 * intensity})`
       ctx.lineWidth = 1
       ctx.setLineDash([4, 8])
       ctx.beginPath()
@@ -439,7 +390,7 @@ function drawVariantBackground(
       const pulseY = height - (scanLineY % height)
       ctx.beginPath()
       ctx.arc(spineX, pulseY, 2, 0, Math.PI * 2)
-      ctx.fillStyle = `rgba(249, 115, 22, ${0.4 * intensity})`
+      ctx.fillStyle = `rgba(${orangeRgb}, ${0.4 * intensity})`
       ctx.fill()
       break
     }
@@ -451,7 +402,7 @@ function drawVariantBackground(
       for (let r = 50; r <= 150; r += 50) {
         ctx.beginPath()
         ctx.arc(cx, cy, r, 0, Math.PI * 2)
-        ctx.strokeStyle = `rgba(6, 182, 212, ${(0.035 - r * 0.00015) * intensity})`
+        ctx.strokeStyle = `rgba(${cyanRgb}, ${(0.035 - r * 0.00015) * intensity})`
         ctx.lineWidth = 0.5
         ctx.setLineDash([4, 12])
         ctx.stroke()
@@ -464,14 +415,14 @@ function drawVariantBackground(
       // Abstract subtle verification shield/hexagon geometry & vertical scan line
       const scanY = scanLineY % height
       const grad = ctx.createLinearGradient(0, scanY - 20, 0, scanY + 20)
-      grad.addColorStop(0, 'rgba(6, 182, 212, 0)')
-      grad.addColorStop(0.5, `rgba(6, 182, 212, ${0.035 * intensity})`)
-      grad.addColorStop(1, 'rgba(6, 182, 212, 0)')
+      grad.addColorStop(0, `rgba(${cyanRgb}, 0)`)
+      grad.addColorStop(0.5, `rgba(${cyanRgb}, ${0.035 * intensity})`)
+      grad.addColorStop(1, `rgba(${cyanRgb}, 0)`)
       ctx.fillStyle = grad
       ctx.fillRect(0, scanY - 20, width, 40)
 
       // Verified node crosses in peripheral background
-      ctx.strokeStyle = `rgba(6, 182, 212, ${0.06 * intensity})`
+      ctx.strokeStyle = `rgba(${cyanRgb}, ${0.06 * intensity})`
       ctx.lineWidth = 0.75
       const crossPoints = [
         { x: width * 0.1, y: height * 0.25 },
@@ -492,7 +443,7 @@ function drawVariantBackground(
 
     case 'network': {
       // Faint constellation web connection in the upper-left
-      ctx.strokeStyle = `rgba(249, 115, 22, ${0.045 * intensity})`
+      ctx.strokeStyle = `rgba(${orangeRgb}, ${0.045 * intensity})`
       ctx.lineWidth = 0.5
       ctx.beginPath()
       ctx.arc(width * 0.15, height * 0.35, 120, 0, Math.PI * 0.7)
@@ -505,7 +456,7 @@ function drawVariantBackground(
 
     case 'engineering': {
       // Computational bus lines & data stream corridors
-      ctx.strokeStyle = `rgba(6, 182, 212, ${0.05 * intensity})`
+      ctx.strokeStyle = `rgba(${cyanRgb}, ${0.05 * intensity})`
       ctx.lineWidth = 0.5
       ctx.setLineDash([12, 20])
       for (let y = height * 0.2; y <= height * 0.85; y += height * 0.2) {
@@ -518,7 +469,7 @@ function drawVariantBackground(
 
       // Subtle gradient radial pool in center
       const radGrad = ctx.createRadialGradient(width * 0.5, height * 0.4, 20, width * 0.5, height * 0.4, 300)
-      radGrad.addColorStop(0, `rgba(249, 115, 22, ${0.03 * intensity})`)
+      radGrad.addColorStop(0, `rgba(${orangeRgb}, ${0.03 * intensity})`)
       radGrad.addColorStop(1, 'rgba(0, 0, 0, 0)')
       ctx.fillStyle = radGrad
       ctx.fillRect(0, 0, width, height)
@@ -535,7 +486,7 @@ function drawVariantBackground(
         const waveAlpha = Math.max(0, (1 - radius / 380) * 0.06 * intensity)
         ctx.beginPath()
         ctx.arc(originX, originY, radius, 0, Math.PI * 2)
-        ctx.strokeStyle = `rgba(249, 115, 22, ${waveAlpha})`
+        ctx.strokeStyle = `rgba(${orangeRgb}, ${waveAlpha})`
         ctx.lineWidth = 0.75
         ctx.stroke()
       }
@@ -546,7 +497,7 @@ function drawVariantBackground(
       // Minimal breathing gradient for idle footer
       const breathe = Math.sin(Date.now() * 0.001) * 0.02
       const grad = ctx.createRadialGradient(width * 0.5, height * 0.8, 10, width * 0.5, height * 0.8, width * 0.6)
-      grad.addColorStop(0, `rgba(6, 182, 212, ${Math.max(0.01, 0.03 * intensity + breathe)})`)
+      grad.addColorStop(0, `rgba(${cyanRgb}, ${Math.max(0.01, 0.03 * intensity + breathe)})`)
       grad.addColorStop(1, 'rgba(0, 0, 0, 0)')
       ctx.fillStyle = grad
       ctx.fillRect(0, 0, width, height)

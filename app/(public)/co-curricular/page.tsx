@@ -21,16 +21,16 @@ export default async function CoCurricularPage() {
       <div style={{ position: 'relative', zIndex: 1, maxWidth: 'var(--container-max)', margin: '0 auto' }}>
         {/* Futuristic Module Page Header */}
         <PageHeader
-          moduleTag="// CO_CURRICULAR_ACTIVITIES"
+          moduleTag="Co-Curricular Milestones"
           title={
             <>
-              BEYOND THE CLASSROOM:<br />
-              HACKATHONS, LEADERSHIP &amp; SPRINTS
+              Beyond the Classroom:<br />
+              Hackathons, Leadership &amp; Sprints
             </>
           }
           quote="Beyond the classroom: building, competing, leading."
           description="Competitive hackathons, technical challenges, student clubs, and leadership experiences that shaped how I build, lead, and explore new frontiers."
-          statusBadge="ACTIVITY_ARCHIVE_VERIFIED"
+          statusBadge="Verified Milestones"
         />
 
         {/* Dynamic Database-Driven Activity Archive */}

@@ -268,12 +268,12 @@ export default function ResumeClientView({
           >
             {/* Header Status Bar inside Dark Container */}
             <div className="resume-viewer-header">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '7px', color: '#E45D2C', fontWeight: 600 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '7px', color: 'var(--color-accent, #E45D2C)', fontWeight: 600 }}>
                 <FileText size={12} />
                 <span>BABUL KUMAR — CURRICULUM VITAE</span>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#9E978F' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--color-text-muted, #9E978F)' }}>
                 <span>PDF Preview • Standard Format</span>
                 {isFullscreen && (
                   <button
@@ -289,7 +289,7 @@ export default function ResumeClientView({
               </div>
             </div>
 
-            {/* Dark Viewing Area with Centered PDF Presentation */}
+            {/* Viewing Area with Centered PDF Presentation */}
             <div className="resume-viewer-body">
               <iframe
                 src={`${resumeUrl}#toolbar=0&navpanes=0&view=FitH`}
@@ -299,7 +299,7 @@ export default function ResumeClientView({
                   height: '100%',
                   border: 'none',
                   display: 'block',
-                  backgroundColor: '#13151A',
+                  backgroundColor: 'transparent',
                 }}
               />
             </div>

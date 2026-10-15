@@ -29,16 +29,16 @@ export default async function ContactPage() {
       <div style={{ position: 'relative', zIndex: 1, maxWidth: 'var(--container-max)', margin: '0 auto' }}>
         {/* Futuristic Page Header */}
         <PageHeader
-          moduleTag="// COMMUNICATION_TERMINAL"
+          moduleTag="Communication Channel"
           title={
             <>
-              TRANSMISSION TERMINAL &amp;<br />
-              DIRECT DISPATCH
+              Get in Touch &amp;<br />
+              Direct Communication
             </>
           }
           quote="Direct communication channel open."
           description="Send an inquiry regarding Software Development Engineering, Applied AI/ML roles, research collaborations, or technical software systems."
-          statusBadge="PORTS_OPEN_LISTENING"
+          statusBadge="Available for Inquiries"
         />
 
         {/* Terminal Contact Form & Social Dispatch Cards */}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 import {
   FileText,
   ShieldCheck,
@@ -13,7 +13,20 @@ import {
   RotateCcw,
 } from 'lucide-react'
 import { isPdfDocument } from '@/lib/supabase/storage'
+import { downloadCertificateFile } from '@/lib/download'
 import CertificateLightbox from './CertificateLightbox'
+
+function getThemeSnapshot(): 'light' | 'dark' {
+  if (typeof window === 'undefined') return 'dark'
+  return (document.documentElement.getAttribute('data-theme') as 'light' | 'dark') || 'dark'
+}
+
+function subscribeTheme(callback: () => void) {
+  if (typeof window === 'undefined') return () => {}
+  const observer = new MutationObserver(callback)
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+  return () => observer.disconnect()
+}
 
 interface CertificateDocViewerProps {
   publicFileUrl: string | null
@@ -30,10 +43,28 @@ export default function CertificateDocViewer({
   category,
   credentialId,
 }: CertificateDocViewerProps) {
+  const theme = useSyncExternalStore(subscribeTheme, getThemeSnapshot, () => 'dark' as const)
+  const isLight = theme === 'light'
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [zoomLevel, setZoomLevel] = useState(1)
   const [isLoading, setIsLoading] = useState(true)
   const [imageError, setImageError] = useState(false)
+  const [isDownloading, setIsDownloading] = useState(false)
+
+  const handleDownloadClick = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    if (!publicFileUrl || isDownloading) return
+    setIsDownloading(true)
+    try {
+      const ext = publicFileUrl.toLowerCase().includes('.pdf') ? '.pdf' : '.png'
+      const baseName = (title || 'Certificate').replace(/[<>:"/\\|?*\x00-\x1F]/g, '').trim().replace(/\s+/g, '_')
+      await downloadCertificateFile(publicFileUrl, `${baseName}${ext}`)
+    } catch (err) {
+      console.error('CertificateDocViewer download error:', err)
+    } finally {
+      setIsDownloading(false)
+    }
+  }
 
   const isPdf = isPdfDocument(publicFileUrl)
 
@@ -143,8 +174,8 @@ export default function CertificateDocViewer({
               type="button"
               onClick={() => setLightboxOpen(true)}
               style={{
-                background: 'rgba(255, 255, 255, 0.06)',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
+                background: isLight ? 'rgba(18, 17, 16, 0.05)' : 'rgba(255, 255, 255, 0.06)',
+                border: isLight ? '1px solid rgba(18, 17, 16, 0.14)' : '1px solid rgba(255, 255, 255, 0.12)',
                 borderRadius: '6px',
                 color: 'var(--color-text, #E5E7EB)',
                 padding: '6px 12px',
@@ -168,8 +199,8 @@ export default function CertificateDocViewer({
               target="_blank"
               rel="noreferrer"
               style={{
-                background: 'rgba(255, 255, 255, 0.06)',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
+                background: isLight ? 'rgba(18, 17, 16, 0.05)' : 'rgba(255, 255, 255, 0.06)',
+                border: isLight ? '1px solid rgba(18, 17, 16, 0.14)' : '1px solid rgba(255, 255, 255, 0.12)',
                 borderRadius: '6px',
                 color: 'var(--color-text, #E5E7EB)',
                 padding: '6px 12px',
@@ -189,10 +220,9 @@ export default function CertificateDocViewer({
             </a>
 
             <a
-              href={publicFileUrl}
+              href={publicFileUrl ? `/api/certificates/download?url=${encodeURIComponent(publicFileUrl)}&filename=${encodeURIComponent((title || 'Certificate').replace(/[<>:"/\\|?*\x00-\x1F]/g, '').trim().replace(/\s+/g, '_') + (publicFileUrl.toLowerCase().includes('.pdf') ? '.pdf' : '.png'))}` : '#'}
               download
-              target="_blank"
-              rel="noreferrer"
+              onClick={handleDownloadClick}
               style={{
                 background: 'var(--color-accent, #E45D2C)',
                 borderRadius: '6px',
@@ -205,12 +235,15 @@ export default function CertificateDocViewer({
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '5px',
-                boxShadow: '0 2px 8px rgba(228, 93, 44, 0.3)',
+                boxShadow: isLight ? '0 2px 8px rgba(212, 72, 28, 0.25)' : '0 2px 8px rgba(228, 93, 44, 0.3)',
+                cursor: isDownloading ? 'wait' : 'pointer',
+                opacity: isDownloading ? 0.75 : 1,
               }}
-              title="Download certificate document"
+              title="Download certificate document to device"
+              aria-label="Download certificate document"
             >
               <Download size={12} />
-              <span>Download</span>
+              <span>{isDownloading ? 'Downloading...' : 'Download'}</span>
             </a>
           </div>
         </div>
@@ -222,7 +255,9 @@ export default function CertificateDocViewer({
           style={{
             position: 'relative',
             padding: 'clamp(20px, 4vh, 40px) clamp(16px, 3vw, 32px)',
-            background: 'radial-gradient(circle at 50% 50%, rgba(228, 93, 44, 0.05) 0%, #080A0E 100%)',
+            background: isLight
+              ? 'radial-gradient(circle at 50% 50%, rgba(212, 72, 28, 0.04) 0%, #F5F3EE 100%)'
+              : 'radial-gradient(circle at 50% 50%, rgba(228, 93, 44, 0.05) 0%, #080A0E 100%)',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
@@ -240,18 +275,18 @@ export default function CertificateDocViewer({
                 style={{
                   width: '100%',
                   height: '100%',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  border: isLight ? '1px solid rgba(18, 17, 16, 0.12)' : '1px solid rgba(255, 255, 255, 0.1)',
                   borderRadius: '8px',
-                  background: '#1A1D24',
+                  background: isLight ? '#FFFFFF' : '#1A1D24',
                   display: 'block',
                 }}
               />
             </div>
           ) : imageError ? (
             /* Error Fallback */
-            <div style={{ padding: '36px 20px', textAlign: 'center', color: '#9CA3AF' }}>
+            <div style={{ padding: '36px 20px', textAlign: 'center', color: isLight ? '#4B5563' : '#9CA3AF' }}>
               <Award size={40} style={{ color: 'var(--color-accent)', margin: '0 auto 12px' }} />
-              <h3 style={{ fontSize: '16px', color: '#F3F4F6', margin: '0 0 6px' }}>{title}</h3>
+              <h3 style={{ fontSize: '16px', color: 'var(--color-text)', margin: '0 0 6px' }}>{title}</h3>
               <p style={{ fontSize: '13px', margin: 0 }}>Issued by {issuer} · {category}</p>
             </div>
           ) : (
@@ -270,8 +305,10 @@ export default function CertificateDocViewer({
                 style={{
                   borderRadius: '8px',
                   overflow: 'hidden',
-                  boxShadow: '0 16px 48px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.1)',
-                  background: '#0B0D13',
+                  boxShadow: isLight
+                    ? '0 16px 40px rgba(18, 17, 16, 0.12), 0 0 0 1px rgba(18, 17, 16, 0.1)'
+                    : '0 16px 48px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.1)',
+                  background: isLight ? '#FFFFFF' : '#0B0D13',
                   transition: 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
                   transform: `scale(${zoomLevel})`,
                   transformOrigin: 'center center',
@@ -315,11 +352,11 @@ export default function CertificateDocViewer({
                   marginTop: '16px',
                   display: 'inline-flex',
                   alignItems: 'center',
-                  background: 'rgba(15, 19, 28, 0.9)',
-                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  background: isLight ? 'rgba(255, 255, 255, 0.96)' : 'rgba(15, 19, 28, 0.9)',
+                  border: isLight ? '1px solid rgba(18, 17, 16, 0.15)' : '1px solid rgba(255, 255, 255, 0.12)',
                   borderRadius: 'var(--radius-full, 9999px)',
                   padding: '3px 8px',
-                  boxShadow: '0 6px 20px rgba(0, 0, 0, 0.5)',
+                  boxShadow: isLight ? '0 6px 20px rgba(18, 17, 16, 0.08)' : '0 6px 20px rgba(0, 0, 0, 0.5)',
                   gap: '4px',
                   zIndex: 5,
                 }}
@@ -330,7 +367,7 @@ export default function CertificateDocViewer({
                   style={{
                     background: 'none',
                     border: 'none',
-                    color: '#D1D5DB',
+                    color: isLight ? '#374151' : '#D1D5DB',
                     padding: '5px 8px',
                     cursor: 'pointer',
                     borderRadius: '50%',
@@ -349,7 +386,7 @@ export default function CertificateDocViewer({
                     fontSize: '11px',
                     fontFamily: 'var(--font-mono, monospace)',
                     fontWeight: 600,
-                    color: '#F3F4F6',
+                    color: isLight ? '#121110' : '#F3F4F6',
                     minWidth: '42px',
                     textAlign: 'center',
                   }}
@@ -363,7 +400,7 @@ export default function CertificateDocViewer({
                   style={{
                     background: 'none',
                     border: 'none',
-                    color: '#D1D5DB',
+                    color: isLight ? '#374151' : '#D1D5DB',
                     padding: '5px 8px',
                     cursor: 'pointer',
                     borderRadius: '50%',
@@ -377,7 +414,14 @@ export default function CertificateDocViewer({
                   <ZoomIn size={14} />
                 </button>
 
-                <div style={{ width: '1px', height: '12px', background: 'rgba(255, 255, 255, 0.12)', margin: '0 2px' }} />
+                <div
+                  style={{
+                    width: '1px',
+                    height: '12px',
+                    background: isLight ? 'rgba(18, 17, 16, 0.12)' : 'rgba(255, 255, 255, 0.12)',
+                    margin: '0 2px',
+                  }}
+                />
 
                 <button
                   type="button"
@@ -385,7 +429,7 @@ export default function CertificateDocViewer({
                   style={{
                     background: 'none',
                     border: 'none',
-                    color: '#9CA3AF',
+                    color: isLight ? '#4B5563' : '#9CA3AF',
                     padding: '5px 8px',
                     cursor: 'pointer',
                     display: 'inline-flex',
@@ -393,6 +437,7 @@ export default function CertificateDocViewer({
                     gap: '4px',
                     fontSize: '11px',
                     fontFamily: 'var(--font-mono, monospace)',
+                    fontWeight: 600,
                   }}
                   title="Reset to Fit Screen"
                   aria-label="Reset to Fit Screen"

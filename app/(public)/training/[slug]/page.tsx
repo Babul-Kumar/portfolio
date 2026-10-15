@@ -402,9 +402,7 @@ export default async function TrainingDetailPage({
                 </div>
 
                 <a
-                  href={docUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href={`/api/certificates/download?url=${encodeURIComponent(docUrl)}&filename=${encodeURIComponent(training.title.replace(/[<>:"/\\|?*\x00-\x1F]/g, '').trim().replace(/\s+/g, '_') + (docUrl.toLowerCase().includes('.pdf') ? '.pdf' : '.png'))}`}
                   download
                   style={{
                     fontSize: '12px',
@@ -419,6 +417,8 @@ export default async function TrainingDetailPage({
                     background: 'var(--color-accent-bg)',
                     border: '1px solid var(--color-accent-border)',
                   }}
+                  title="Download training document"
+                  aria-label="Download training document"
                 >
                   <Download size={13} />
                   <span>Download Document</span>

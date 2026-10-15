@@ -185,7 +185,7 @@ export const FALLBACK_PROFILE: Profile = {
   location: 'Punjab, India',
   university: 'Lovely Professional University',
   degree: 'B.Tech Computer Science & Engineering',
-  graduation_year: 2026,
+  graduation_year: 2028,
   email: 'babulkumar0220@gmail.com',
   phone: null,
   github_url: 'https://github.com/babul-kumar',
@@ -843,8 +843,8 @@ export const FALLBACK_EDUCATION: Education[] = [
     institution: 'Lovely Professional University',
     degree: 'B.Tech',
     field: 'Computer Science & Engineering',
-    start_date: '2022-08-01',
-    end_date: '2026-06-30',
+    start_date: '2024-08-01',
+    end_date: '2028-06-30',
     is_current: true,
     grade: 'First Class',
     location: 'Punjab, India',
@@ -1059,16 +1059,22 @@ export async function getCertificates(options?: {
       const { data, error } = await query
       if (error) {
         console.error('getCertificates database error:', error.message)
-        return []
       }
-      return data || []
+      const list = data && Array.isArray(data) ? (data as Certificate[]) : []
+      const merged = [...list]
+      for (const c of FALLBACK_CERTIFICATES) {
+        if (!merged.some((ec) => ec.slug === c.slug)) {
+          merged.push(c)
+        }
+      }
+      return merged
     } catch (err: unknown) {
       console.error('getCertificates unexpected error:', err)
-      return []
+      return [...FALLBACK_CERTIFICATES]
     }
   })()
 
-  const data = await withTimeout(fetchPromise, [])
+  const data = await withTimeout(fetchPromise, [...FALLBACK_CERTIFICATES])
   setCache(cacheKey, data)
   return data
 }
@@ -1088,16 +1094,16 @@ export async function getCertificateBySlug(slug: string): Promise<Certificate | 
         .maybeSingle()
       if (error) {
         console.error(`getCertificateBySlug database error for ${slug}:`, error.message)
-        return null
+        return FALLBACK_CERTIFICATES.find((c) => c.slug === slug) || null
       }
-      return data || null
+      return data || FALLBACK_CERTIFICATES.find((c) => c.slug === slug) || null
     } catch (err: unknown) {
       console.error(`getCertificateBySlug unexpected error for ${slug}:`, err)
-      return null
+      return FALLBACK_CERTIFICATES.find((c) => c.slug === slug) || null
     }
   })()
 
-  const data = await withTimeout(fetchPromise, null)
+  const data = await withTimeout(fetchPromise, FALLBACK_CERTIFICATES.find((c) => c.slug === slug) || null)
   if (data) setCache(`cert_${slug}`, data)
   return data
 }

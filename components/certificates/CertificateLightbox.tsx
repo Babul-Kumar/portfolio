@@ -15,6 +15,19 @@ import {
   ArrowLeft,
 } from 'lucide-react'
 import { isPdfDocument } from '@/lib/supabase/storage'
+import { downloadCertificateFile } from '@/lib/download'
+
+function getThemeSnapshot(): 'light' | 'dark' {
+  if (typeof window === 'undefined') return 'dark'
+  return (document.documentElement.getAttribute('data-theme') as 'light' | 'dark') || 'dark'
+}
+
+function subscribeTheme(callback: () => void) {
+  if (typeof window === 'undefined') return () => {}
+  const observer = new MutationObserver(callback)
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+  return () => observer.disconnect()
+}
 
 const subscribe = () => () => {}
 const getSnapshot = () => true
@@ -44,11 +57,29 @@ export default function CertificateLightbox({
   date,
 }: CertificateLightboxProps) {
   const isClient = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
+  const theme = useSyncExternalStore(subscribeTheme, getThemeSnapshot, () => 'dark' as const)
+  const isLight = theme === 'light'
   const [zoomLevel, setZoomLevel] = useState(1)
   const [isLoading, setIsLoading] = useState(true)
   const [imageError, setImageError] = useState(false)
+  const [isDownloading, setIsDownloading] = useState(false)
   const isPdf = isPdfDocument(fileUrl)
   const containerRef = useRef<HTMLDivElement>(null)
+
+  const handleDownloadClick = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    if (!fileUrl || isDownloading) return
+    setIsDownloading(true)
+    try {
+      const ext = fileUrl.toLowerCase().includes('.pdf') ? '.pdf' : '.png'
+      const baseName = (title || 'Certificate').replace(/[<>:"/\\|?*\x00-\x1F]/g, '').trim().replace(/\s+/g, '_')
+      await downloadCertificateFile(fileUrl, `${baseName}${ext}`)
+    } catch (err) {
+      console.error('CertificateLightbox download error:', err)
+    } finally {
+      setIsDownloading(false)
+    }
+  }
 
   const handleClose = useCallback(() => {
     setZoomLevel(1)
@@ -113,7 +144,7 @@ export default function CertificateLightbox({
         height: '100dvh',
         maxHeight: '100dvh',
         zIndex: 9999999, // Truly isolated topmost stacking layer
-        background: '#07090E', // Solid non-transparent background to prevent any page bleed-through
+        background: isLight ? '#FAF9F6' : '#07090E', // Solid non-transparent background to prevent any page bleed-through
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
@@ -133,8 +164,8 @@ export default function CertificateLightbox({
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          background: '#0D111A',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+          background: isLight ? '#FFFFFF' : '#0D111A',
+          borderBottom: isLight ? '1px solid rgba(18, 17, 16, 0.12)' : '1px solid rgba(255, 255, 255, 0.1)',
           zIndex: 10,
           gap: '12px',
         }}
@@ -145,10 +176,10 @@ export default function CertificateLightbox({
           type="button"
           onClick={handleClose}
           style={{
-            background: 'rgba(255, 255, 255, 0.08)',
-            border: '1px solid rgba(255, 255, 255, 0.15)',
+            background: isLight ? 'var(--color-surface-2)' : 'rgba(255, 255, 255, 0.08)',
+            border: isLight ? '1px solid var(--color-border)' : '1px solid rgba(255, 255, 255, 0.15)',
             borderRadius: '6px',
-            color: '#F3F4F6',
+            color: isLight ? 'var(--color-text)' : '#F3F4F6',
             padding: '6px 14px',
             cursor: 'pointer',
             display: 'inline-flex',
@@ -195,10 +226,10 @@ export default function CertificateLightbox({
           type="button"
           onClick={handleClose}
           style={{
-            background: 'rgba(239, 68, 68, 0.15)',
-            border: '1px solid rgba(239, 68, 68, 0.35)',
+            background: isLight ? 'rgba(220, 38, 38, 0.08)' : 'rgba(239, 68, 68, 0.15)',
+            border: isLight ? '1px solid rgba(220, 38, 38, 0.25)' : '1px solid rgba(239, 68, 68, 0.35)',
             borderRadius: '6px',
-            color: '#FCA5A5',
+            color: isLight ? '#DC2626' : '#FCA5A5',
             padding: '6px 14px',
             cursor: 'pointer',
             display: 'inline-flex',
@@ -232,7 +263,9 @@ export default function CertificateLightbox({
           justifyContent: 'center',
           overflow: zoomLevel > 1 ? 'auto' : 'hidden',
           padding: '16px clamp(16px, 3vw, 36px)',
-          background: 'radial-gradient(circle at center, rgba(228, 93, 44, 0.05) 0%, #07090E 70%)',
+          background: isLight
+            ? 'radial-gradient(circle at center, rgba(212, 72, 28, 0.06) 0%, #FAF9F6 70%)'
+            : 'radial-gradient(circle at center, rgba(228, 93, 44, 0.05) 0%, #07090E 70%)',
         }}
         onClick={(e) => {
           if (e.target === containerRef.current) {
@@ -355,8 +388,10 @@ export default function CertificateLightbox({
               style={{
                 borderRadius: '8px',
                 overflow: 'hidden',
-                boxShadow: '0 20px 60px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(255, 255, 255, 0.12)',
-                background: '#0B0E14',
+                boxShadow: isLight
+                  ? '0 20px 60px rgba(18, 17, 16, 0.15), 0 0 0 1px rgba(18, 17, 16, 0.08)'
+                  : '0 20px 60px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(255, 255, 255, 0.12)',
+                background: '#FFFFFF',
                 transition: 'transform 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
                 transform: `scale(${zoomLevel})`,
                 transformOrigin: 'center center',
@@ -399,11 +434,11 @@ export default function CertificateLightbox({
                   marginTop: '10px',
                   display: 'inline-flex',
                   alignItems: 'center',
-                  background: 'rgba(14, 18, 26, 0.96)',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  background: isLight ? 'rgba(255, 255, 255, 0.95)' : 'rgba(14, 18, 26, 0.96)',
+                  border: isLight ? '1px solid rgba(18, 17, 16, 0.15)' : '1px solid rgba(255, 255, 255, 0.15)',
                   borderRadius: '9999px',
                   padding: '3px 8px',
-                  boxShadow: '0 6px 20px rgba(0, 0, 0, 0.7)',
+                  boxShadow: isLight ? '0 6px 20px rgba(18, 17, 16, 0.12)' : '0 6px 20px rgba(0, 0, 0, 0.7)',
                   gap: '4px',
                   zIndex: 10,
                   flex: '0 0 auto',
@@ -415,7 +450,7 @@ export default function CertificateLightbox({
                   style={{
                     background: 'none',
                     border: 'none',
-                    color: '#D1D5DB',
+                    color: isLight ? '#374151' : '#D1D5DB',
                     padding: '5px 7px',
                     cursor: 'pointer',
                     borderRadius: '50%',
@@ -434,7 +469,7 @@ export default function CertificateLightbox({
                     fontSize: '11px',
                     fontFamily: 'var(--font-mono, monospace)',
                     fontWeight: 600,
-                    color: '#F3F4F6',
+                    color: isLight ? '#121110' : '#F3F4F6',
                     minWidth: '42px',
                     textAlign: 'center',
                   }}
@@ -448,7 +483,7 @@ export default function CertificateLightbox({
                   style={{
                     background: 'none',
                     border: 'none',
-                    color: '#D1D5DB',
+                    color: isLight ? '#374151' : '#D1D5DB',
                     padding: '5px 7px',
                     cursor: 'pointer',
                     borderRadius: '50%',
@@ -462,7 +497,7 @@ export default function CertificateLightbox({
                   <ZoomIn size={14} />
                 </button>
 
-                <div style={{ width: '1px', height: '12px', background: 'rgba(255, 255, 255, 0.15)', margin: '0 2px' }} />
+                <div style={{ width: '1px', height: '12px', background: isLight ? 'rgba(18, 17, 16, 0.12)' : 'rgba(255, 255, 255, 0.15)', margin: '0 2px' }} />
 
                 <button
                   type="button"
@@ -470,7 +505,7 @@ export default function CertificateLightbox({
                   style={{
                     background: 'none',
                     border: 'none',
-                    color: '#9CA3AF',
+                    color: isLight ? '#6B7280' : '#9CA3AF',
                     padding: '5px 7px',
                     cursor: 'pointer',
                     display: 'inline-flex',
@@ -500,8 +535,8 @@ export default function CertificateLightbox({
           flex: '0 0 44px',
           height: '44px',
           padding: '0 clamp(14px, 2.5vw, 24px)',
-          background: '#0A0E16',
-          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+          background: isLight ? '#FFFFFF' : '#0A0E16',
+          borderTop: isLight ? '1px solid rgba(18, 17, 16, 0.12)' : '1px solid rgba(255, 255, 255, 0.1)',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -514,16 +549,16 @@ export default function CertificateLightbox({
         {/* Credential Metadata */}
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '13px', fontWeight: 700, color: '#F9FAFB' }}>
+            <span style={{ fontSize: '13px', fontWeight: 700, color: isLight ? '#121110' : '#F9FAFB' }}>
               {title}
             </span>
             <span
               style={{
                 fontSize: '10px',
                 fontFamily: 'var(--font-mono, monospace)',
-                color: '#10B981',
-                background: 'rgba(16, 185, 129, 0.12)',
-                border: '1px solid rgba(16, 185, 129, 0.3)',
+                color: isLight ? '#0D7A70' : '#10B981',
+                background: isLight ? 'rgba(13, 122, 112, 0.08)' : 'rgba(16, 185, 129, 0.12)',
+                border: isLight ? '1px solid rgba(13, 122, 112, 0.25)' : '1px solid rgba(16, 185, 129, 0.3)',
                 padding: '1px 6px',
                 borderRadius: '3px',
                 display: 'inline-flex',
@@ -534,7 +569,7 @@ export default function CertificateLightbox({
             >
               <ShieldCheck size={11} /> VERIFIED
             </span>
-            <span style={{ fontSize: '12px', fontFamily: 'var(--font-mono, monospace)', color: '#9CA3AF' }}>
+            <span style={{ fontSize: '12px', fontFamily: 'var(--font-mono, monospace)', color: isLight ? '#6B7280' : '#9CA3AF' }}>
               · {orgLabel} {duration ? `· ${duration}` : ''} {date ? `· ${date}` : ''} {credentialId ? `· ID: ${credentialId}` : ''}
             </span>
           </div>
@@ -547,10 +582,10 @@ export default function CertificateLightbox({
             target="_blank"
             rel="noreferrer"
             style={{
-              background: 'rgba(255, 255, 255, 0.08)',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
+              background: isLight ? 'var(--color-surface-2)' : 'rgba(255, 255, 255, 0.08)',
+              border: isLight ? '1px solid var(--color-border)' : '1px solid rgba(255, 255, 255, 0.15)',
               borderRadius: '6px',
-              color: '#F3F4F6',
+              color: isLight ? 'var(--color-text)' : '#F3F4F6',
               padding: '6px 14px',
               fontSize: '12px',
               fontFamily: 'var(--font-mono, monospace)',
@@ -568,10 +603,9 @@ export default function CertificateLightbox({
           </a>
 
           <a
-            href={fileUrl}
+            href={fileUrl ? `/api/certificates/download?url=${encodeURIComponent(fileUrl)}&filename=${encodeURIComponent((title || 'Certificate').replace(/[<>:"/\\|?*\x00-\x1F]/g, '').trim().replace(/\s+/g, '_') + (fileUrl.toLowerCase().includes('.pdf') ? '.pdf' : '.png'))}` : '#'}
             download
-            target="_blank"
-            rel="noreferrer"
+            onClick={handleDownloadClick}
             style={{
               background: 'var(--color-accent, #E45D2C)',
               borderRadius: '6px',
@@ -585,11 +619,14 @@ export default function CertificateLightbox({
               alignItems: 'center',
               gap: '6px',
               boxShadow: '0 2px 8px rgba(228, 93, 44, 0.3)',
+              cursor: isDownloading ? 'wait' : 'pointer',
+              opacity: isDownloading ? 0.75 : 1,
             }}
-            title="Download credential file"
+            title="Download credential file to device"
+            aria-label="Download credential file"
           >
             <Download size={12} />
-            <span>DOWNLOAD</span>
+            <span>{isDownloading ? 'DOWNLOADING...' : 'DOWNLOAD'}</span>
           </a>
         </div>
       </footer>

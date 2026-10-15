@@ -349,7 +349,7 @@ export default function AdminProfilePage() {
             </div>
             <div>
               <label style={labelStyle}>Graduation Year</label>
-              <input type="number" {...register('graduation_year')} style={inputStyle} placeholder="2026" />
+              <input type="number" {...register('graduation_year')} style={inputStyle} placeholder="2028" />
             </div>
             <div>
               <label style={labelStyle}>Location / Base</label>

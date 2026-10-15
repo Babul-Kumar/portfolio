@@ -1,8 +1,92 @@
 'use client'
 
+import React, { useState, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { GraduationCap, Target, Compass, Code, ArrowRight } from 'lucide-react'
 import AmbientSectionEnvironment from '@/components/ambient/AmbientSectionEnvironment'
+
+function InteractiveAboutCard({
+  children,
+  accentColor = '#14B8A6',
+}: {
+  children: React.ReactNode
+  accentColor?: string
+}) {
+  const cardRef = useRef<HTMLDivElement>(null)
+  const [coords, setCoords] = useState({ x: 0, y: 0, rotX: 0, rotY: 0 })
+  const [isHovered, setIsHovered] = useState(false)
+
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const card = cardRef.current
+    if (!card) return
+    const rect = card.getBoundingClientRect()
+    const relX = e.clientX - rect.left
+    const relY = e.clientY - rect.top
+    const centerX = rect.width / 2
+    const centerY = rect.height / 2
+
+    const rotX = -((relY - centerY) / centerY) * 5.0
+    const rotY = ((relX - centerX) / centerX) * 5.0
+
+    setCoords({ x: relX, y: relY, rotX, rotY })
+  }, [])
+
+  const handleMouseEnter = () => setIsHovered(true)
+  const handleMouseLeave = () => {
+    setIsHovered(false)
+    setCoords({ x: 0, y: 0, rotX: 0, rotY: 0 })
+  }
+
+  return (
+    <div
+      ref={cardRef}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      className="interactive-about-card"
+      style={{
+        position: 'relative',
+        padding: '32px',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        gap: '24px',
+        background: isHovered ? 'var(--color-surface-2)' : 'var(--color-surface)',
+        border: `1px solid ${isHovered ? accentColor + '44' : 'var(--color-border)'}`,
+        borderRadius: 'var(--radius-md, 10px)',
+        transform: isHovered
+          ? `perspective(800px) rotateX(${coords.rotX.toFixed(2)}deg) rotateY(${coords.rotY.toFixed(2)}deg) translateZ(6px)`
+          : 'perspective(800px) rotateX(0deg) rotateY(0deg) translateZ(0px)',
+        transition: isHovered
+          ? 'transform 90ms ease-out, border-color 220ms ease, box-shadow 220ms ease'
+          : 'transform 360ms cubic-bezier(0.16, 1, 0.3, 1), border-color 220ms ease, box-shadow 220ms ease',
+        boxShadow: isHovered
+          ? `0 18px 38px rgba(0, 0, 0, 0.45), 0 0 24px ${accentColor}18`
+          : '0 2px 8px rgba(0, 0, 0, 0.12)',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Specular Radial Spotlight Sheen */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          inset: 0,
+          borderRadius: 'inherit',
+          pointerEvents: 'none',
+          background: `radial-gradient(280px circle at ${coords.x}px ${coords.y}px, ${accentColor}1C, transparent 75%)`,
+          opacity: isHovered ? 1 : 0,
+          transition: 'opacity 200ms ease',
+          zIndex: 1,
+        }}
+      />
+
+      <div style={{ position: 'relative', zIndex: 3, display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: '24px' }}>
+        {children}
+      </div>
+    </div>
+  )
+}
 
 export default function HomeAboutSection() {
   return (
@@ -12,8 +96,8 @@ export default function HomeAboutSection() {
         position: 'relative',
         overflow: 'hidden',
         padding: 'clamp(64px, 8vw, 96px) 0',
-        background: 'var(--color-bg)',
-        borderTop: '1px solid var(--color-border)',
+        background: 'transparent',
+        borderTop: '1px solid var(--color-border-subtle)',
       }}
     >
       <AmbientSectionEnvironment variant="architecture" intensity={0.35} accentMode="dual" />
@@ -28,7 +112,7 @@ export default function HomeAboutSection() {
               gap: '8px',
               fontFamily: 'var(--font-mono, monospace)',
               fontSize: '11px',
-              letterSpacing: '0.14em',
+              letterSpacing: '0.1em',
               textTransform: 'uppercase',
               color: 'var(--color-accent)',
               fontWeight: 600,
@@ -44,7 +128,7 @@ export default function HomeAboutSection() {
                 boxShadow: '0 0 8px var(--color-accent)',
               }}
             />
-            <span>{'// SYSTEM_ORIGIN_01 · PROFILE & VISION'}</span>
+            <span>Profile &amp; Vision</span>
           </div>
 
           <h2
@@ -52,11 +136,12 @@ export default function HomeAboutSection() {
             style={{
               fontSize: 'clamp(28px, 4.5vw, 44px)',
               margin: '0 0 16px',
-              letterSpacing: '-0.03em',
+              letterSpacing: '-0.025em',
+              fontWeight: 700,
             }}
           >
-            ENGINEERING AT THE INTERSECTION<br />
-            OF INTELLIGENCE & SYSTEMS.
+            Engineering at the Intersection<br />
+            of Intelligence &amp; Systems.
           </h2>
 
           <p
@@ -97,7 +182,7 @@ export default function HomeAboutSection() {
           </Link>
         </div>
 
-        {/* Two-Column Cyber Composition */}
+        {/* Two-Column Interactive 3D Cyber Composition */}
         <div
           style={{
             display: 'grid',
@@ -106,39 +191,63 @@ export default function HomeAboutSection() {
           }}
         >
           {/* Card 1: Professional Intro & Education */}
-          <div
-            className="glass-card"
-            style={{
-              padding: '32px',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              gap: '24px',
-              border: '1px solid var(--color-border)',
-            }}
-          >
+          <InteractiveAboutCard accentColor="#14B8A6">
             <div>
               <div
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '10px',
+                  justifyContent: 'space-between',
                   marginBottom: '18px',
-                  color: 'var(--color-accent)',
                 }}
               >
-                <GraduationCap size={20} />
-                <span
+                <div
                   style={{
-                    fontFamily: 'var(--font-mono, monospace)',
-                    fontSize: '12px',
-                    letterSpacing: '0.1em',
-                    textTransform: 'uppercase',
-                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    color: '#14B8A6',
                   }}
                 >
-                  ACADEMIC FOUNDATION
-                </span>
+                  <GraduationCap size={20} />
+                  <span
+                    style={{
+                      fontFamily: 'var(--font-mono, monospace)',
+                      fontSize: '11px',
+                      letterSpacing: '0.06em',
+                      textTransform: 'uppercase',
+                      fontWeight: 600,
+                    }}
+                  >
+                    Academic Foundation
+                  </span>
+                </div>
+
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    fontFamily: 'var(--font-mono, monospace)',
+                    fontSize: '10px',
+                    color: '#10B981',
+                    background: 'rgba(16, 185, 129, 0.1)',
+                    border: '1px solid rgba(16, 185, 129, 0.25)',
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                  }}
+                >
+                  <span
+                    style={{
+                      width: '5px',
+                      height: '5px',
+                      borderRadius: '50%',
+                      background: '#10B981',
+                      boxShadow: '0 0 6px #10B981',
+                    }}
+                  />
+                  <span>B.Tech CSE (2024–2028)</span>
+                </div>
               </div>
 
               <h3
@@ -159,9 +268,12 @@ export default function HomeAboutSection() {
                   color: 'var(--color-accent)',
                   fontFamily: 'var(--font-mono, monospace)',
                   marginBottom: '14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
                 }}
               >
-                Lovely Professional University · 2022 — 2026
+                <span>Lovely Professional University · 2024 — 2028</span>
               </div>
 
               <p
@@ -193,8 +305,9 @@ export default function HomeAboutSection() {
                         background: 'var(--color-surface-2)',
                         border: '1px solid var(--color-border)',
                         color: 'var(--color-text-secondary)',
-                        padding: '3px 8px',
+                        padding: '4px 9px',
                         borderRadius: 'var(--radius-sm)',
+                        transition: 'all 180ms ease',
                       }}
                     >
                       {tag}
@@ -238,42 +351,66 @@ export default function HomeAboutSection() {
                 <ArrowRight size={12} />
               </Link>
             </div>
-          </div>
+          </InteractiveAboutCard>
 
           {/* Card 2: Current Focus & Technical Interests */}
-          <div
-            className="glass-card"
-            style={{
-              padding: '32px',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              gap: '24px',
-              border: '1px solid var(--color-border)',
-            }}
-          >
+          <InteractiveAboutCard accentColor="var(--color-accent)">
             <div>
               <div
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '10px',
+                  justifyContent: 'space-between',
                   marginBottom: '18px',
-                  color: 'var(--color-accent)',
                 }}
               >
-                <Target size={20} />
-                <span
+                <div
                   style={{
-                    fontFamily: 'var(--font-mono, monospace)',
-                    fontSize: '12px',
-                    letterSpacing: '0.1em',
-                    textTransform: 'uppercase',
-                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    color: 'var(--color-accent)',
                   }}
                 >
-                  CURRENT TECHNICAL FOCUS
-                </span>
+                  <Target size={20} />
+                  <span
+                    style={{
+                      fontFamily: 'var(--font-mono, monospace)',
+                      fontSize: '11px',
+                      letterSpacing: '0.06em',
+                      textTransform: 'uppercase',
+                      fontWeight: 600,
+                    }}
+                  >
+                    Current Focus
+                  </span>
+                </div>
+
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    fontFamily: 'var(--font-mono, monospace)',
+                    fontSize: '10px',
+                    color: 'var(--color-accent)',
+                    background: 'var(--color-accent-bg)',
+                    border: '1px solid var(--color-accent-border)',
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                  }}
+                >
+                  <span
+                    style={{
+                      width: '5px',
+                      height: '5px',
+                      borderRadius: '50%',
+                      background: 'var(--color-accent)',
+                      boxShadow: '0 0 6px var(--color-accent)',
+                    }}
+                  />
+                  <span>Active Engineering</span>
+                </div>
               </div>
 
               <h3
@@ -323,6 +460,7 @@ export default function HomeAboutSection() {
                       border: '1px solid var(--color-border)',
                       padding: '10px 14px',
                       borderRadius: 'var(--radius-sm)',
+                      transition: 'all 180ms ease',
                     }}
                   >
                     <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text)', marginBottom: '2px' }}>
@@ -370,9 +508,19 @@ export default function HomeAboutSection() {
                 <ArrowRight size={12} />
               </Link>
             </div>
-          </div>
+          </InteractiveAboutCard>
         </div>
       </div>
+
+      <style jsx>{`
+        @media (prefers-reduced-motion: reduce) {
+          :global(.interactive-about-card) {
+            transform: none !important;
+            transition: none !important;
+          }
+        }
+      `}</style>
     </section>
   )
 }
+

@@ -181,11 +181,11 @@ A personal brand opening sequence communicating:
 
 * **Homepage (`/`)**:
   * Focuses on a concise, high-density, visually engaging professional overview.
-  * Features the Apple-inspired brand intro sequence, interactive hero with 3D avatar stage, availability indicator, core focus tags, brief origin overview (`HomeAboutSection`), 12-technology radar, and exploration links.
+  * Features the Apple-inspired brand intro sequence, interactive hero with 3D avatar stage, availability indicator, brief origin overview (`HomeAboutSection`), 12-technology radar (`HomeTechStackSection`), and exploration links (`HomeModuleRadarSection`). Full engineering projects are showcased on `/work`.
 * **Dedicated About Page (`/about`)**:
   * Distinct editorial profile dossier displaying Babul Kumar's real profile photograph (`/images/profilepicture.jpg`) in a refined architectural frame.
   * In-depth biography covering his background, engineering drive, applied AI/ML systems (MCP, AST telemetry, tabular predictive modeling), and full-stack architecture.
-  * Structured academic foundation from Lovely Professional University (B.Tech CSE, 2022 – 2026, First Class).
+  * Structured academic foundation from Lovely Professional University (B.Tech CSE, 2024 – 2028, First Class).
   * Direct linkages to verified honors (Global AI Hackathon 2026 finalist, University CodeSprint 1st Place, Dean's Honor Roll), specialized trainings (`/training`), and representative projects (`/work`).
 * **Routing & Navigation**:
   * Removed legacy redirect in `next.config.ts`.

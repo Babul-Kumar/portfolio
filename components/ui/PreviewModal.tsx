@@ -4,6 +4,18 @@ import { useState, useEffect, useRef, useCallback, useSyncExternalStore } from '
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 
+function getThemeSnapshot(): 'light' | 'dark' {
+  if (typeof window === 'undefined') return 'dark'
+  return (document.documentElement.getAttribute('data-theme') as 'light' | 'dark') || 'dark'
+}
+
+function subscribeTheme(callback: () => void) {
+  if (typeof window === 'undefined') return () => {}
+  const observer = new MutationObserver(callback)
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+  return () => observer.disconnect()
+}
+
 const subscribe = () => () => {}
 const getSnapshot = () => true
 const getServerSnapshot = () => false
@@ -20,6 +32,7 @@ import {
   FileText,
 } from 'lucide-react'
 import { isPdfDocument } from '@/lib/supabase/storage'
+import { downloadCertificateFile } from '@/lib/download'
 
 export interface PreviewMedia {
   url: string
@@ -59,10 +72,13 @@ export interface PreviewModalProps {
 }
 
 export default function PreviewModal({ isOpen, onClose, item }: PreviewModalProps) {
+  const theme = useSyncExternalStore(subscribeTheme, getThemeSnapshot, () => 'dark' as const)
+  const isLight = theme === 'light'
   const [currentIndex, setCurrentIndex] = useState(0)
   const [zoom, setZoom] = useState(1)
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
+  const [isDownloading, setIsDownloading] = useState(false)
   const dragStartRef = useRef({ x: 0, y: 0 })
   const panStartRef = useRef({ x: 0, y: 0 })
   const modalContentRef = useRef<HTMLDivElement>(null)
@@ -241,6 +257,21 @@ export default function PreviewModal({ isOpen, onClose, item }: PreviewModalProp
   // Effective download URL
   const effectiveDownloadUrl = item.downloadUrl || (activeMedia ? activeMedia.url : null)
 
+  const handleDownloadClick = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    if (!effectiveDownloadUrl || isDownloading) return
+    setIsDownloading(true)
+    try {
+      const ext = effectiveDownloadUrl.toLowerCase().includes('.pdf') ? '.pdf' : '.png'
+      const baseName = (item.title || 'Document').replace(/[<>:"/\\|?*\x00-\x1F]/g, '').trim().replace(/\s+/g, '_')
+      await downloadCertificateFile(effectiveDownloadUrl, `${baseName}${ext}`)
+    } catch (err) {
+      console.error('PreviewModal download error:', err)
+    } finally {
+      setIsDownloading(false)
+    }
+  }
+
   return createPortal(
     <>
       <AnimatePresence>
@@ -261,7 +292,7 @@ export default function PreviewModal({ isOpen, onClose, item }: PreviewModalProp
               height: '100dvh',
               maxHeight: '100dvh',
               zIndex: 999999, // Truly topmost stacking layer above navbar (100) and footer (1)
-              background: '#04060A', // Solid opaque backdrop to completely occlude the underlying page and footer
+              background: isLight ? 'rgba(250, 249, 246, 0.94)' : '#04060A', // Solid opaque backdrop to completely occlude the underlying page and footer
               backdropFilter: 'blur(20px)',
               WebkitBackdropFilter: 'blur(20px)',
               display: 'flex',
@@ -287,14 +318,14 @@ export default function PreviewModal({ isOpen, onClose, item }: PreviewModalProp
                 width: '42px',
                 height: '42px',
                 borderRadius: '50%',
-                background: 'rgba(18, 22, 30, 0.92)',
-                border: '1px solid rgba(255, 255, 255, 0.22)',
-                color: '#FFFFFF',
+                background: isLight ? 'rgba(255, 255, 255, 0.95)' : 'rgba(18, 22, 30, 0.92)',
+                border: isLight ? '1px solid rgba(18, 17, 16, 0.15)' : '1px solid rgba(255, 255, 255, 0.22)',
+                color: isLight ? '#121110' : '#FFFFFF',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 cursor: 'pointer',
-                boxShadow: '0 6px 20px rgba(0, 0, 0, 0.7)',
+                boxShadow: isLight ? '0 6px 20px rgba(18, 17, 16, 0.12)' : '0 6px 20px rgba(0, 0, 0, 0.7)',
                 backdropFilter: 'blur(8px)',
                 transition: 'all 0.2s ease',
               }}
@@ -355,7 +386,9 @@ export default function PreviewModal({ isOpen, onClose, item }: PreviewModalProp
                       height: 'auto',
                       objectFit: 'contain',
                       borderRadius: '6px',
-                      boxShadow: '0 24px 70px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(255, 255, 255, 0.15)',
+                      boxShadow: isLight
+                        ? '0 24px 60px rgba(18, 17, 16, 0.16), 0 0 0 1px rgba(18, 17, 16, 0.08)'
+                        : '0 24px 70px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(255, 255, 255, 0.15)',
                       backgroundColor: '#FFFFFF',
                       display: 'block',
                       transform: `scale(${zoom}) translate(${pan.x / zoom}px, ${pan.y / zoom}px)`,
@@ -375,12 +408,12 @@ export default function PreviewModal({ isOpen, onClose, item }: PreviewModalProp
                       display: 'flex',
                       alignItems: 'center',
                       gap: '4px',
-                      background: 'rgba(10, 12, 18, 0.85)',
-                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      background: isLight ? 'rgba(255, 255, 255, 0.95)' : 'rgba(10, 12, 18, 0.85)',
+                      border: isLight ? '1px solid rgba(18, 17, 16, 0.15)' : '1px solid rgba(255, 255, 255, 0.15)',
                       borderRadius: '6px',
                       padding: '3px 6px',
                       backdropFilter: 'blur(8px)',
-                      boxShadow: '0 4px 16px rgba(0, 0, 0, 0.6)',
+                      boxShadow: isLight ? '0 4px 16px rgba(18, 17, 16, 0.1)' : '0 4px 16px rgba(0, 0, 0, 0.6)',
                       zIndex: 10,
                     }}
                   >
@@ -391,7 +424,9 @@ export default function PreviewModal({ isOpen, onClose, item }: PreviewModalProp
                       style={{
                         background: 'transparent',
                         border: 'none',
-                        color: zoom <= 1.0 ? 'rgba(255,255,255,0.4)' : '#FFFFFF',
+                        color: zoom <= 1.0
+                          ? isLight ? 'rgba(18, 17, 16, 0.3)' : 'rgba(255,255,255,0.4)'
+                          : isLight ? '#121110' : '#FFFFFF',
                         cursor: zoom <= 1.0 ? 'not-allowed' : 'pointer',
                         padding: '4px',
                         display: 'flex',
@@ -421,8 +456,10 @@ export default function PreviewModal({ isOpen, onClose, item }: PreviewModalProp
                       style={{
                         background: 'transparent',
                         border: 'none',
-                        color: zoom >= 3.0 ? 'rgba(255,255,255,0.4)' : '#FFFFFF',
-                        cursor: zoom >= 3.0 ? 'not-allowed' : 'pointer',
+                        color: zoom >= 3.0
+                          ? isLight ? 'rgba(18, 17, 16, 0.3)' : 'rgba(255,255,255,0.4)'
+                          : isLight ? '#121110' : '#FFFFFF',
+                        cursor: zoom <= 3.0 ? 'not-allowed' : 'pointer',
                         padding: '4px',
                         display: 'flex',
                         alignItems: 'center',
@@ -439,8 +476,8 @@ export default function PreviewModal({ isOpen, onClose, item }: PreviewModalProp
                         style={{
                           background: 'transparent',
                           border: 'none',
-                          borderLeft: '1px solid rgba(255, 255, 255, 0.15)',
-                          color: '#FFFFFF',
+                          borderLeft: isLight ? '1px solid rgba(18, 17, 16, 0.12)' : '1px solid rgba(255, 255, 255, 0.15)',
+                          color: isLight ? '#121110' : '#FFFFFF',
                           cursor: 'pointer',
                           padding: '4px',
                           display: 'flex',
@@ -472,14 +509,15 @@ export default function PreviewModal({ isOpen, onClose, item }: PreviewModalProp
                           width: '38px',
                           height: '38px',
                           borderRadius: '50%',
-                          background: 'rgba(10, 12, 18, 0.85)',
-                          border: '1px solid rgba(255, 255, 255, 0.2)',
-                          color: '#FFFFFF',
+                          background: isLight ? 'rgba(255, 255, 255, 0.95)' : 'rgba(10, 12, 18, 0.85)',
+                          border: isLight ? '1px solid rgba(18, 17, 16, 0.15)' : '1px solid rgba(255, 255, 255, 0.2)',
+                          color: isLight ? '#121110' : '#FFFFFF',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           cursor: 'pointer',
                           backdropFilter: 'blur(8px)',
+                          boxShadow: isLight ? '0 4px 16px rgba(18, 17, 16, 0.12)' : 'none',
                           zIndex: 10,
                         }}
                         className="gallery-nav-btn"
@@ -502,14 +540,15 @@ export default function PreviewModal({ isOpen, onClose, item }: PreviewModalProp
                           width: '38px',
                           height: '38px',
                           borderRadius: '50%',
-                          background: 'rgba(10, 12, 18, 0.85)',
-                          border: '1px solid rgba(255, 255, 255, 0.2)',
-                          color: '#FFFFFF',
+                          background: isLight ? 'rgba(255, 255, 255, 0.95)' : 'rgba(10, 12, 18, 0.85)',
+                          border: isLight ? '1px solid rgba(18, 17, 16, 0.15)' : '1px solid rgba(255, 255, 255, 0.2)',
+                          color: isLight ? '#121110' : '#FFFFFF',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           cursor: 'pointer',
                           backdropFilter: 'blur(8px)',
+                          boxShadow: isLight ? '0 4px 16px rgba(18, 17, 16, 0.12)' : 'none',
                           zIndex: 10,
                         }}
                         className="gallery-nav-btn"
@@ -619,10 +658,10 @@ export default function PreviewModal({ isOpen, onClose, item }: PreviewModalProp
                   gap: '12px',
                   padding: '7px 18px',
                   borderRadius: '24px',
-                  background: 'rgba(14, 18, 26, 0.85)',
-                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  background: isLight ? 'rgba(255, 255, 255, 0.95)' : 'rgba(14, 18, 26, 0.85)',
+                  border: isLight ? '1px solid rgba(18, 17, 16, 0.12)' : '1px solid rgba(255, 255, 255, 0.12)',
                   backdropFilter: 'blur(12px)',
-                  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.6)',
+                  boxShadow: isLight ? '0 8px 24px rgba(18, 17, 16, 0.1)' : '0 8px 24px rgba(0, 0, 0, 0.6)',
                   flexWrap: 'wrap',
                 }}
               >
@@ -639,10 +678,9 @@ export default function PreviewModal({ isOpen, onClose, item }: PreviewModalProp
 
                 {effectiveDownloadUrl && (
                   <a
-                    href={effectiveDownloadUrl}
+                    href={`/api/certificates/download?url=${encodeURIComponent(effectiveDownloadUrl)}&filename=${encodeURIComponent((item.title || 'Certificate').replace(/[<>:"/\\|?*\x00-\x1F]/g, '').trim().replace(/\s+/g, '_') + (effectiveDownloadUrl.toLowerCase().includes('.pdf') ? '.pdf' : '.png'))}`}
                     download
-                    target="_blank"
-                    rel="noreferrer"
+                    onClick={handleDownloadClick}
                     style={{
                       fontSize: '11px',
                       fontFamily: 'var(--font-mono)',
@@ -653,13 +691,17 @@ export default function PreviewModal({ isOpen, onClose, item }: PreviewModalProp
                       gap: '4px',
                       padding: '2px 8px',
                       borderRadius: '4px',
-                      background: 'rgba(228, 93, 44, 0.12)',
-                      border: '1px solid rgba(228, 93, 44, 0.3)',
+                      background: isLight ? 'rgba(212, 72, 28, 0.08)' : 'rgba(228, 93, 44, 0.12)',
+                      border: isLight ? '1px solid rgba(212, 72, 28, 0.25)' : '1px solid rgba(228, 93, 44, 0.3)',
+                      cursor: isDownloading ? 'wait' : 'pointer',
+                      opacity: isDownloading ? 0.75 : 1,
                     }}
                     className="hover-accent-text"
+                    title="Download document to device"
+                    aria-label="Download document"
                   >
                     <Download size={11} />
-                    <span>DOWNLOAD</span>
+                    <span>{isDownloading ? 'DOWNLOADING...' : 'DOWNLOAD'}</span>
                   </a>
                 )}
 
@@ -678,8 +720,8 @@ export default function PreviewModal({ isOpen, onClose, item }: PreviewModalProp
                       gap: '4px',
                       padding: '2px 8px',
                       borderRadius: '4px',
-                      background: 'rgba(255, 255, 255, 0.06)',
-                      border: '1px solid rgba(255, 255, 255, 0.12)',
+                      background: isLight ? 'rgba(18, 17, 16, 0.05)' : 'rgba(255, 255, 255, 0.06)',
+                      border: isLight ? '1px solid rgba(18, 17, 16, 0.12)' : '1px solid rgba(255, 255, 255, 0.12)',
                     }}
                     className="hover-accent-text"
                   >

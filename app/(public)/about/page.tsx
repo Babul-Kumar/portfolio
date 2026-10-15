@@ -69,16 +69,16 @@ export default async function AboutPage() {
       >
         {/* Module HUD Header */}
         <PageHeader
-          moduleTag="// IDENTITY_DOSSIER_01 · PROFILE & BIOGRAPHY"
+          moduleTag="Profile &amp; Biography"
           title={
             <>
-              ENGINEERING IDENTITY,<br />
-              ACADEMIC ROOTS &amp; JOURNEY
+              Engineering Identity,<br />
+              Academic Roots &amp; Journey
             </>
           }
           quote="Curiosity grounded in foundational computer science."
           description="A detailed look at my background, university education at Lovely Professional University, applied machine learning research, and technical milestones."
-          statusBadge="ACTIVE_ENGINEER_PROFILE"
+          statusBadge="Active Profile"
         />
 
         {/* =========================================================================
@@ -90,36 +90,6 @@ export default async function AboutPage() {
         >
           {/* Authentic Portrait Presentation */}
           <div className="about-portrait-card">
-            {/* Corner Blueprint Crosshairs */}
-            <span
-              style={{
-                position: 'absolute',
-                top: '6px',
-                left: '6px',
-                fontSize: '10px',
-                fontFamily: 'var(--font-mono, monospace)',
-                color: 'var(--color-accent)',
-                opacity: 0.7,
-                userSelect: 'none',
-              }}
-            >
-              +
-            </span>
-            <span
-              style={{
-                position: 'absolute',
-                top: '6px',
-                right: '6px',
-                fontSize: '10px',
-                fontFamily: 'var(--font-mono, monospace)',
-                color: 'var(--color-accent)',
-                opacity: 0.7,
-                userSelect: 'none',
-              }}
-            >
-              +
-            </span>
-
             {/* Profile Image Frame */}
             <div className="about-portrait-frame">
               <Image
@@ -174,11 +144,11 @@ export default async function AboutPage() {
                       fontFamily: 'var(--font-mono, monospace)',
                       fontSize: '11px',
                       fontWeight: 600,
-                      letterSpacing: '0.06em',
+                      letterSpacing: '0.02em',
                       color: '#F5F6F8',
                     }}
                   >
-                    VERIFIED PORTFOLIO IDENTITY
+                    Verified Identity
                   </span>
                 </div>
                 <span
@@ -186,9 +156,10 @@ export default async function AboutPage() {
                     fontFamily: 'var(--font-mono, monospace)',
                     fontSize: '10px',
                     color: 'var(--color-accent)',
+                    fontWeight: 600,
                   }}
                 >
-                  BK_AUTH_2028
+                  Class of 2028
                 </span>
               </div>
             </div>
@@ -215,7 +186,7 @@ export default async function AboutPage() {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Calendar size={13} style={{ color: 'var(--color-accent)' }} />
-                <span>B.Tech CSE Class of 2028 (2024 — 2028)</span>
+                <span>B.Tech CSE (2024 — 2028) · Lovely Professional University</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Compass size={13} style={{ color: 'var(--color-accent)' }} />

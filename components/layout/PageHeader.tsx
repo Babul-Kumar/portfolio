@@ -14,7 +14,7 @@ export default function PageHeader({
   title,
   quote,
   description,
-  statusBadge = 'LIVE_MODULE_ACTIVE',
+  statusBadge = 'Active',
   accentColor = 'var(--color-accent)',
 }: PageHeaderProps) {
   return (
@@ -26,7 +26,7 @@ export default function PageHeader({
         position: 'relative',
       }}
     >
-      {/* Top HUD Telemetry Row */}
+      {/* Top Telemetry / Category Row */}
       <div
         style={{
           display: 'flex',
@@ -44,8 +44,7 @@ export default function PageHeader({
             gap: '8px',
             fontFamily: 'var(--font-mono, monospace)',
             fontSize: '11px',
-            letterSpacing: '0.14em',
-            textTransform: 'uppercase',
+            letterSpacing: '0.04em',
             color: accentColor,
             fontWeight: 600,
           }}
