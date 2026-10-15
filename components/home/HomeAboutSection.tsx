@@ -17,6 +17,7 @@ function InteractiveAboutCard({
   const [isHovered, setIsHovered] = useState(false)
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) return
     const card = cardRef.current
     if (!card) return
     const rect = card.getBoundingClientRect()
@@ -31,7 +32,10 @@ function InteractiveAboutCard({
     setCoords({ x: relX, y: relY, rotX, rotY })
   }, [])
 
-  const handleMouseEnter = () => setIsHovered(true)
+  const handleMouseEnter = () => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) return
+    setIsHovered(true)
+  }
   const handleMouseLeave = () => {
     setIsHovered(false)
     setCoords({ x: 0, y: 0, rotX: 0, rotY: 0 })
@@ -46,7 +50,10 @@ function InteractiveAboutCard({
       className="interactive-about-card"
       style={{
         position: 'relative',
-        padding: '32px',
+        width: '100%',
+        maxWidth: '100%',
+        boxSizing: 'border-box',
+        padding: 'clamp(20px, 4.5vw, 32px)',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
@@ -183,13 +190,7 @@ export default function HomeAboutSection() {
         </div>
 
         {/* Two-Column Interactive 3D Cyber Composition */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
-            gap: '24px',
-          }}
-        >
+        <div className="about-cards-grid">
           {/* Card 1: Professional Intro & Education */}
           <InteractiveAboutCard accentColor="#14B8A6">
             <div>
@@ -198,6 +199,8 @@ export default function HomeAboutSection() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
+                  flexWrap: 'wrap',
+                  gap: '10px',
                   marginBottom: '18px',
                 }}
               >
@@ -269,6 +272,7 @@ export default function HomeAboutSection() {
                   fontFamily: 'var(--font-mono, monospace)',
                   marginBottom: '14px',
                   display: 'flex',
+                  flexWrap: 'wrap',
                   alignItems: 'center',
                   gap: '6px',
                 }}
@@ -325,6 +329,8 @@ export default function HomeAboutSection() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '12px',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -361,6 +367,8 @@ export default function HomeAboutSection() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
+                  flexWrap: 'wrap',
+                  gap: '10px',
                   marginBottom: '18px',
                 }}
               >
@@ -482,6 +490,8 @@ export default function HomeAboutSection() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '12px',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -513,6 +523,28 @@ export default function HomeAboutSection() {
       </div>
 
       <style jsx>{`
+        .about-cards-grid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 20px;
+          width: 100%;
+          max-width: 100%;
+          box-sizing: border-box;
+        }
+
+        @media (min-width: 768px) {
+          .about-cards-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 24px;
+          }
+        }
+
+        @media (max-width: 767px) {
+          :global(.interactive-about-card) {
+            transform: none !important;
+          }
+        }
+
         @media (prefers-reduced-motion: reduce) {
           :global(.interactive-about-card) {
             transform: none !important;

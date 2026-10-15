@@ -99,6 +99,7 @@ function InteractiveRadarCard({ mod }: { mod: ModuleItem }) {
   const Icon = mod.icon
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) return
     const card = cardRef.current
     if (!card) return
     const rect = card.getBoundingClientRect()
@@ -114,7 +115,10 @@ function InteractiveRadarCard({ mod }: { mod: ModuleItem }) {
     setCoords({ x: relX, y: relY, rotX, rotY })
   }, [])
 
-  const handleMouseEnter = () => setIsHovered(true)
+  const handleMouseEnter = () => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) return
+    setIsHovered(true)
+  }
   const handleMouseLeave = () => {
     setIsHovered(false)
     setCoords({ x: 0, y: 0, rotX: 0, rotY: 0 })
@@ -130,7 +134,10 @@ function InteractiveRadarCard({ mod }: { mod: ModuleItem }) {
       className="interactive-radar-card"
       style={{
         position: 'relative',
-        padding: '28px',
+        width: '100%',
+        maxWidth: '100%',
+        boxSizing: 'border-box',
+        padding: 'clamp(18px, 4.5vw, 26px)',
         textDecoration: 'none',
         display: 'flex',
         flexDirection: 'column',
@@ -196,6 +203,8 @@ function InteractiveRadarCard({ mod }: { mod: ModuleItem }) {
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '10px',
             marginBottom: '16px',
           }}
         >
@@ -287,6 +296,8 @@ function InteractiveRadarCard({ mod }: { mod: ModuleItem }) {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '10px',
         }}
       >
         <div
@@ -424,7 +435,10 @@ export default function HomeModuleRadarSection() {
               alignItems: 'center',
               justifyContent: 'space-between',
               gap: '14px',
-              padding: '12px 20px',
+              padding: '12px clamp(12px, 3.5vw, 20px)',
+              width: '100%',
+              maxWidth: '100%',
+              boxSizing: 'border-box',
               background: isLight ? 'var(--color-surface)' : 'rgba(255, 255, 255, 0.02)',
               border: `1px solid var(--color-border)`,
               borderRadius: 'var(--radius-md, 10px)',
@@ -476,8 +490,9 @@ export default function HomeModuleRadarSection() {
                 fontSize: '11px',
                 color: 'var(--color-text-secondary)',
                 display: 'flex',
-                gap: '16px',
+                gap: '12px',
                 alignItems: 'center',
+                flexWrap: 'wrap',
               }}
             >
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
@@ -492,13 +507,7 @@ export default function HomeModuleRadarSection() {
         </div>
 
         {/* Modules Grid */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-            gap: '20px',
-          }}
-        >
+        <div className="radar-modules-grid">
           {MODULE_LINKS.map((mod) => (
             <InteractiveRadarCard key={mod.name} mod={mod} />
           ))}
@@ -522,6 +531,35 @@ export default function HomeModuleRadarSection() {
 
         .radar-card-sweep.sweep-active {
           animation: cardLaserPass 1.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+        }
+
+        .radar-modules-grid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 16px;
+          width: 100%;
+          max-width: 100%;
+          box-sizing: border-box;
+        }
+
+        @media (min-width: 640px) {
+          .radar-modules-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 20px;
+          }
+        }
+
+        @media (min-width: 1080px) {
+          .radar-modules-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 20px;
+          }
+        }
+
+        @media (max-width: 767px) {
+          :global(.interactive-radar-card) {
+            transform: none !important;
+          }
         }
 
         @media (prefers-reduced-motion: reduce) {
