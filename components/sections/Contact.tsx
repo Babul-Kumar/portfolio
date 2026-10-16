@@ -137,14 +137,15 @@ export default function ContactSection({ profile }: ContactSectionProps = {}) {
 
       <div style={{ position: 'relative', zIndex: 1, width: '100%' }}>
         {/* =========================================================================
-            Clean Two-Column Grid: Left (Heading & Contact Links) | Right (Form)
+            Balanced Centered Two-Column Grid: Left (Links) | Right (Form)
             ========================================================================= */}
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'minmax(0, 46fr) minmax(0, 54fr)',
-            gap: 'clamp(32px, 5vw, 64px)',
+            gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1.15fr)',
+            gap: 'clamp(28px, 4vw, 52px)',
             alignItems: 'start',
+            width: '100%',
           }}
           className="contact-layout"
         >

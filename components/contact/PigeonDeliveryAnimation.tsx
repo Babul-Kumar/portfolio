@@ -17,11 +17,11 @@ interface PigeonDeliveryAnimationProps {
 }
 
 type AnimationPhase =
-  | 'letter_reading' // Phase 1: User reads their submitted dispatch letter (1.4s)
-  | 'letter_folding' // Phase 2: Letter physically folds in 3D into the rolled dispatch scroll (1.8s)
-  | 'pigeon_arrival' // Phase 3: Rock dove swoops in, grabs scroll with claws, bobs head, springs for liftoff (2.2s)
-  | 'pigeon_flight'  // Phase 4: Pigeon soars across the sky holding the scroll (2.5s)
-  | 'confirmation'   // Phase 5: Pigeon exits off-screen; pristine confirmation card appears
+  | 'letter_reading' // Phase 1: User reads their submitted letter (1.2s)
+  | 'letter_folding' // Phase 2: Letter physically folds in 3D into compact scroll (1.6s)
+  | 'pigeon_arrival' // Phase 3: Rock dove swoops in, grabs scroll with claws, bobs head, liftoff (2.0s)
+  | 'pigeon_flight'  // Phase 4: Pigeon soars across sky with flapping wings (2.4s)
+  | 'confirmation'   // Phase 5: Pigeon exits 100% off-screen; pristine confirmation appears
 
 const subscribe = () => () => {}
 
@@ -83,31 +83,31 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
 
     if (phase === 'letter_reading') {
       setHasScrollOnBird(false)
-      // 1. User reviews their submitted dispatch letter (1.4s)
+      // 1. User reviews their submitted letter (1.2s)
       timer = setTimeout(() => {
         setPhase('letter_folding')
-      }, 1400)
+      }, 1200)
     } else if (phase === 'letter_folding') {
       setHasScrollOnBird(false)
-      // 2. 3D origami folding: top panel down, bottom panel up, wax seal stamp, roll into scroll (1.8s)
+      // 2. 3D origami folding: top flap down, bottom flap up, wax seal stamp, rolls into scroll (1.6s)
       timer = setTimeout(() => {
         setPhase('pigeon_arrival')
-      }, 1800)
+      }, 1600)
     } else if (phase === 'pigeon_arrival') {
       setHasScrollOnBird(false)
-      // 3. Pigeon swoops in and makes exact talon contact at 900ms
+      // 3. Pigeon swoops in and makes exact talon contact at 850ms
       grabTimer = setTimeout(() => {
         setHasScrollOnBird(true)
-      }, 900)
+      }, 850)
 
-      // Liftoff spring at 2200ms -> transitions seamlessly into soaring sky flight
+      // Liftoff spring at 2000ms -> transitions seamlessly into soaring sky flight
       timer = setTimeout(() => {
         let launchX = deskAnchorRef.current.x
         let launchY = deskAnchorRef.current.y
         if (deskRef.current) {
           const rect = deskRef.current.getBoundingClientRect()
           launchX = rect.left + rect.width * 0.5
-          launchY = rect.top + rect.height * 0.5 - 30 // accounts for liftoff spring offset
+          launchY = rect.top + rect.height * 0.5 - 20
         }
 
         flightPosRef.current = {
@@ -118,7 +118,7 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
         }
         setFlightPos(flightPosRef.current)
         setPhase('pigeon_flight')
-      }, 2200)
+      }, 2000)
     }
 
     return () => {
@@ -138,40 +138,40 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
     const startY = flightPosRef.current.y || vpHeight * 0.55
 
     // Target is safely outside the visible viewport boundary (full wingspan clearance)
-    const targetX = vpWidth + 320
+    const targetX = vpWidth + 280
     const targetY = -220
 
-    const flightDuration = 2500 // 2.5s of soaring flight
+    const flightDuration = 2400 // 2.4s of soaring flight
     const startTime = performance.now()
 
     // Safety fallback timer protects against background tab suspension
     const safetyTimeout = setTimeout(() => {
       setPhase('confirmation')
-    }, flightDuration + 800)
+    }, flightDuration + 600)
 
     const stepFlight = (now: number) => {
       const elapsed = now - startTime
       const rawProgress = Math.min(elapsed / flightDuration, 1.0)
 
       // Smooth acceleration curve into distance
-      const progress = Math.pow(rawProgress, 1.15)
+      const progress = Math.pow(rawProgress, 1.2)
 
       // Aerodynamic lift undulation (gentle heave on each wingstroke)
       const liftUndulation = Math.sin((elapsed / 220) * Math.PI * 2) * -5
-      const ascendingArc = Math.sin(rawProgress * Math.PI * 0.9) * -60
+      const ascendingArc = Math.sin(rawProgress * Math.PI * 0.9) * -55
 
       const currentX = startX + (targetX - startX) * progress
       const currentY = startY + (targetY - startY) * progress + ascendingArc + liftUndulation
 
-      // Perspective distance scaling: scales smoothly from 1.0 down to 0.38
-      const currentScale = Math.max(1.0 - rawProgress * 0.62, 0.38)
+      // Perspective distance scaling: scales smoothly from 1.0 down to 0.42
+      const currentScale = Math.max(1.0 - rawProgress * 0.58, 0.42)
 
       // Aerodynamic banking angle along flight trajectory
-      const currentRotation = -12 + Math.sin(rawProgress * Math.PI) * -10
+      const currentRotation = -10 + Math.sin(rawProgress * Math.PI) * -8
 
       // Direct DOM update for 60fps performance without React state re-render thrashing
       if (birdPortalRef.current) {
-        birdPortalRef.current.style.transform = `translate(${currentX}px, ${currentY}px) translate(-50%, -50%) scale(${currentScale}) rotate(${currentRotation}deg)`
+        birdPortalRef.current.style.transform = `translate3d(${currentX}px, ${currentY}px, 0) translate(-50%, -50%) scale(${currentScale}) rotate(${currentRotation}deg)`
       }
 
       flightPosRef.current = {
@@ -182,10 +182,13 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
       }
 
       // STRICT OFF-SCREEN CHECK:
-      const birdClearance = 110 * currentScale
-      const isEntirelyOffScreen = (currentX - birdClearance > vpWidth) || (currentY + birdClearance < 0)
+      // Bird size is 180px * currentScale. Radius is ~90 * currentScale.
+      // Must be completely past right viewport edge OR completely above top edge
+      const birdRadius = 100 * currentScale
+      const isPastRight = currentX - birdRadius >= vpWidth
+      const isAboveTop = currentY + birdRadius <= 0
 
-      if (rawProgress >= 1.0 && isEntirelyOffScreen) {
+      if (rawProgress >= 1.0 && (isPastRight || isAboveTop)) {
         clearTimeout(safetyTimeout)
         setPhase('confirmation')
       } else {
@@ -227,7 +230,7 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
         <div
           style={{
             width: '100%',
-            maxWidth: '440px',
+            maxWidth: '420px',
             position: 'relative',
             perspective: '1400px',
             transformStyle: 'preserve-3d',
@@ -238,7 +241,7 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
             minHeight: '340px',
           }}
         >
-          {/* Subtle desk surface horizon and soft contact shadow for physical grounding */}
+          {/* Subtle desk surface horizon and soft contact shadow */}
           <div
             style={{
               position: 'absolute',
@@ -265,13 +268,14 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
               zIndex: 1,
             }}
           />
+
           {/* THE PHYSICAL LUXURY DISPATCH PARCHMENT LETTER */}
           {(phase === 'letter_reading' || phase === 'letter_folding') && (
             <div
               className={`letter-sheet-wrapper ${phase === 'letter_folding' ? 'is-folding' : 'is-open'}`}
               style={{
                 width: '100%',
-                maxWidth: '400px',
+                maxWidth: '380px',
                 position: 'relative',
                 perspective: '1400px',
                 transformStyle: 'preserve-3d',
@@ -281,13 +285,41 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
                 {/* Panel 1: Top Panel (Header & Metadata) */}
                 <div className="letter-panel panel-top">
                   <div className="flap-face flap-front">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '10px', fontFamily: 'var(--font-mono)', color: '#78716C', marginBottom: '6px' }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        fontSize: '10px',
+                        fontFamily: 'var(--font-mono)',
+                        color: '#78716C',
+                        marginBottom: '6px',
+                      }}
+                    >
                       <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#EA580C', display: 'inline-block' }} />
+                        <span
+                          style={{
+                            width: '6px',
+                            height: '6px',
+                            borderRadius: '50%',
+                            background: '#EA580C',
+                            display: 'inline-block',
+                          }}
+                        />
                         TO: BABUL KUMAR
                       </span>
-                      <span style={{ fontSize: '9px', background: 'rgba(234, 88, 12, 0.1)', color: '#C2410C', padding: '2px 8px', borderRadius: '4px', fontWeight: 600, letterSpacing: '0.04em' }}>
-                        EXPRESS DISPATCH
+                      <span
+                        style={{
+                          fontSize: '9px',
+                          background: 'rgba(234, 88, 12, 0.08)',
+                          color: '#C2410C',
+                          padding: '2px 8px',
+                          borderRadius: '4px',
+                          fontWeight: 600,
+                          letterSpacing: '0.04em',
+                        }}
+                      >
+                        PERSONAL MESSAGE
                       </span>
                     </div>
                     <div style={{ fontSize: '12px', fontWeight: 700, color: '#292524' }}>
@@ -304,13 +336,55 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
                 {/* Panel 2: Middle Panel (Message Text) */}
                 <div className="letter-panel panel-middle">
                   <div style={{ width: '100%' }}>
-                    <div style={{ height: '1px', background: 'linear-gradient(90deg, transparent, rgba(217, 119, 6, 0.3), transparent)', marginBottom: '10px' }} />
-                    <div style={{ fontSize: '13px', lineHeight: 1.6, color: '#1C1917', fontStyle: 'italic', position: 'relative' }}>
-                      <span style={{ fontSize: '18px', fontFamily: 'serif', color: '#EA580C', lineHeight: 0, marginRight: '4px', verticalAlign: '-3px' }}>&ldquo;</span>
+                    <div
+                      style={{
+                        height: '1px',
+                        background: 'linear-gradient(90deg, transparent, rgba(217, 119, 6, 0.3), transparent)',
+                        marginBottom: '10px',
+                      }}
+                    />
+                    <div
+                      style={{
+                        fontSize: '13px',
+                        lineHeight: 1.6,
+                        color: '#1C1917',
+                        fontStyle: 'italic',
+                        position: 'relative',
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: '18px',
+                          fontFamily: 'serif',
+                          color: '#EA580C',
+                          lineHeight: 0,
+                          marginRight: '4px',
+                          verticalAlign: '-3px',
+                        }}
+                      >
+                        &ldquo;
+                      </span>
                       {previewMessage}
-                      <span style={{ fontSize: '18px', fontFamily: 'serif', color: '#EA580C', lineHeight: 0, marginLeft: '4px', verticalAlign: '-3px' }}>&rdquo;</span>
+                      <span
+                        style={{
+                          fontSize: '18px',
+                          fontFamily: 'serif',
+                          color: '#EA580C',
+                          lineHeight: 0,
+                          marginLeft: '4px',
+                          verticalAlign: '-3px',
+                        }}
+                      >
+                        &rdquo;
+                      </span>
                     </div>
-                    <div style={{ height: '1px', background: 'linear-gradient(90deg, transparent, rgba(217, 119, 6, 0.3), transparent)', marginTop: '10px' }} />
+                    <div
+                      style={{
+                        height: '1px',
+                        background: 'linear-gradient(90deg, transparent, rgba(217, 119, 6, 0.3), transparent)',
+                        marginTop: '10px',
+                      }}
+                    />
                   </div>
                 </div>
 
@@ -318,8 +392,17 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
                 <div className="letter-panel panel-bottom">
                   <div className="flap-face flap-front">
                     <div>
-                      <div style={{ fontSize: '10.5px', color: '#78716C' }}>Respectfully submitted,</div>
-                      <div style={{ fontSize: '12.5px', fontWeight: 600, color: '#1C1917', fontFamily: 'var(--font-mono)' }}>{data.name}</div>
+                      <div style={{ fontSize: '10.5px', color: '#78716C' }}>Respectfully,</div>
+                      <div
+                        style={{
+                          fontSize: '12.5px',
+                          fontWeight: 600,
+                          color: '#1C1917',
+                          fontFamily: 'var(--font-mono)',
+                        }}
+                      >
+                        {data.name}
+                      </div>
                     </div>
 
                     {/* Pre-embossed BK Monogram */}
@@ -342,15 +425,15 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
             </div>
           )}
 
-          {/* THE AUTHENTIC ROLLED DESK SCROLL (Pixel-aligned with pigeon claws) */}
+          {/* THE AUTHENTIC ROLLED DESK SCROLL (Centered and pixel-aligned with pigeon claws) */}
           {(phase === 'letter_folding' || phase === 'pigeon_arrival') && (
             <div
               className={`desk-scroll ${phase === 'letter_folding' ? 'emerging' : hasScrollOnBird ? 'picked-up' : 'resting'}`}
               style={{
                 position: 'absolute',
-                left: 'calc(50% - 43.25px)',
-                top: 'calc(50% + 40.25px)',
-                width: '65px',
+                left: 'calc(50% - 32px)',
+                top: 'calc(50% + 14px)',
+                width: '64px',
                 height: 'auto',
                 zIndex: 4,
                 pointerEvents: 'none',
@@ -359,7 +442,7 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
               <Image
                 src="/images/pigeon/desk_scroll_realistic.webp"
                 alt="Rolled parchment dispatch scroll"
-                width={65}
+                width={64}
                 height={30}
                 priority
                 unoptimized
@@ -396,7 +479,7 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
       )}
 
       {/* =========================================================================
-          DESK STATUS DURING FLIGHT (Serene, clean status while bird soars across sky)
+          DESK STATUS DURING FLIGHT (Clean status while bird soars across sky)
           ========================================================================= */}
       {phase === 'pigeon_flight' && (
         <div
@@ -408,14 +491,14 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
             alignItems: 'center',
             justifyContent: 'center',
             minHeight: '340px',
-            animation: 'fadeInUp 0.5s ease-out forwards',
+            animation: 'fadeInUp 0.4s ease-out forwards',
           }}
         >
           {/* Subtle warm amber dispatch beacon */}
           <div
             style={{
-              width: '50px',
-              height: '50px',
+              width: '48px',
+              height: '48px',
               borderRadius: '50%',
               background: 'rgba(234, 88, 12, 0.08)',
               border: '1.5px solid rgba(234, 88, 12, 0.35)',
@@ -427,7 +510,7 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
               animation: 'pulseGlow 1.4s infinite alternate',
             }}
           >
-            <Send size={20} color="#EA580C" style={{ transform: 'translate(1px, -1px)' }} />
+            <Send size={18} color="#EA580C" style={{ transform: 'translate(1px, -1px)' }} />
           </div>
           <div
             style={{
@@ -439,15 +522,15 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
               marginBottom: '4px',
             }}
           >
-            Dispatch in flight...
+            Delivering message...
           </div>
           <div
             style={{
-              fontSize: '12.5px',
+              fontSize: '13px',
               color: 'var(--color-text-secondary)',
             }}
           >
-            Air courier delivering to Babul Kumar
+            Courier pigeon in flight to Babul Kumar
           </div>
         </div>
       )}
@@ -460,10 +543,7 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
           id="pigeon-sky-flight-portal"
           style={{
             position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100vw',
-            height: '100vh',
+            inset: 0,
             pointerEvents: 'none',
             zIndex: 999999,
             overflow: 'visible',
@@ -476,7 +556,7 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
               position: 'absolute',
               top: 0,
               left: 0,
-              transform: `translate(${flightPos.x}px, ${flightPos.y}px) translate(-50%, -50%) scale(${flightPos.scale}) rotate(${flightPos.rotation}deg)`,
+              transform: `translate3d(${flightPos.x}px, ${flightPos.y}px, 0) translate(-50%, -50%) scale(${flightPos.scale}) rotate(${flightPos.rotation}deg)`,
               transformOrigin: 'center center',
               transition: 'none',
               filter: 'drop-shadow(0 14px 24px rgba(0, 0, 0, 0.5))',
@@ -501,7 +581,7 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
             textAlign: 'center',
             padding: '36px 28px',
             borderRadius: 'var(--radius-lg)',
-            background: 'rgba(255, 255, 255, 0.02)',
+            background: 'var(--color-surface)',
             border: '1px solid var(--color-border)',
             boxShadow: 'var(--shadow-card)',
             animation: 'fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
@@ -512,9 +592,9 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
           <div
             style={{
               position: 'relative',
-              width: '72px',
-              height: '72px',
-              margin: '0 auto 20px',
+              width: '68px',
+              height: '68px',
+              margin: '0 auto 18px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -531,8 +611,8 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
             />
             <div
               style={{
-                width: '52px',
-                height: '52px',
+                width: '50px',
+                height: '50px',
                 borderRadius: '50%',
                 background: 'radial-gradient(circle, #0F766E 0%, #115E59 100%)',
                 border: '1.5px solid #14B8A6',
@@ -544,13 +624,13 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
                 zIndex: 2,
               }}
             >
-              <CheckCircle2 size={28} color="#5EEAD4" strokeWidth={2.4} />
+              <CheckCircle2 size={26} color="#5EEAD4" strokeWidth={2.4} />
             </div>
           </div>
 
           <h3
             style={{
-              fontSize: '22px',
+              fontSize: '21px',
               fontWeight: 700,
               color: 'var(--color-text)',
               marginBottom: '8px',
@@ -562,9 +642,9 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
 
           <p
             style={{
-              fontSize: '15px',
+              fontSize: '14.5px',
               color: 'var(--color-text-secondary)',
-              marginBottom: '26px',
+              marginBottom: '24px',
               lineHeight: 1.5,
             }}
           >
@@ -597,7 +677,6 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
       <style>{`
         /* =========================================================================
            TRUE PHYSICAL 3D LETTER ORIGAMI FOLDING SYSTEM
-           Parent container is transparent: folding physically shrinks height!
            ========================================================================= */
         .letter-sheet-wrapper {
           width: 100%;
@@ -613,7 +692,7 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
           flex-direction: column;
           transform-style: preserve-3d;
           position: relative;
-          filter: drop-shadow(0 18px 36px rgba(0, 0, 0, 0.48));
+          filter: drop-shadow(0 16px 32px rgba(0, 0, 0, 0.45));
         }
 
         .letter-panel {
@@ -626,7 +705,7 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
         }
 
         .panel-top {
-          height: 64px;
+          height: 60px;
           border-top: 1.5px solid #E8DFCE;
           border-radius: 8px 8px 0 0;
           transform-origin: bottom center;
@@ -634,30 +713,30 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
         }
 
         .panel-middle {
-          min-height: 84px;
+          min-height: 80px;
           border-top: 1px dashed rgba(217, 119, 6, 0.35);
           border-bottom: 1px dashed rgba(217, 119, 6, 0.35);
-          padding: 14px 20px;
+          padding: 12px 18px;
           display: flex;
           align-items: center;
           z-index: 1;
         }
 
         .panel-bottom {
-          height: 64px;
+          height: 60px;
           border-bottom: 1.5px solid #E8DFCE;
           border-radius: 0 0 8px 8px;
           transform-origin: top center;
           z-index: 3;
         }
 
-        /* Dual Faces for folding flaps (Eliminates transparent hollows) */
+        /* Dual Faces for folding flaps */
         .flap-face {
           position: absolute;
           inset: 0;
           backface-visibility: hidden;
           -webkit-backface-visibility: hidden;
-          padding: 12px 20px;
+          padding: 10px 18px;
           box-sizing: border-box;
           border-radius: inherit;
           display: flex;
@@ -710,8 +789,8 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
 
         /* Wax Seal Badge */
         .wax-seal-badge {
-          width: 42px;
-          height: 42px;
+          width: 38px;
+          height: 38px;
           border-radius: 50%;
           background: radial-gradient(circle at 35% 30%, #FB923C 0%, #EA580C 45%, #C2410C 85%, #7C2D12 100%);
           box-shadow: 0 4px 12px rgba(154, 52, 18, 0.5), inset 0 1px 2px rgba(255, 255, 255, 0.45);
@@ -731,7 +810,7 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
         }
 
         .wax-seal-text {
-          font-size: 13.5px;
+          font-size: 12.5px;
           font-weight: 900;
           font-family: serif;
           color: #FFF7ED;
@@ -739,101 +818,61 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
           text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
         }
 
-        /* =========================================================================
-           TRUE 3D PHYSICAL FOLDING KEYFRAMES
-           ========================================================================= */
+        /* 3D Folding Keyframes */
         .letter-sheet-wrapper.is-folding .panel-top {
-          animation: foldTopClean 0.5s cubic-bezier(0.33, 1, 0.68, 1) forwards;
+          animation: foldTopClean 0.45s cubic-bezier(0.33, 1, 0.68, 1) forwards;
         }
 
         .letter-sheet-wrapper.is-folding .panel-bottom {
-          animation: foldBottomClean 0.5s cubic-bezier(0.33, 1, 0.68, 1) 0.35s forwards;
+          animation: foldBottomClean 0.45s cubic-bezier(0.33, 1, 0.68, 1) 0.3s forwards;
         }
 
-        /* Wax Seal Stamp Pop on closure */
         .letter-sheet-wrapper.is-folding .flap-back .wax-seal-badge {
-          animation: sealStampPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) 0.85s forwards;
+          animation: sealStampPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) 0.75s forwards;
         }
 
-        /* Continuous roll into the exact scroll resting position */
         .letter-sheet-wrapper.is-folding .letter-tri-fold {
-          animation: rollIntoScrollTarget 0.55s cubic-bezier(0.4, 0, 0.2, 1) 1.2s forwards;
+          animation: rollIntoScrollTarget 0.5s cubic-bezier(0.4, 0, 0.2, 1) 1.05s forwards;
         }
 
         @keyframes foldTopClean {
-          0% {
-            transform: rotateX(0deg);
-          }
-          100% {
-            transform: rotateX(-180deg);
-            z-index: 4;
-          }
+          0% { transform: rotateX(0deg); }
+          100% { transform: rotateX(-180deg); z-index: 4; }
         }
 
         @keyframes foldBottomClean {
-          0% {
-            transform: rotateX(0deg);
-          }
-          100% {
-            transform: rotateX(180deg);
-            z-index: 5;
-          }
+          0% { transform: rotateX(0deg); }
+          100% { transform: rotateX(180deg); z-index: 5; }
         }
 
         @keyframes sealStampPop {
-          0% {
-            transform: scale(0.85);
-            box-shadow: 0 2px 6px rgba(154, 52, 18, 0.3);
-          }
-          60% {
-            transform: scale(1.3);
-            box-shadow: 0 0 30px rgba(234, 88, 12, 0.9), 0 0 55px rgba(251, 146, 60, 0.5);
-          }
-          100% {
-            transform: scale(1);
-            box-shadow: 0 4px 14px rgba(154, 52, 18, 0.5);
-          }
+          0% { transform: scale(0.85); box-shadow: 0 2px 6px rgba(154, 52, 18, 0.3); }
+          60% { transform: scale(1.25); box-shadow: 0 0 25px rgba(234, 88, 12, 0.8); }
+          100% { transform: scale(1); box-shadow: 0 4px 14px rgba(154, 52, 18, 0.5); }
         }
 
+        /* Symmetrical collapse into center resting scroll */
         @keyframes rollIntoScrollTarget {
           0% {
             transform: translate(0, 0) scale(1) rotate(0deg);
             opacity: 1;
             border-radius: 8px;
           }
-          45% {
-            transform: translate(-18px, 16px) scale(0.65, 0.5) rotate(-4deg);
-            border-radius: 16px;
-            opacity: 0.95;
-          }
-          80% {
-            transform: translate(-36px, 32px) scale(0.32, 0.26) rotate(-7deg);
-            border-radius: 24px;
-            opacity: 0.6;
+          50% {
+            transform: translate(0, 6px) scale(0.55, 0.45) rotate(-2deg);
+            border-radius: 18px;
+            opacity: 0.9;
           }
           100% {
-            transform: translate(-43.25px, 40.25px) scale(0.16, 0.18) rotate(-9deg);
-            border-radius: 28px;
+            transform: translate(0, 14px) scale(0.18, 0.18) rotate(-4deg);
+            border-radius: 26px;
             opacity: 0;
           }
         }
 
-        /* =========================================================================
-           DESK SCROLL (Pixel-aligned authentic rolled parchment cylinder)
-           ========================================================================= */
-        .desk-scroll {
-          position: absolute;
-          left: calc(50% - 43.25px);
-          top: calc(50% + 40.25px);
-          width: 65px;
-          height: auto;
-          z-index: 4;
-          pointer-events: none;
-          transition: opacity 0.04s ease;
-        }
-
+        /* Desk Scroll */
         .desk-scroll.emerging {
-          animation: scrollSettleBounce 0.45s cubic-bezier(0.34, 1.3, 0.64, 1) 1.35s forwards;
+          animation: scrollSettleBounce 0.4s cubic-bezier(0.34, 1.3, 0.64, 1) 1.2s forwards;
           opacity: 0;
         }
 
@@ -849,11 +888,11 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
         @keyframes scrollSettleBounce {
           0% {
             opacity: 0;
-            transform: scale(0.7) rotate(-9deg);
+            transform: scale(0.7) rotate(-6deg);
           }
           65% {
             opacity: 1;
-            transform: scale(1.06) rotate(1.5deg);
+            transform: scale(1.05) rotate(1deg);
           }
           100% {
             opacity: 1;
@@ -861,61 +900,51 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
           }
         }
 
-        /* =========================================================================
-           PIGEON ARRIVAL, TOUCHDOWN TALON CLAMP, AND PROUD LIFTOFF
-           Seamless zero-jump transition because body pixels are 100% identical!
-           ========================================================================= */
+        /* Pigeon Arrival Swoop */
         .pigeon-actor.arrival-swoop {
-          animation: pigeonSwoopAndGrab 2.2s cubic-bezier(0.2, 0.85, 0.35, 1) forwards;
+          animation: pigeonSwoopAndGrab 2.0s cubic-bezier(0.2, 0.85, 0.35, 1) forwards;
         }
 
         @keyframes pigeonSwoopAndGrab {
           0% {
             opacity: 0;
-            transform: translate(-50%, -50%) translate(-85px, -115px) scale(0.7) rotate(14deg);
+            transform: translate(-50%, -50%) translate(-80px, -110px) scale(0.7) rotate(14deg);
           }
           30% {
             opacity: 1;
-            transform: translate(-50%, -50%) translate(-35px, -45px) scale(0.9) rotate(6deg);
+            transform: translate(-50%, -50%) translate(-30px, -40px) scale(0.9) rotate(6deg);
           }
-          41% {
-            /* Touchdown grab squarely on scroll at 900ms (41% of 2200ms) */
+          42% {
+            /* Touchdown grab squarely on scroll at 850ms */
             transform: translate(-50%, -50%) translate(0, 0) scale(1) rotate(0deg);
           }
-          48% {
-            /* Knee flexion landing cushion (absorbs momentum) */
+          50% {
+            /* Knee landing cushion */
             transform: translate(-50%, -50%) translateY(3px) scale(0.985) rotate(0.5deg);
           }
-          55% {
-            /* Gentle rebound to resting stance */
+          58% {
             transform: translate(-50%, -50%) translateY(0) scale(1) rotate(0deg);
           }
-          63% {
-            /* Inquisitive rock dove head bob - alert tilt left */
+          66% {
+            /* Alert head bob left */
             transform: translate(-50%, -50%) translateY(0) scale(1) rotate(-2.5deg);
           }
-          72% {
-            /* Alert forward nod - proud stance with secured dispatch */
+          76% {
+            /* Alert forward nod */
             transform: translate(-50%, -50%) translateY(0) scale(1.015) rotate(1deg);
           }
-          82% {
-            /* Settle and center */
-            transform: translate(-50%, -50%) translateY(0) scale(1) rotate(0deg);
-          }
-          90% {
-            /* Crouch down to coil spring energy in legs */
-            transform: translate(-50%, -50%) translateY(3.5px) scale(0.98) rotate(-2deg);
+          86% {
+            /* Crouch to spring */
+            transform: translate(-50%, -50%) translateY(3px) scale(0.98) rotate(-2deg);
           }
           100% {
-            /* Powerful upward spring push-off */
-            transform: translate(-50%, -50%) translateY(-30px) scale(1.06) rotate(6deg);
+            /* Upward spring liftoff */
+            transform: translate(-50%, -50%) translateY(-24px) scale(1.04) rotate(4deg);
             opacity: 0;
           }
         }
 
-        /* =========================================================================
-           CROSS-BROWSER HARDWARE-ACCELERATED WING FLAPPING
-           ========================================================================= */
+        /* Wing Flapping System with Smooth Crossfade and Lift Bob */
         .pigeon-flight-container {
           position: relative;
           width: 180px;
@@ -926,15 +955,15 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
           position: relative;
           width: 100%;
           height: 100%;
-          animation: pigeonBodyBob 0.24s infinite alternate ease-in-out;
+          animation: pigeonBodyBob 0.28s infinite alternate ease-in-out;
         }
 
         @keyframes pigeonBodyBob {
           0% {
-            transform: translateY(0px) rotate(-3deg);
+            transform: translateY(0px) rotate(-2deg);
           }
           100% {
-            transform: translateY(-6px) rotate(3deg);
+            transform: translateY(-8px) rotate(3deg);
           }
         }
 
@@ -948,22 +977,25 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
           pointer-events: none;
         }
 
+        /* Natural sinusoidal wing flapping transition without flashing strobe */
         .pigeon-wings-up {
-          animation: flapUpCycle 0.24s infinite linear;
+          animation: flapUpCycle 0.28s infinite ease-in-out;
         }
 
         .pigeon-wings-down {
-          animation: flapDownCycle 0.24s infinite linear;
+          animation: flapDownCycle 0.28s infinite ease-in-out;
         }
 
         @keyframes flapUpCycle {
-          0%, 49.99% { opacity: 1; visibility: visible; }
-          50%, 100% { opacity: 0; visibility: hidden; }
+          0%, 15%   { opacity: 1; transform: scaleY(1) rotate(0deg); }
+          45%, 60%  { opacity: 0; transform: scaleY(0.92) rotate(-3deg); }
+          85%, 100% { opacity: 1; transform: scaleY(1) rotate(0deg); }
         }
 
         @keyframes flapDownCycle {
-          0%, 49.99% { opacity: 0; visibility: hidden; }
-          50%, 100% { opacity: 1; visibility: visible; }
+          0%, 15%   { opacity: 0; transform: scaleY(0.92) rotate(2deg); }
+          45%, 60%  { opacity: 1; transform: scaleY(1) rotate(0deg); }
+          85%, 100% { opacity: 0; transform: scaleY(0.92) rotate(2deg); }
         }
 
         /* Confirmation Ripple */
@@ -1010,11 +1042,7 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
   )
 }
 
-// =============================================================================
-// REFINED ROCK DOVE (COLUMBA LIVIA) PERCHED COMPONENT
-// =============================================================================
 function PerchedPigeon({ hasScroll }: { hasScroll: boolean }) {
-  // Pixel-perfect identical upper body: zero flickering, zero jumping
   const src = hasScroll
     ? '/images/pigeon/pigeon_perched_with_scroll.webp'
     : '/images/pigeon/pigeon_perched_empty_perfect.webp'
@@ -1050,9 +1078,6 @@ function PerchedPigeon({ hasScroll }: { hasScroll: boolean }) {
   )
 }
 
-// =============================================================================
-// REFINED ROCK DOVE (COLUMBA LIVIA) SOARING FLIGHT COMPONENT WITH WING FLAP
-// =============================================================================
 function FlyingPigeon() {
   return (
     <div className="pigeon-flight-container" aria-label="Rock Dove Soaring in Flight">

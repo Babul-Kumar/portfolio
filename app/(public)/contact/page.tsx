@@ -14,17 +14,29 @@ export default async function ContactPage() {
   const profile = await getProfile()
 
   return (
-    <main
+    <section
+      className="contact-page-wrapper"
       style={{
         position: 'relative',
-        overflow: 'hidden',
-        padding: 'calc(68px + clamp(16px, 3vw, 36px)) var(--container-pad) clamp(48px, 6vw, 80px)',
+        padding: 'calc(68px + clamp(20px, 3.5vw, 40px)) var(--container-pad) clamp(48px, 6vw, 80px)',
         minHeight: '85vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'flex-start',
       }}
     >
-      <div style={{ position: 'relative', zIndex: 1, maxWidth: 'var(--container-max)', margin: '0 auto' }}>
+      <div
+        style={{
+          position: 'relative',
+          zIndex: 1,
+          width: '100%',
+          maxWidth: '1060px',
+          margin: '0 auto',
+        }}
+      >
         <ContactSection profile={profile} />
       </div>
-    </main>
+    </section>
   )
 }
