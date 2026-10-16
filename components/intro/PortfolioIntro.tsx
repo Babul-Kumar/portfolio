@@ -53,6 +53,7 @@ export default function PortfolioIntro() {
   const startTimeRef = useRef<number | null>(null)
   const phaseRef = useRef<'bk' | 'name' | 'particles' | 'atom' | 'dissolve' | 'complete'>('bk')
   const completedRef = useRef(false)
+  const isFadingOutRef = useRef(false)
 
   // Subtle pointer-driven 3D tilt (smooth lerp, desktop only)
   const targetTilt = useRef({ x: 0, y: 0 })
@@ -97,13 +98,14 @@ export default function PortfolioIntro() {
 
   const skipIntro = useCallback(() => {
     if (completedRef.current) return
+    isFadingOutRef.current = true
     setIsFadingOut(true)
     try {
       document.documentElement.classList.add('intro-emerging')
     } catch {}
     setTimeout(() => {
       completeIntro()
-    }, 240)
+    }, 280)
   }, [completeIntro])
 
   // Inactive Tab / Visibility Listener & Keyboard Escape Handler
@@ -304,7 +306,7 @@ export default function PortfolioIntro() {
           phaseRef.current = 'atom'
           setCurrentPhase('atom')
         }
-      } else if (elapsed < 6.8) {
+      } else if (elapsed < 6.7) {
         if (phaseRef.current !== 'dissolve') {
           phaseRef.current = 'dissolve'
           setCurrentPhase('dissolve')
@@ -320,6 +322,12 @@ export default function PortfolioIntro() {
         try {
           document.documentElement.classList.add('intro-emerging')
         } catch {}
+      }
+
+      // Smooth cinematic crossfade of intro overlay at 6.1s into homepage
+      if (elapsed >= 6.1 && !isFadingOutRef.current) {
+        isFadingOutRef.current = true
+        setIsFadingOut(true)
       }
 
       // Smooth pointer tilt interpolation
@@ -636,6 +644,7 @@ export default function PortfolioIntro() {
               stroke="#F5F6F8"
               strokeWidth="6"
               strokeLinecap="round"
+              pathLength={100}
             />
             <path
               className="bk-stroke-b-top"
@@ -643,6 +652,7 @@ export default function PortfolioIntro() {
               stroke="#F5F6F8"
               strokeWidth="6"
               strokeLinecap="round"
+              pathLength={100}
             />
             <path
               className="bk-stroke-b-bot"
@@ -650,6 +660,7 @@ export default function PortfolioIntro() {
               stroke="#F5F6F8"
               strokeWidth="6"
               strokeLinecap="round"
+              pathLength={100}
             />
 
             {/* K Strokes */}
@@ -659,6 +670,7 @@ export default function PortfolioIntro() {
               stroke="#EA580C"
               strokeWidth="6"
               strokeLinecap="round"
+              pathLength={100}
             />
             <path
               className="bk-stroke-k-top"
@@ -666,6 +678,7 @@ export default function PortfolioIntro() {
               stroke="#EA580C"
               strokeWidth="6"
               strokeLinecap="round"
+              pathLength={100}
             />
             <path
               className="bk-stroke-k-bot"
@@ -673,6 +686,7 @@ export default function PortfolioIntro() {
               stroke="#EA580C"
               strokeWidth="6"
               strokeLinecap="round"
+              pathLength={100}
             />
 
             {/* Accent Slash */}
@@ -683,6 +697,7 @@ export default function PortfolioIntro() {
               strokeWidth="2.5"
               strokeLinecap="round"
               opacity="0.8"
+              pathLength={100}
             />
           </svg>
         </div>
@@ -748,7 +763,7 @@ export default function PortfolioIntro() {
       {/* Scoped CSS Animations */}
       <style>{`
         .cinematic-intro-overlay {
-          transition: opacity 0.3s ease-out;
+          transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1) !important;
         }
         .cinematic-intro-overlay.fade-out {
           opacity: 0 !important;
@@ -804,57 +819,45 @@ export default function PortfolioIntro() {
           pointer-events: none;
         }
 
-        /* Discrete SVG stroke draws */
+        /* Normalized 100% pathLength SVG stroke draws */
         .bk-stroke-b-spine {
-          stroke-dasharray: 84;
-          stroke-dashoffset: 84;
-          animation: drawStrokeSpine 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.04s forwards;
+          stroke-dasharray: 100;
+          stroke-dashoffset: 100;
+          animation: drawStroke 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.04s forwards;
         }
         .bk-stroke-b-top {
-          stroke-dasharray: 80;
-          stroke-dashoffset: 80;
-          animation: drawStrokeTop 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.15s forwards;
+          stroke-dasharray: 100;
+          stroke-dashoffset: 100;
+          animation: drawStroke 0.42s cubic-bezier(0.16, 1, 0.3, 1) 0.15s forwards;
         }
         .bk-stroke-b-bot {
-          stroke-dasharray: 88;
-          stroke-dashoffset: 88;
-          animation: drawStrokeBot 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.25s forwards;
+          stroke-dasharray: 100;
+          stroke-dashoffset: 100;
+          animation: drawStroke 0.42s cubic-bezier(0.16, 1, 0.3, 1) 0.25s forwards;
         }
         .bk-stroke-k-spine {
-          stroke-dasharray: 84;
-          stroke-dashoffset: 84;
-          animation: drawStrokeSpine 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.12s forwards;
+          stroke-dasharray: 100;
+          stroke-dashoffset: 100;
+          animation: drawStroke 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.12s forwards;
         }
         .bk-stroke-k-top {
-          stroke-dasharray: 68;
-          stroke-dashoffset: 68;
-          animation: drawStrokeArm 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.26s forwards;
+          stroke-dasharray: 100;
+          stroke-dashoffset: 100;
+          animation: drawStroke 0.42s cubic-bezier(0.16, 1, 0.3, 1) 0.26s forwards;
         }
         .bk-stroke-k-bot {
-          stroke-dasharray: 68;
-          stroke-dashoffset: 68;
-          animation: drawStrokeArm 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.36s forwards;
+          stroke-dasharray: 100;
+          stroke-dashoffset: 100;
+          animation: drawStroke 0.42s cubic-bezier(0.16, 1, 0.3, 1) 0.36s forwards;
         }
         .bk-stroke-slash {
-          stroke-dasharray: 68;
-          stroke-dashoffset: 68;
-          animation: drawStrokeArm 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.22s forwards;
+          stroke-dasharray: 100;
+          stroke-dashoffset: 100;
+          animation: drawStroke 0.38s cubic-bezier(0.16, 1, 0.3, 1) 0.22s forwards;
         }
 
-        @keyframes drawStrokeSpine {
-          from { stroke-dashoffset: 84; }
-          to   { stroke-dashoffset: 0; }
-        }
-        @keyframes drawStrokeTop {
-          from { stroke-dashoffset: 80; }
-          to   { stroke-dashoffset: 0; }
-        }
-        @keyframes drawStrokeBot {
-          from { stroke-dashoffset: 88; }
-          to   { stroke-dashoffset: 0; }
-        }
-        @keyframes drawStrokeArm {
-          from { stroke-dashoffset: 68; }
+        @keyframes drawStroke {
+          from { stroke-dashoffset: 100; }
           to   { stroke-dashoffset: 0; }
         }
 

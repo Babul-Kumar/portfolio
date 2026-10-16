@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import AdminLayoutShell from '@/components/admin/AdminLayoutShell'
 
 export const metadata: Metadata = {
-  title: 'Admin Dashboard — Babul Kumar',
+  title: 'Admin Dashboard',
   robots: { index: false, follow: false },
 }
 

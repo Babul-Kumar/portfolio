@@ -7,7 +7,7 @@ import PageHeader from '@/components/layout/PageHeader'
 export const revalidate = 60 // 1-minute ISR / on-demand revalidation
 
 export const metadata: Metadata = {
-  title: 'Certificates & Specializations — Babul Kumar',
+  title: 'Certificates & Specializations',
   description:
     'Verified credentials and technical specializations across Artificial Intelligence, Machine Learning, Deep Learning, and Full-Stack Systems.',
 }

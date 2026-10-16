@@ -17,7 +17,6 @@ const isStaticExport =
 const nextConfig: NextConfig = {
   devIndicators: false,
   trailingSlash: true,
-  skipTrailingSlashRedirect: true,
   basePath: process.env.NEXT_PUBLIC_BASE_PATH || undefined,
   turbopack: {
     root: process.cwd(),

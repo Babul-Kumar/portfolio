@@ -76,6 +76,7 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
 
   const deskRef = useRef<HTMLDivElement>(null)
   const birdPortalRef = useRef<HTMLDivElement>(null)
+  const routePathRef = useRef<SVGPathElement>(null)
   const animFrameRef = useRef<number | null>(null)
   const flightPosRef = useRef({ x: 0, y: 0, scale: 1, rotation: 4 })
 
@@ -230,6 +231,20 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
         birdPortalRef.current.style.transform = `translate3d(${currentX}px, ${currentY}px, 0) translate(-50%, -50%) scale(${currentScale}) rotate(${currentRotation}deg)`
       }
 
+      // Smooth trailing contrail route: grows organically from desk up to live pigeon position
+      if (routePathRef.current) {
+        if (rawProgress <= 0.005) {
+          routePathRef.current.setAttribute('d', '')
+        } else {
+          const subCtrlX = (1 - rawProgress) * startX + rawProgress * ((startX + targetX) * 0.45)
+          const subCtrlY = (1 - rawProgress) * startY + rawProgress * (Math.min(startY - 140, vpHeight * 0.2))
+          routePathRef.current.setAttribute(
+            'd',
+            `M ${startX} ${startY} Q ${subCtrlX} ${subCtrlY}, ${currentX} ${currentY}`
+          )
+        }
+      }
+
       flightPosRef.current = {
         x: currentX,
         y: currentY,
@@ -347,13 +362,13 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
-                        fontSize: '10px',
+                        fontSize: '9.5px',
                         fontFamily: 'var(--font-mono)',
                         color: '#78716C',
                         marginBottom: '4px',
                       }}
                     >
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, color: '#C2410C' }}>
                         <span
                           style={{
                             width: '6px',
@@ -363,37 +378,27 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
                             display: 'inline-block',
                           }}
                         />
-                        TO: BABUL KUMAR
+                        TO: BABUL KUMAR &lt;babulkumar0220@gmail.com&gt;
                       </span>
                       <span
                         style={{
-                          fontSize: '8.5px',
-                          background: 'rgba(234, 88, 12, 0.08)',
+                          fontSize: '8px',
+                          background: 'rgba(234, 88, 12, 0.1)',
                           color: '#C2410C',
-                          padding: '2px 7px',
+                          padding: '1.5px 6px',
                           borderRadius: '4px',
-                          fontWeight: 600,
+                          fontWeight: 700,
                           letterSpacing: '0.04em',
                         }}
                       >
-                        PERSONAL DISPATCH
+                        RECIPIENT INBOX
                       </span>
                     </div>
-                    <div style={{ fontSize: '11.5px', fontWeight: 700, color: '#292524', lineHeight: 1.3 }}>
-                      FROM: <span style={{ color: '#C2410C' }}>{data.name}</span>
-                    </div>
-                    <div
-                      style={{
-                        fontSize: '10px',
-                        color: '#78716C',
-                        fontFamily: 'var(--font-mono)',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        lineHeight: 1.2,
-                      }}
-                    >
-                      &lt;{data.email}&gt;
+                    <div style={{ fontSize: '11px', fontWeight: 600, color: '#292524', lineHeight: 1.3 }}>
+                      FROM: <span style={{ color: '#1C1917' }}>{data.name}</span>{' '}
+                      <span style={{ fontSize: '9.5px', color: '#78716C', fontFamily: 'var(--font-mono)', fontWeight: 400 }}>
+                        &lt;{data.email}&gt;
+                      </span>
                     </div>
                   </div>
                   {/* Flap backface when folded down */}
@@ -712,9 +717,10 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
               </filter>
             </defs>
 
-            {/* Glowing trajectory curve */}
+            {/* Glowing trajectory curve: dynamically trails behind the flying courier pigeon */}
             <path
-              d={`M ${routeCoords.startX} ${routeCoords.startY} Q ${routeCoords.ctrlX} ${routeCoords.ctrlY}, ${routeCoords.targetX} ${routeCoords.targetY}`}
+              ref={routePathRef}
+              d=""
               fill="none"
               stroke="url(#pigeon-flight-route-grad)"
               strokeWidth="2.5"
@@ -820,6 +826,7 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
           style={{
             width: '100%',
             maxWidth: '440px',
+            margin: '0 auto',
             textAlign: 'center',
             padding: '36px 28px',
             borderRadius: 'var(--radius-lg)',
@@ -828,6 +835,7 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
             boxShadow: 'var(--shadow-card)',
             animation: 'fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
             position: 'relative',
+            boxSizing: 'border-box',
           }}
         >
           {/* Subtle teal success ripple and checkmark */}
@@ -884,14 +892,142 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
 
           <p
             style={{
-              fontSize: '14.5px',
+              fontSize: '14px',
               color: 'var(--color-text-secondary)',
-              marginBottom: '24px',
+              marginBottom: '20px',
               lineHeight: 1.5,
             }}
           >
-            Thank you for reaching out. Babul Kumar will review your message shortly.
+            Thank you for reaching out, <strong style={{ color: 'var(--color-text)' }}>{data.name}</strong>. Your message was successfully dispatched and delivered directly to Babul Kumar.
           </p>
+
+          {/* Explicit Recipient & Dispatch Manifest Receipt */}
+          <div
+            style={{
+              width: '100%',
+              margin: '0 auto 24px',
+              padding: '14px 16px',
+              borderRadius: 'var(--radius-md)',
+              background: 'var(--color-surface-2)',
+              border: '1px solid var(--color-border-subtle)',
+              textAlign: 'left',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '10px',
+              boxSizing: 'border-box',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                paddingBottom: '8px',
+                borderBottom: '1px solid var(--color-border-subtle)',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: '10px',
+                  fontFamily: 'var(--font-mono)',
+                  color: 'var(--color-accent)',
+                  fontWeight: 600,
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                }}
+              >
+                ● DISPATCH RECEIPT
+              </span>
+              <span
+                style={{
+                  fontSize: '10px',
+                  fontFamily: 'var(--font-mono)',
+                  color: '#10B981',
+                  background: 'rgba(16, 185, 129, 0.1)',
+                  padding: '2px 6px',
+                  borderRadius: '4px',
+                  fontWeight: 600,
+                }}
+              >
+                DELIVERED
+              </span>
+            </div>
+
+            {/* Recipient */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+              <div
+                style={{
+                  fontSize: '10px',
+                  fontFamily: 'var(--font-mono)',
+                  color: 'var(--color-text-muted)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em',
+                }}
+              >
+                Recipient:
+              </div>
+              <div
+                style={{
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  color: 'var(--color-text)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  flexWrap: 'wrap',
+                }}
+              >
+                <span>Babul Kumar</span>
+                <span
+                  style={{
+                    fontSize: '11px',
+                    fontFamily: 'var(--font-mono)',
+                    color: 'var(--color-accent)',
+                    fontWeight: 400,
+                  }}
+                >
+                  &lt;babulkumar0220@gmail.com&gt;
+                </span>
+              </div>
+            </div>
+
+            {/* Sender */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+              <div
+                style={{
+                  fontSize: '10px',
+                  fontFamily: 'var(--font-mono)',
+                  color: 'var(--color-text-muted)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em',
+                }}
+              >
+                Sender:
+              </div>
+              <div
+                style={{
+                  fontSize: '13px',
+                  fontWeight: 500,
+                  color: 'var(--color-text-secondary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  flexWrap: 'wrap',
+                }}
+              >
+                <span>{data.name}</span>
+                <span
+                  style={{
+                    fontSize: '11px',
+                    fontFamily: 'var(--font-mono)',
+                    color: 'var(--color-text-muted)',
+                  }}
+                >
+                  &lt;{data.email}&gt;
+                </span>
+              </div>
+            </div>
+          </div>
 
           <button
             type="button"

@@ -105,7 +105,7 @@ export default function ContactSection({ profile }: ContactSectionProps = {}) {
     if (status === 'submitting') return
     setStatus('submitting')
     try {
-      const res = await fetch('/api/contact', {
+      const res = await fetch('/api/contact/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -146,6 +146,8 @@ export default function ContactSection({ profile }: ContactSectionProps = {}) {
             gap: 'clamp(28px, 4vw, 52px)',
             alignItems: 'start',
             width: '100%',
+            maxWidth: '1060px',
+            margin: '0 auto',
           }}
           className="contact-layout"
         >
@@ -304,6 +306,9 @@ export default function ContactSection({ profile }: ContactSectionProps = {}) {
               background: 'var(--color-card-bg)',
               boxShadow: 'var(--shadow-card)',
               width: '100%',
+              maxWidth: '560px',
+              margin: '0 auto',
+              boxSizing: 'border-box',
               overflow: status === 'animating' ? 'visible' : undefined,
               contain: status === 'animating' ? 'none' : undefined,
             }}
@@ -563,6 +568,8 @@ export default function ContactSection({ profile }: ContactSectionProps = {}) {
           .contact-layout {
             grid-template-columns: 1fr !important;
             gap: 36px !important;
+            max-width: 580px !important;
+            margin: 0 auto !important;
           }
         }
       `}</style>

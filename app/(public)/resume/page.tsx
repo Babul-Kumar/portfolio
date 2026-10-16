@@ -9,7 +9,7 @@ import {
 import ResumeClientView from '@/components/resume/ResumeClientView'
 
 export const metadata: Metadata = {
-  title: 'Curriculum Vitae & Résumé — Babul Kumar',
+  title: 'Curriculum Vitae & Résumé',
   description:
     'Official curriculum vitae and resume of Babul Kumar — Computer Science, AI/ML, and Full-Stack Engineering.',
 }

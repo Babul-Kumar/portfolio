@@ -3,7 +3,7 @@ import ContactSection from '@/components/sections/Contact'
 import { getProfile } from '@/lib/data'
 
 export const metadata: Metadata = {
-  title: 'Contact — Babul Kumar',
+  title: 'Contact',
   description:
     "Get in touch with Babul Kumar for software engineering opportunities, AI/ML research collaborations, and open-source projects.",
 }

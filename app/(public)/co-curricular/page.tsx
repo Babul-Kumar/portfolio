@@ -7,7 +7,7 @@ import PageHeader from '@/components/layout/PageHeader'
 export const revalidate = 60 // 1-minute ISR / on-demand revalidation
 
 export const metadata: Metadata = {
-  title: 'Co-Curricular & Leadership — Babul Kumar',
+  title: 'Co-Curricular & Leadership',
   description:
     'Technical events, hackathons, open-source sprints, and leadership initiatives undertaken by Babul Kumar beyond the traditional classroom.',
 }

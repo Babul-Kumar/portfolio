@@ -58,12 +58,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 const theme = localStorage.getItem('theme') ?? 'dark';
                 document.documentElement.setAttribute('data-theme', theme);
                 const search = window.location.search || '';
+                const pathname = window.location.pathname || '';
+                const isHome = pathname === '/' || pathname === '' || pathname === '/index.html';
                 const isReplay = search.includes('intro=') || search.includes('replay=') || search.includes('force_intro=');
                 if (isReplay) {
                   sessionStorage.removeItem('bk_intro_seen');
-                } else if (sessionStorage.getItem('bk_intro_seen') === 'true') {
+                }
+                const isSeen = sessionStorage.getItem('bk_intro_seen') === 'true';
+                if (isSeen) {
                   document.documentElement.classList.add('intro-seen');
                   document.documentElement.setAttribute('data-intro-seen', 'true');
+                } else if (isHome) {
+                  document.documentElement.classList.add('intro-active');
                 }
               } catch {}
 

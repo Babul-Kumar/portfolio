@@ -5,7 +5,7 @@ import AmbientSectionEnvironment from '@/components/ambient/AmbientSectionEnviro
 import PageHeader from '@/components/layout/PageHeader'
 
 export const metadata: Metadata = {
-  title: 'Work & Projects — Babul Kumar',
+  title: 'Work & Projects',
   description:
     'A curated showcase of autonomous AI agents, gradient-boosted predictive models, telemetry monitors, and modern full-stack developer tools engineered by Babul Kumar.',
 }
