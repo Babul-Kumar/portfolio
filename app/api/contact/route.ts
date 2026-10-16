@@ -6,6 +6,8 @@ import { contactSchema } from '@/lib/validations'
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
 
 function checkRateLimit(ip: string): boolean {
+  if (process.env.NODE_ENV === 'development') return true
+
   const now = Date.now()
 
   // Periodic pruning if map grows large
@@ -22,7 +24,7 @@ function checkRateLimit(ip: string): boolean {
     return true
   }
 
-  if (entry.count >= 3) return false // Max 3 per minute
+  if (entry.count >= 10) return false // Max 10 per minute
 
   entry.count++
   return true
