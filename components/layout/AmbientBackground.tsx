@@ -170,23 +170,20 @@ export default function AmbientBackground() {
     const initSimulation = () => {
       atoms = []
       cosmicDust = []
-
       const isMobile = width < 768
-      const isTablet = width >= 768 && width < 1024
+      const isTablet = width < 1024
 
       // ---------------------------------------------------------------------
-      // Single Unified Quantum Atom: "Solitary Singularity Core"
-      // POSITION: Upper-Left Quadrant (x: 0.18, y: 0.22)
-      // The 3D Character Avatar on the right is completely unobstructed!
-      // Features: Single high-energy nucleus with 8 intersecting 3D shells
-      // and 32 densely orbiting electrons with luminous comet trails.
+      // Unified Quantum Atom: Matches the intro's 3-orbital-plane atom
+      // Position: Centered (x: 0.50, y: 0.50) in deep ambient background
+      // Soft, delicate, lighter colors to ensure 100% page content legibility
       // ---------------------------------------------------------------------
-      const atomScale = isMobile ? 0.65 : isTablet ? 0.95 : 1.28
-      const trailMultiplier = isMobile ? 0.75 : 1.0
+      const introRadius = Math.max(95, Math.min(160, Math.min(width, height) * 0.22))
+      const atomScale = 1.0
 
       const singleAtom: AtomSystem = {
         id: 'atom-singularity',
-        name: 'Solitary Singularity Core',
+        name: 'Quantum Atom Matrix',
         xRatio: 0.50,
         yRatio: 0.50,
         currentX: 0.50 * width,
@@ -196,272 +193,76 @@ export default function AmbientBackground() {
         scale: atomScale,
         dominantColor: 'terracotta',
         pulses: [],
-        nextPulseTimer: 2.2,
+        nextPulseTimer: 3.8,
         gyroOffsetX: 0,
         gyroOffsetY: 0,
         magneticPoleTilt: 0.35,
         rings: [
-          // -----------------------------------------------------------------
-          // Shell 1: K-Shell (n=1) - Inner High-Velocity Bohr Core Orbit
-          // 2 electrons, ultra-bright stellar gold & terracotta
-          // -----------------------------------------------------------------
+          // Orbit 1: Teal (-35 deg = -0.61 rad)
           {
-            baseRadius: 46,
-            tiltBeta: 0.92,
-            rotationGamma: 0.15,
-            precessionSpeed: 0.0006,
+            baseRadius: introRadius,
+            tiltBeta: 1.18,
+            rotationGamma: -0.61,
+            precessionSpeed: 0.00012,
             shellType: 'circular',
-            ringColorType: 'gold',
+            ringColorType: 'teal',
             electrons: [
               {
-                id: 'e1-1',
-                angle: 0.2,
-                baseSpeed: 0.018,
-                radius: 2.3,
-                colorType: 'gold',
+                id: 'e1',
+                angle: 0.5,
+                baseSpeed: 0.0092,
+                radius: 2.2,
+                colorType: 'teal',
                 trail: [],
-                maxTrail: Math.floor(16 * trailMultiplier),
+                maxTrail: 14,
                 spinAngle: 0,
-                spinSpeed: 0.08,
-                sparkleTimer: 0,
-              },
-              {
-                id: 'e1-2',
-                angle: 0.2 + Math.PI,
-                baseSpeed: 0.018,
-                radius: 2.3,
-                colorType: 'terracotta',
-                trail: [],
-                maxTrail: Math.floor(16 * trailMultiplier),
-                spinAngle: Math.PI,
-                spinSpeed: -0.08,
+                spinSpeed: 0.05,
                 sparkleTimer: 0,
               },
             ],
           },
-
-          // -----------------------------------------------------------------
-          // Shell 2: L-Shell (n=2) - Balanced 3-Electron Gyroscope Ring
-          // -----------------------------------------------------------------
+          // Orbit 2: Terracotta (+35 deg = +0.61 rad)
           {
-            baseRadius: 88,
-            tiltBeta: 1.12,
-            rotationGamma: 0.78,
-            precessionSpeed: -0.00045,
+            baseRadius: introRadius,
+            tiltBeta: 1.18,
+            rotationGamma: 0.61,
+            precessionSpeed: -0.00012,
             shellType: 'circular',
             ringColorType: 'terracotta',
             electrons: [
               {
-                id: 'e2-1',
-                angle: 0.1,
-                baseSpeed: 0.013,
-                radius: 2.4,
+                id: 'e2',
+                angle: 2.1,
+                baseSpeed: 0.0076,
+                radius: 2.2,
                 colorType: 'terracotta',
                 trail: [],
-                maxTrail: Math.floor(20 * trailMultiplier),
-                spinAngle: 0.5,
-                spinSpeed: 0.07,
-                sparkleTimer: 0,
-              },
-              {
-                id: 'e2-2',
-                angle: 0.1 + (2 * Math.PI) / 3,
-                baseSpeed: 0.013,
-                radius: 2.4,
-                colorType: 'gold',
-                trail: [],
-                maxTrail: Math.floor(20 * trailMultiplier),
-                spinAngle: 2.6,
-                spinSpeed: -0.07,
-                sparkleTimer: 0,
-              },
-              {
-                id: 'e2-3',
-                angle: 0.1 + (4 * Math.PI) / 3,
-                baseSpeed: 0.013,
-                radius: 2.4,
-                colorType: 'terracotta',
-                trail: [],
-                maxTrail: Math.floor(20 * trailMultiplier),
-                spinAngle: 4.7,
-                spinSpeed: 0.07,
+                maxTrail: 14,
+                spinAngle: 1.5,
+                spinSpeed: -0.05,
                 sparkleTimer: 0,
               },
             ],
           },
-
-          // -----------------------------------------------------------------
-          // Shell 3: M-Shell (n=3) - Equatorial Precision Cyan/Teal Ring
-          // 4 electrons in balanced quadrature spacing
-          // -----------------------------------------------------------------
+          // Orbit 3: Amber/Gold (+86 deg = +1.50 rad)
           {
-            baseRadius: 132,
-            tiltBeta: 1.25,
-            rotationGamma: -0.68,
-            precessionSpeed: 0.00035,
-            shellType: 'circular',
-            ringColorType: 'teal',
-            electrons: [
-              {
-                id: 'e3-1',
-                angle: 0.3,
-                baseSpeed: 0.0098,
-                radius: 2.5,
-                colorType: 'teal',
-                trail: [],
-                maxTrail: Math.floor(22 * trailMultiplier),
-                spinAngle: 0.8,
-                spinSpeed: 0.065,
-                sparkleTimer: 0,
-              },
-              {
-                id: 'e3-2',
-                angle: 0.3 + 0.5 * Math.PI,
-                baseSpeed: 0.0098,
-                radius: 2.5,
-                colorType: 'gold',
-                trail: [],
-                maxTrail: Math.floor(22 * trailMultiplier),
-                spinAngle: 2.3,
-                spinSpeed: -0.065,
-                sparkleTimer: 0,
-              },
-              {
-                id: 'e3-3',
-                angle: 0.3 + 1.0 * Math.PI,
-                baseSpeed: 0.0098,
-                radius: 2.5,
-                colorType: 'teal',
-                trail: [],
-                maxTrail: Math.floor(22 * trailMultiplier),
-                spinAngle: 3.9,
-                spinSpeed: 0.065,
-                sparkleTimer: 0,
-              },
-              {
-                id: 'e3-4',
-                angle: 0.3 + 1.5 * Math.PI,
-                baseSpeed: 0.0098,
-                radius: 2.5,
-                colorType: 'terracotta',
-                trail: [],
-                maxTrail: Math.floor(22 * trailMultiplier),
-                spinAngle: 5.4,
-                spinSpeed: -0.065,
-                sparkleTimer: 0,
-              },
-            ],
-          },
-
-          // -----------------------------------------------------------------
-          // Shell 4: N-Shell (n=4) - Tilted Harmonic Golden Ring
-          // 4 electrons spaced symmetrically
-          // -----------------------------------------------------------------
-          {
-            baseRadius: 178,
-            tiltBeta: 1.08,
-            rotationGamma: 1.48,
-            precessionSpeed: -0.00028,
+            baseRadius: introRadius,
+            tiltBeta: 1.18,
+            rotationGamma: 1.50,
+            precessionSpeed: 0.00015,
             shellType: 'circular',
             ringColorType: 'gold',
             electrons: [
               {
-                id: 'e4-1',
-                angle: 0.0,
-                baseSpeed: 0.0075,
-                radius: 2.6,
+                id: 'e3',
+                angle: 4.2,
+                baseSpeed: 0.0068,
+                radius: 2.2,
                 colorType: 'gold',
                 trail: [],
-                maxTrail: Math.floor(26 * trailMultiplier),
-                spinAngle: 0.2,
-                spinSpeed: 0.055,
-                sparkleTimer: 0,
-              },
-              {
-                id: 'e4-2',
-                angle: 0.5 * Math.PI,
-                baseSpeed: 0.0075,
-                radius: 2.6,
-                colorType: 'terracotta',
-                trail: [],
-                maxTrail: Math.floor(26 * trailMultiplier),
-                spinAngle: 1.8,
-                spinSpeed: -0.055,
-                sparkleTimer: 0,
-              },
-              {
-                id: 'e4-3',
-                angle: 1.0 * Math.PI,
-                baseSpeed: 0.0075,
-                radius: 2.6,
-                colorType: 'teal',
-                trail: [],
-                maxTrail: Math.floor(26 * trailMultiplier),
-                spinAngle: 3.4,
-                spinSpeed: 0.055,
-                sparkleTimer: 0,
-              },
-              {
-                id: 'e4-4',
-                angle: 1.5 * Math.PI,
-                baseSpeed: 0.0075,
-                radius: 2.6,
-                colorType: 'violet',
-                trail: [],
-                maxTrail: Math.floor(26 * trailMultiplier),
-                spinAngle: 5.0,
-                spinSpeed: -0.055,
-                sparkleTimer: 0,
-              },
-            ],
-          },
-
-          // -----------------------------------------------------------------
-          // Shell 5: Valence Perimeter Ring (n=5) - Outer Gyroscopic Perimeter
-          // 3 electrons with long luminous comet trails
-          // -----------------------------------------------------------------
-          {
-            baseRadius: 224,
-            tiltBeta: 0.98,
-            rotationGamma: -1.35,
-            precessionSpeed: 0.0002,
-            shellType: 'circular',
-            ringColorType: 'teal',
-            electrons: [
-              {
-                id: 'e5-1',
-                angle: 0.6,
-                baseSpeed: 0.0055,
-                radius: 2.7,
-                colorType: 'teal',
-                trail: [],
-                maxTrail: Math.floor(32 * trailMultiplier),
-                spinAngle: 0.7,
-                spinSpeed: 0.045,
-                sparkleTimer: 0,
-              },
-              {
-                id: 'e5-2',
-                angle: 0.6 + (2 * Math.PI) / 3,
-                baseSpeed: 0.0055,
-                radius: 2.7,
-                colorType: 'violet',
-                trail: [],
-                maxTrail: Math.floor(32 * trailMultiplier),
-                spinAngle: 2.8,
-                spinSpeed: -0.045,
-                sparkleTimer: 0,
-              },
-              {
-                id: 'e5-3',
-                angle: 0.6 + (4 * Math.PI) / 3,
-                baseSpeed: 0.0055,
-                radius: 2.7,
-                colorType: 'terracotta',
-                trail: [],
-                maxTrail: Math.floor(32 * trailMultiplier),
-                spinAngle: 4.9,
-                spinSpeed: 0.045,
+                maxTrail: 14,
+                spinAngle: 3.1,
+                spinSpeed: 0.05,
                 sparkleTimer: 0,
               },
             ],
@@ -584,10 +385,10 @@ export default function AmbientBackground() {
       }
 
       // =====================================================================
-      // Layer 0: Harmonic Wave Streamlines
+      // Layer 0: Harmonic Wave Streamlines (Subtle Background Flow)
       // =====================================================================
       ctx.save()
-      const waveAlpha = light ? 0.055 : 0.07
+      const waveAlpha = light ? 0.025 : 0.038
       ctx.beginPath()
       const yWave1 = height * 0.28
       ctx.moveTo(0, yWave1)
@@ -596,7 +397,7 @@ export default function AmbientBackground() {
         ctx.lineTo(x, y)
       }
       ctx.strokeStyle = `rgba(${terracottaRGB}, ${waveAlpha})`
-      ctx.lineWidth = 0.95
+      ctx.lineWidth = 0.85
       ctx.setLineDash([12, 18])
       ctx.lineDashOffset = -time * 16
       ctx.stroke()
@@ -609,7 +410,7 @@ export default function AmbientBackground() {
         ctx.lineTo(x, y)
       }
       ctx.strokeStyle = `rgba(${tealRGB}, ${waveAlpha})`
-      ctx.lineWidth = 0.95
+      ctx.lineWidth = 0.85
       ctx.setLineDash([14, 20])
       ctx.lineDashOffset = time * 14
       ctx.stroke()
@@ -668,7 +469,7 @@ export default function AmbientBackground() {
         p.pulsePhase += p.pulseSpeed
       }
 
-      // Constellation mesh between close dust particles
+      // Constellation mesh between close dust particles (soft, faint connections)
       const MAX_DUST_LINE = 105
       for (let i = 0; i < cosmicDust.length; i++) {
         const p1 = cosmicDust[i]
@@ -676,12 +477,12 @@ export default function AmbientBackground() {
           const p2 = cosmicDust[j]
           const dist = Math.hypot(p1.x - p2.x, p1.y - p2.y)
           if (dist < MAX_DUST_LINE) {
-            const alpha = (1 - dist / MAX_DUST_LINE) * (light ? 0.14 : 0.10)
+            const alpha = (1 - dist / MAX_DUST_LINE) * (light ? 0.08 : 0.06)
             ctx.beginPath()
             ctx.moveTo(p1.x, p1.y)
             ctx.lineTo(p2.x, p2.y)
             ctx.strokeStyle = `rgba(${neutralRGB}, ${alpha})`
-            ctx.lineWidth = 0.7
+            ctx.lineWidth = 0.6
             ctx.stroke()
           }
         }
@@ -695,7 +496,7 @@ export default function AmbientBackground() {
 
         ctx.beginPath()
         ctx.arc(p.x, p.y, r, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(${cRGB}, ${light ? 0.45 : 0.6})`
+        ctx.fillStyle = `rgba(${cRGB}, ${light ? 0.18 : 0.25})`
         ctx.fill()
       }
 
@@ -737,49 +538,43 @@ export default function AmbientBackground() {
         const cy = atom.currentY
         const atomColorRGB = getColorRGB(atom.dominantColor)
 
-        // Stable, serene orbital speed
-        const speedMultiplier = 1.0
+        // Read synchronized time with the cinematic intro epoch
+        const atomEpoch =
+          typeof window !== 'undefined' && (window as any).__portfolioAtomEpoch
+            ? (window as any).__portfolioAtomEpoch
+            : 0
+        const epochElapsed = atomEpoch ? (performance.now() - atomEpoch) / 1000 : time + 5.0
 
         // -------------------------------------------------------------------
         // 4A. CONTINUOUS CLOSED 3D ORBITAL AXIS RINGS (Seamless & Unbroken)
-        // Volumetric Dual-Pass Light: Soft Ambient Glow Halo + Precision Laser Filament Core
+        // Delicate, ethereal single hairline paths in harmonious subtle tones
         // -------------------------------------------------------------------
         ctx.save()
         for (let r = 0; r < atom.rings.length; r++) {
           const ring = atom.rings[r]
-          ring.rotationGamma += ring.precessionSpeed
+          const rColorRGB = ring.ringColorType ? getColorRGB(ring.ringColorType) : atomColorRGB
 
-          const effGamma = ring.rotationGamma + atom.gyroOffsetX
-          const effBeta = ring.tiltBeta + atom.gyroOffsetY
-
-          // Seamless, continuous 3D closed orbit loop (96 steps for liquid-smooth curve)
-          const steps = 96
+          // Calculate closed in-plane ellipse coordinates matching PortfolioIntro
+          const steps = 80
           ctx.beginPath()
           for (let step = 0; step <= steps; step++) {
-            const theta = (step / steps) * Math.PI * 2
-            const pt = getOrbitPoint(ring, theta, atom.scale, cx, cy, effGamma, effBeta, time)
+            const angle = (step / steps) * Math.PI * 2
+            const lx = ring.baseRadius * atom.scale * Math.cos(angle)
+            const ly = ring.baseRadius * atom.scale * 0.38 * Math.sin(angle)
+            const px = cx + lx * Math.cos(ring.rotationGamma) - ly * Math.sin(ring.rotationGamma)
+            const py = cy + lx * Math.sin(ring.rotationGamma) + ly * Math.cos(ring.rotationGamma)
             if (step === 0) {
-              ctx.moveTo(pt.x, pt.y)
+              ctx.moveTo(px, py)
             } else {
-              ctx.lineTo(pt.x, pt.y)
+              ctx.lineTo(px, py)
             }
           }
           ctx.closePath()
 
-          const rColorRGB = ring.ringColorType ? getColorRGB(ring.ringColorType) : atomColorRGB
-
-          // Pass 1: Soft Ambient Glow Halo Beam
-          ctx.strokeStyle = `rgba(${rColorRGB}, ${light ? 0.10 : 0.16})`
-          ctx.lineWidth = light ? 2.6 : 3.4
+          // Subtle, low-contrast hairline stroke (non-distracting ambient background)
+          ctx.strokeStyle = `rgba(${rColorRGB}, ${light ? 0.08 : 0.14})`
+          ctx.lineWidth = 0.85
           ctx.stroke()
-
-          // Pass 2: Precision Laser Filament Core with Radiant Bloom
-          ctx.strokeStyle = `rgba(${rColorRGB}, ${light ? 0.38 : 0.58})`
-          ctx.lineWidth = light ? 1.05 : 1.35
-          ctx.shadowColor = `rgba(${rColorRGB}, ${light ? 0.25 : 0.50})`
-          ctx.shadowBlur = light ? 3 : 7
-          ctx.stroke()
-          ctx.shadowBlur = 0
         }
         ctx.restore()
 
@@ -788,64 +583,60 @@ export default function AmbientBackground() {
         // -------------------------------------------------------------------
         for (let r = 0; r < atom.rings.length; r++) {
           const ring = atom.rings[r]
-          const effGamma = ring.rotationGamma + atom.gyroOffsetX
-          const effBeta = ring.tiltBeta + atom.gyroOffsetY
+          const el = ring.electrons[0]
+          if (!el) continue
 
-          for (let e = 0; e < ring.electrons.length; e++) {
-            const el = ring.electrons[e]
+          const period = r === 0 ? 2.35 : r === 1 ? 2.85 : 3.25
+          const ringStartTime = r === 0 ? 2.7 : r === 1 ? 3.5 : 4.3
+          const omega = (Math.PI * 2) / period
+          const phi = omega * Math.max(0, epochElapsed - ringStartTime)
 
-            // Keplerian speed modulation (accelerates gently near periapsis)
-            const keplerFactor = 1.0 + 0.15 * Math.cos(el.angle)
-            el.angle += el.baseSpeed * speedMultiplier * keplerFactor
-            if (el.angle > Math.PI * 2) el.angle -= Math.PI * 2
+          const majorR = ring.baseRadius * atom.scale
+          const minorR = majorR * 0.38
+          const lx = majorR * Math.cos(phi)
+          const ly = minorR * Math.sin(phi)
+          const zDepth = Math.sin(phi)
 
-            el.spinAngle += el.spinSpeed
+          const px = cx + lx * Math.cos(ring.rotationGamma) - ly * Math.sin(ring.rotationGamma)
+          const py = cy + lx * Math.sin(ring.rotationGamma) + ly * Math.cos(ring.rotationGamma)
 
-            // Calculate current 3D position
-            const pt = getOrbitPoint(ring, el.angle, atom.scale, cx, cy, effGamma, effBeta, time)
+          el.trail.push({ x: px, y: py, z: zDepth })
+          if (el.trail.length > el.maxTrail) el.trail.shift()
 
-            el.trail.push({ x: pt.x, y: pt.y, z: pt.z })
-            if (el.trail.length > el.maxTrail) el.trail.shift()
+          if (zDepth < 0) {
+            const elColorRGB = getColorRGB(el.colorType)
+            const len = el.trail.length
 
-            // If in back half, draw back electron and trail
-            if (pt.z < 0) {
-              const elColorRGB = getColorRGB(el.colorType)
-              const len = el.trail.length
-
-              if (len > 2) {
-                for (let t = 0; t < len - 1; t++) {
-                  const pt1 = el.trail[t]
-                  const pt2 = el.trail[t + 1]
-                  if (pt1.z < 0) {
-                    const progress = (t + 1) / len
-                    const quadAlpha = progress * progress
-                    ctx.beginPath()
-                    ctx.moveTo(pt1.x, pt1.y)
-                    ctx.lineTo(pt2.x, pt2.y)
-                    ctx.strokeStyle = `rgba(${elColorRGB}, ${quadAlpha * (light ? 0.32 : 0.44)})`
-                    ctx.lineWidth = 0.5 + progress * (light ? 0.9 : 1.3)
-                    ctx.stroke()
-                  }
+            if (len > 2) {
+              for (let t = 0; t < len - 1; t++) {
+                const pt1 = el.trail[t]
+                const pt2 = el.trail[t + 1]
+                if (pt1.z < 0) {
+                  const progress = (t + 1) / len
+                  const quadAlpha = progress * progress
+                  ctx.beginPath()
+                  ctx.moveTo(pt1.x, pt1.y)
+                  ctx.lineTo(pt2.x, pt2.y)
+                  ctx.strokeStyle = `rgba(${elColorRGB}, ${quadAlpha * (light ? 0.08 : 0.14)})`
+                  ctx.lineWidth = 0.4 + progress * 0.6
+                  ctx.stroke()
                 }
               }
-
-              // Draw electron head (dimmer behind nucleus)
-              const radius = el.radius * (light ? 0.85 : 0.95)
-              ctx.beginPath()
-              ctx.arc(pt.x, pt.y, radius, 0, Math.PI * 2)
-              ctx.fillStyle = `rgba(${elColorRGB}, ${light ? 0.72 : 0.82})`
-              ctx.fill()
             }
+
+            // Faint back electron head
+            ctx.beginPath()
+            ctx.arc(px, py, 1.8, 0, Math.PI * 2)
+            ctx.fillStyle = `rgba(${elColorRGB}, ${light ? 0.22 : 0.30})`
+            ctx.fill()
           }
         }
 
         // -------------------------------------------------------------------
-        // 4C. ATOMIC NUCLEUS: RADIANT QUANTUM FUSION CORE
-        // A single majestic, soft-glowing starburst core with coronal plasma,
-        // magnetic horizon, and specular white-hot singularity point.
-        // (NO mechanical crosshairs or target reticles!)
+        // 4C. ATOMIC NUCLEUS: SOFT LUMINOUS AMBIENT PEARL
+        // Ethereal, gentle breathing star core with light, calm transparency
         // -------------------------------------------------------------------
-        // 1. Quantum pulse wavefronts (slow serene ripples expanding outward)
+        // 1. Quantum pulse wavefronts (gentle ambient ripples)
         for (let pIdx = atom.pulses.length - 1; pIdx >= 0; pIdx--) {
           const pulse = atom.pulses[pIdx]
           pulse.radius += pulse.speed
@@ -858,30 +649,17 @@ export default function AmbientBackground() {
 
           ctx.beginPath()
           ctx.arc(cx, cy, pulse.radius, 0, Math.PI * 2)
-          ctx.strokeStyle = `rgba(${pulse.color}, ${pulse.alpha})`
-          ctx.lineWidth = 0.95
+          ctx.strokeStyle = `rgba(${pulse.color}, ${pulse.alpha * (light ? 0.35 : 0.45)})`
+          ctx.lineWidth = 0.75
           ctx.stroke()
         }
 
-        // 2. Subtle Quantum Probability Atmosphere (Faint Golden Shell Aura)
-        ctx.save()
-        const auraR = 38 * atom.scale
-        ctx.beginPath()
-        ctx.arc(cx, cy, auraR, 0, Math.PI * 2)
-        ctx.strokeStyle = `rgba(${goldRGB}, ${light ? 0.12 : 0.18})`
-        ctx.lineWidth = 0.85
-        ctx.setLineDash([2, 6])
-        ctx.stroke()
-        ctx.setLineDash([])
-        ctx.restore()
-
-        // 3. Outer Fusion Corona Glow (Soft, Breathing, Hypnotic)
-        const breathe = Math.sin(time * 1.6) * 3.0
-        const coronaRadius = (30 + breathe) * atom.scale
-        const coronaGrad = ctx.createRadialGradient(cx, cy, 2, cx, cy, coronaRadius)
-        coronaGrad.addColorStop(0, `rgba(${goldRGB}, ${light ? 0.50 : 0.70})`)
-        coronaGrad.addColorStop(0.35, `rgba(${atomColorRGB}, ${light ? 0.22 : 0.35})`)
-        coronaGrad.addColorStop(0.70, `rgba(${atomColorRGB}, ${light ? 0.06 : 0.12})`)
+        // 2. Soft Coronal Glow (Breathing softly, low alpha)
+        const breath = 1.0 + Math.sin(time * 2.0) * 0.05
+        const coronaRadius = 22 * atom.scale * breath
+        const coronaGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, coronaRadius)
+        coronaGrad.addColorStop(0, `rgba(${goldRGB}, ${light ? 0.10 : 0.16})`)
+        coronaGrad.addColorStop(0.45, `rgba(${terracottaRGB}, ${light ? 0.05 : 0.09})`)
         coronaGrad.addColorStop(1, 'transparent')
 
         ctx.beginPath()
@@ -889,127 +667,67 @@ export default function AmbientBackground() {
         ctx.fillStyle = coronaGrad
         ctx.fill()
 
-        // 4. Confinement Energy Ring
-        const fluxRingR = (13.5 + Math.sin(time * 2.2) * 0.7) * atom.scale
-        ctx.save()
-        ctx.beginPath()
-        ctx.arc(cx, cy, fluxRingR, 0, Math.PI * 2)
-        ctx.strokeStyle = `rgba(${goldRGB}, ${light ? 0.38 : 0.65})`
-        ctx.lineWidth = 0.95
-        ctx.setLineDash([3, 5])
-        ctx.lineDashOffset = -time * 10
-        ctx.stroke()
-        ctx.setLineDash([])
-        ctx.restore()
+        // 3. Delicate Luminous Core Pearl (Clean, subtle, non-distracting)
+        const coreR = 3.6 * atom.scale
+        const coreGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreR)
+        coreGrad.addColorStop(0, '#FFFFFF')
+        coreGrad.addColorStop(0.4, `rgba(${goldRGB}, ${light ? 0.45 : 0.65})`)
+        coreGrad.addColorStop(0.9, `rgba(${terracottaRGB}, ${light ? 0.20 : 0.35})`)
+        coreGrad.addColorStop(1, 'transparent')
 
-        // 5. HIGH-ENERGY SOLID FUSION SPHERE
-        const coreR = (8.0 + Math.sin(time * 2.0) * 0.45) * atom.scale
-        const sphereGrad = ctx.createRadialGradient(
-          cx - coreR * 0.3,
-          cy - coreR * 0.3,
-          1,
-          cx,
-          cy,
-          coreR
-        )
-        sphereGrad.addColorStop(0, '#FFFFFF')
-        sphereGrad.addColorStop(0.28, `rgb(${goldRGB})`)
-        sphereGrad.addColorStop(0.72, `rgb(${atomColorRGB})`)
-        sphereGrad.addColorStop(1, light ? 'rgba(160, 45, 15, 0.95)' : 'rgba(120, 30, 8, 0.95)')
-
-        ctx.save()
         ctx.beginPath()
         ctx.arc(cx, cy, coreR, 0, Math.PI * 2)
-        ctx.fillStyle = sphereGrad
-        ctx.shadowColor = `rgba(${atomColorRGB}, ${light ? 0.55 : 0.9})`
-        ctx.shadowBlur = light ? 7 : 14
+        ctx.fillStyle = coreGrad
         ctx.fill()
-        ctx.shadowBlur = 0
-        ctx.restore()
-
-        // 6. SPECULAR WHITE-HOT SINGULARITY PEARL (Pure Star Core - No Crosshairs!)
-        const sparkR = 2.4 * atom.scale
-        ctx.save()
-        ctx.beginPath()
-        ctx.arc(cx, cy, sparkR, 0, Math.PI * 2)
-        ctx.fillStyle = '#FFFFFF'
-        ctx.shadowColor = '#FFFFFF'
-        ctx.shadowBlur = light ? 8 : 14
-        ctx.fill()
-        ctx.restore()
 
         // -------------------------------------------------------------------
-        // (Note: Orbital axis rings are seamlessly rendered in full 3D in 4A
-        // to guarantee 100% closed, unbroken loops with zero horizon gaps)
-        // -------------------------------------------------------------------
-
-        // -------------------------------------------------------------------
-        // 4E. FRONT ELECTRONS & LUMINOUS COMET TAILS (z >= 0: Sweeping Foreground)
-        // Fluid Quadratic Decay (t^2 / L^2) + Specular Spark Particles
+        // 4D. FRONT ELECTRONS & LUMINOUS COMET TAILS (z >= 0: Sweeping Foreground)
+        // Light, non-obtrusive trails and soft delicate jewel points
         // -------------------------------------------------------------------
         for (let r = 0; r < atom.rings.length; r++) {
           const ring = atom.rings[r]
-          for (let e = 0; e < ring.electrons.length; e++) {
-            const el = ring.electrons[e]
-            const latest = el.trail[el.trail.length - 1]
-            if (!latest || latest.z < 0) continue
+          const el = ring.electrons[0]
+          if (!el) continue
 
-            const elColorRGB = getColorRGB(el.colorType)
-            const len = el.trail.length
+          const latest = el.trail[el.trail.length - 1]
+          if (!latest || latest.z < 0) continue
 
-            // Luminous seamless quadratic fading comet tail
-            if (len > 2) {
-              ctx.save()
-              ctx.shadowColor = `rgba(${elColorRGB}, ${light ? 0.35 : 0.65})`
-              ctx.shadowBlur = light ? 4 : 8
-              for (let t = 0; t < len - 1; t++) {
-                const pt1 = el.trail[t]
-                const pt2 = el.trail[t + 1]
-                const progress = (t + 1) / len
-                const quadAlpha = progress * progress
-                ctx.beginPath()
-                ctx.moveTo(pt1.x, pt1.y)
-                ctx.lineTo(pt2.x, pt2.y)
-                ctx.strokeStyle = `rgba(${elColorRGB}, ${quadAlpha * (light ? 0.68 : 0.92)})`
-                ctx.lineWidth = 0.6 + progress * (light ? 2.0 : 2.8)
-                ctx.stroke()
-              }
-              ctx.restore()
+          const elColorRGB = getColorRGB(el.colorType)
+          const len = el.trail.length
+
+          // Delicate fading comet tail
+          if (len > 2) {
+            for (let t = 0; t < len - 1; t++) {
+              const pt1 = el.trail[t]
+              const pt2 = el.trail[t + 1]
+              const progress = (t + 1) / len
+              const quadAlpha = progress * progress
+              ctx.beginPath()
+              ctx.moveTo(pt1.x, pt1.y)
+              ctx.lineTo(pt2.x, pt2.y)
+              ctx.strokeStyle = `rgba(${elColorRGB}, ${quadAlpha * (light ? 0.16 : 0.24)})`
+              ctx.lineWidth = 0.5 + progress * 0.8
+              ctx.stroke()
             }
-
-            // Glowing electron head
-            const radius = el.radius
-            // Outer soft aura
-            ctx.beginPath()
-            ctx.arc(latest.x, latest.y, radius * 1.7, 0, Math.PI * 2)
-            ctx.fillStyle = `rgba(${elColorRGB}, ${light ? 0.20 : 0.32})`
-            ctx.fill()
-
-            // Solid jewel particle
-            ctx.beginPath()
-            ctx.arc(latest.x, latest.y, radius, 0, Math.PI * 2)
-            ctx.fillStyle = `rgb(${elColorRGB})`
-            ctx.shadowColor = `rgba(${elColorRGB}, ${light ? 0.75 : 0.95})`
-            ctx.shadowBlur = light ? 8 : 14
-            ctx.fill()
-            ctx.shadowBlur = 0
-
-            // Inner specular white hot quantum spark
-            ctx.beginPath()
-            ctx.arc(latest.x, latest.y, Math.max(1.0, radius * 0.42), 0, Math.PI * 2)
-            ctx.fillStyle = '#FFFFFF'
-            ctx.fill()
-
-            // Micro Spin Satellite Particle (Quantum Spin s = ±1/2)
-            const spinR = 3.8 * atom.scale
-            const sx = latest.x + Math.cos(el.spinAngle) * spinR
-            const sy = latest.y + Math.sin(el.spinAngle) * spinR
-
-            ctx.beginPath()
-            ctx.arc(sx, sy, 1.0, 0, Math.PI * 2)
-            ctx.fillStyle = `rgba(${elColorRGB}, 0.82)`
-            ctx.fill()
           }
+
+          // Subtle electron head aura
+          ctx.beginPath()
+          ctx.arc(latest.x, latest.y, 2.8, 0, Math.PI * 2)
+          ctx.fillStyle = `rgba(${elColorRGB}, ${light ? 0.08 : 0.14})`
+          ctx.fill()
+
+          // Jewel particle core
+          ctx.beginPath()
+          ctx.arc(latest.x, latest.y, 2.0, 0, Math.PI * 2)
+          ctx.fillStyle = `rgba(${elColorRGB}, ${light ? 0.45 : 0.60})`
+          ctx.fill()
+
+          // Specular white center spark
+          ctx.beginPath()
+          ctx.arc(latest.x, latest.y, 0.8, 0, Math.PI * 2)
+          ctx.fillStyle = '#FFFFFF'
+          ctx.fill()
         }
       }
 
@@ -1215,6 +933,7 @@ export default function AmbientBackground() {
       <canvas
         ref={canvasRef}
         aria-hidden="true"
+        className="ambient-background-canvas"
         style={{
           position: 'absolute',
           inset: 0,

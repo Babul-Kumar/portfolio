@@ -231,19 +231,7 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
         birdPortalRef.current.style.transform = `translate3d(${currentX}px, ${currentY}px, 0) translate(-50%, -50%) scale(${currentScale}) rotate(${currentRotation}deg)`
       }
 
-      // Smooth trailing contrail route: grows organically from desk up to live pigeon position
-      if (routePathRef.current) {
-        if (rawProgress <= 0.005) {
-          routePathRef.current.setAttribute('d', '')
-        } else {
-          const subCtrlX = (1 - rawProgress) * startX + rawProgress * ((startX + targetX) * 0.45)
-          const subCtrlY = (1 - rawProgress) * startY + rawProgress * (Math.min(startY - 140, vpHeight * 0.2))
-          routePathRef.current.setAttribute(
-            'd',
-            `M ${startX} ${startY} Q ${subCtrlX} ${subCtrlY}, ${currentX} ${currentY}`
-          )
-        }
-      }
+
 
       flightPosRef.current = {
         x: currentX,
@@ -717,17 +705,7 @@ export default function PigeonDeliveryAnimation({ data, onReset }: PigeonDeliver
               </filter>
             </defs>
 
-            {/* Glowing trajectory curve: dynamically trails behind the flying courier pigeon */}
-            <path
-              ref={routePathRef}
-              d=""
-              fill="none"
-              stroke="url(#pigeon-flight-route-grad)"
-              strokeWidth="2.5"
-              strokeDasharray="8 8"
-              filter="url(#pigeon-route-glow)"
-              className="pigeon-route-animated-path"
-            />
+
 
             {/* Launch Origin Waypoint Marker */}
             <g transform={`translate(${routeCoords.startX}, ${routeCoords.startY})`}>

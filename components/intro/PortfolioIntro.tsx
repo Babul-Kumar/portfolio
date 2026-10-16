@@ -282,6 +282,9 @@ export default function PortfolioIntro() {
 
       if (startTimeRef.current === null) {
         startTimeRef.current = now
+        if (typeof window !== 'undefined') {
+          ;(window as any).__portfolioAtomEpoch = now
+        }
       }
       const elapsed = (now - startTimeRef.current) / 1000 // elapsed in seconds
 
@@ -301,33 +304,31 @@ export default function PortfolioIntro() {
           phaseRef.current = 'particles'
           setCurrentPhase('particles')
         }
-      } else if (elapsed < 5.3) {
+      } else {
         if (phaseRef.current !== 'atom') {
           phaseRef.current = 'atom'
           setCurrentPhase('atom')
         }
-      } else if (elapsed < 6.7) {
-        if (phaseRef.current !== 'dissolve') {
-          phaseRef.current = 'dissolve'
-          setCurrentPhase('dissolve')
-        }
-      } else {
-        completeIntro()
-        return
       }
 
-      // Progressively wake homepage background at 5.4s
-      if (elapsed >= 5.4 && !hasTriggeredEmerge) {
+      // Progressively wake homepage background at 4.7s
+      if (elapsed >= 4.7 && !hasTriggeredEmerge) {
         hasTriggeredEmerge = true
         try {
           document.documentElement.classList.add('intro-emerging')
         } catch {}
       }
 
-      // Smooth cinematic crossfade of intro overlay at 6.1s into homepage
-      if (elapsed >= 6.1 && !isFadingOutRef.current) {
+      // Smooth cinematic crossfade of intro overlay at 4.9s into homepage
+      if (elapsed >= 4.9 && !isFadingOutRef.current) {
         isFadingOutRef.current = true
         setIsFadingOut(true)
+      }
+
+      // Complete intro when overlay has faded out completely (4.9s + 0.85s = 5.75s -> 5.8s)
+      if (elapsed >= 5.8) {
+        completeIntro()
+        return
       }
 
       // Smooth pointer tilt interpolation
@@ -354,11 +355,11 @@ export default function PortfolioIntro() {
       const semiMajor = baseRadius
       const semiMinor = baseRadius * 0.38
 
-      // Overall atom opacity for Phase 5 dissolve
+      // Atom maintains full continuity - softens gently to match AmbientBackground without vanishing
       let atomMasterOpacity = 1.0
-      if (elapsed >= 5.3) {
-        const dissolveProgress = Math.min((elapsed - 5.3) / 1.4, 1.0)
-        atomMasterOpacity = Math.max(0, 1.0 - dissolveProgress)
+      if (elapsed >= 4.7) {
+        const tMerge = Math.min((elapsed - 4.7) / 1.0, 1.0)
+        atomMasterOpacity = 1.0 - tMerge * 0.30
       }
 
       // =========================================================================
@@ -763,7 +764,7 @@ export default function PortfolioIntro() {
       {/* Scoped CSS Animations */}
       <style>{`
         .cinematic-intro-overlay {
-          transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1) !important;
+          transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1) !important;
         }
         .cinematic-intro-overlay.fade-out {
           opacity: 0 !important;
