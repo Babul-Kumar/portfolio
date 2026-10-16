@@ -125,11 +125,11 @@ export default function CyberTerminalModal({
 
         case 'contact':
           newEntries.push(
-            { type: 'output', text: 'DISPATCH COORDINATES:' },
-            { type: 'output', text: '  EMAIL:     babulkumar.dev@gmail.com' },
+            { type: 'output', text: 'CONTACT INFORMATION:' },
+            { type: 'output', text: '  EMAIL:     babulkumar0220@gmail.com' },
             { type: 'output', text: '  GITHUB:    https://github.com/babul-kumar' },
-            { type: 'output', text: '  LINKEDIN:  https://linkedin.com/in/babul-kumar' },
-            { type: 'output', text: '  TERMINAL:  Direct dispatch open on /contact' }
+            { type: 'output', text: '  LINKEDIN:  https://linkedin.com/in/babul-kumar2007' },
+            { type: 'output', text: '  PAGE:      Visit /contact to get in touch' }
           )
           break
 

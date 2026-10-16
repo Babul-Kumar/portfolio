@@ -1,13 +1,11 @@
 import type { Metadata } from 'next'
 import ContactSection from '@/components/sections/Contact'
-import PageHeader from '@/components/layout/PageHeader'
-import AmbientSectionEnvironment from '@/components/ambient/AmbientSectionEnvironment'
 import { getProfile } from '@/lib/data'
 
 export const metadata: Metadata = {
-  title: 'Contact & Inquiries — Babul Kumar',
+  title: 'Contact — Babul Kumar',
   description:
-    'Get in touch with Babul Kumar for internships, technical projects, AI/ML collaborations, or software development engineering opportunities.',
+    "Get in touch with Babul Kumar for software engineering opportunities, AI/ML research collaborations, and open-source projects.",
 }
 
 export const revalidate = 60
@@ -16,34 +14,17 @@ export default async function ContactPage() {
   const profile = await getProfile()
 
   return (
-    <div
+    <main
       style={{
         position: 'relative',
         overflow: 'hidden',
-        padding: 'var(--section-gap) var(--container-pad)',
+        padding: 'calc(68px + clamp(16px, 3vw, 36px)) var(--container-pad) clamp(48px, 6vw, 80px)',
         minHeight: '85vh',
       }}
     >
-      <AmbientSectionEnvironment variant="communication" intensity={0.4} accentMode="orange" />
-
       <div style={{ position: 'relative', zIndex: 1, maxWidth: 'var(--container-max)', margin: '0 auto' }}>
-        {/* Futuristic Page Header */}
-        <PageHeader
-          moduleTag="Communication Channel"
-          title={
-            <>
-              Get in Touch &amp;<br />
-              Direct Communication
-            </>
-          }
-          quote="Direct communication channel open."
-          description="Send an inquiry regarding Software Development Engineering, Applied AI/ML roles, research collaborations, or technical software systems."
-          statusBadge="Available for Inquiries"
-        />
-
-        {/* Terminal Contact Form & Social Dispatch Cards */}
         <ContactSection profile={profile} />
       </div>
-    </div>
+    </main>
   )
 }

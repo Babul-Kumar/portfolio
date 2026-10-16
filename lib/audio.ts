@@ -139,6 +139,47 @@ class SoundSynthesizer {
       osc.stop(now + 0.09)
     } catch {}
   }
+
+  /**
+   * Sci-Fi Quantum Transmission Warp & Delivery Chime (~1.2s)
+   */
+  public playTransmissionWarp(): void {
+    if (!this.enabled) return
+    const ctx = this.initContext()
+    if (!ctx) return
+
+    try {
+      const now = ctx.currentTime
+      // Phase 1: Rising warp sweep
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.type = 'sine'
+      osc.frequency.setValueAtTime(180, now)
+      osc.frequency.exponentialRampToValueAtTime(740, now + 0.6)
+      gain.gain.setValueAtTime(0.001, now)
+      gain.gain.linearRampToValueAtTime(0.045, now + 0.45)
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.65)
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.start(now)
+      osc.stop(now + 0.65)
+
+      // Phase 2: Harmonic delivery triad chime (at t + 0.6s)
+      const chimeNotes = [523.25, 659.25, 783.99] // C5, E5, G5
+      chimeNotes.forEach((freq, idx) => {
+        const cOsc = ctx.createOscillator()
+        const cGain = ctx.createGain()
+        cOsc.type = 'triangle'
+        cOsc.frequency.setValueAtTime(freq, now + 0.6 + idx * 0.04)
+        cGain.gain.setValueAtTime(0.03, now + 0.6 + idx * 0.04)
+        cGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.2)
+        cOsc.connect(cGain)
+        cGain.connect(ctx.destination)
+        cOsc.start(now + 0.6 + idx * 0.04)
+        cOsc.stop(now + 1.2)
+      })
+    } catch {}
+  }
 }
 
 export const sound = new SoundSynthesizer()
@@ -150,3 +191,5 @@ export const toggleSfx = () => sound.toggle()
 export const playMechanicalClick = (pitch?: number) => sound.playClick(pitch)
 export const playHoverTick = (pitch?: number) => sound.playHover(pitch)
 export const playChirp = () => sound.playChirp()
+export const playTransmissionWarp = () => sound.playTransmissionWarp()
+

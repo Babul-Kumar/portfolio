@@ -177,8 +177,8 @@ export default function CommandPalette({
       },
       {
         id: 'nav-contact',
-        title: 'Contact Dispatch Terminal',
-        subtitle: 'Send direct dispatch for SDE & Applied AI/ML opportunities',
+        title: 'Contact',
+        subtitle: 'Get in touch for opportunities and collaborations',
         category: 'NAVIGATION',
         icon: Send,
         action: () => {
